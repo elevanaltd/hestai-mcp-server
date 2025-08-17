@@ -7,6 +7,7 @@ from .analyze import AnalyzeTool
 from .challenge import ChallengeTool
 from .chat import ChatTool
 from .consensus import ConsensusTool
+from .critical_engineer import CriticalEngineerTool
 from .debug import DebugIssueTool
 from .listmodels import ListModelsTool
 from .planner import PlannerTool
@@ -29,6 +30,7 @@ __all__ = [
     "AnalyzeTool",
     "ChatTool",
     "ConsensusTool",
+    "CriticalEngineerTool",
     "ListModelsTool",
     "PlannerTool",
     "ChallengeTool",
