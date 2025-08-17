@@ -66,16 +66,12 @@ from tools import (  # noqa: E402
     AnalyzeTool,
     ChallengeTool,
     ChatTool,
-    CodeReviewTool,
     ConsensusTool,
     DebugIssueTool,
-    DocgenTool,
     ListModelsTool,
     PlannerTool,
-    PrecommitTool,
-    RefactorTool,
+    RequirementsTool,
     SecauditTool,
-    TestGenTool,
     ThinkDeepTool,
     TracerTool,
     VersionTool,
@@ -259,26 +255,28 @@ def filter_disabled_tools(all_tools: dict[str, Any]) -> dict[str, Any]:
     return enabled_tools
 
 
-# Initialize the tool registry with all available AI-powered tools
-# Each tool provides specialized functionality for different development tasks
-# Tools are instantiated once and reused across requests (stateless design)
+# Initialize the tool registry with premium high-end model tools only
+# Each tool provides specialized functionality for complex multi-step workflows
+# Simple tasks are handled by Claude subagents for efficiency
 TOOLS = {
     "chat": ChatTool(),  # Interactive development chat and brainstorming
     "thinkdeep": ThinkDeepTool(),  # Step-by-step deep thinking workflow with expert analysis
     "planner": PlannerTool(),  # Interactive sequential planner using workflow architecture
     "consensus": ConsensusTool(),  # Step-by-step consensus workflow with multi-model analysis
-    "codereview": CodeReviewTool(),  # Comprehensive step-by-step code review workflow with expert analysis
-    "precommit": PrecommitTool(),  # Step-by-step pre-commit validation workflow
     "debug": DebugIssueTool(),  # Root cause analysis and debugging assistance
     "secaudit": SecauditTool(),  # Comprehensive security audit with OWASP Top 10 and compliance coverage
-    "docgen": DocgenTool(),  # Step-by-step documentation generation with complexity analysis
     "analyze": AnalyzeTool(),  # General-purpose file and code analysis
-    "refactor": RefactorTool(),  # Step-by-step refactoring analysis workflow with expert validation
     "tracer": TracerTool(),  # Static call path prediction and control flow analysis
-    "testgen": TestGenTool(),  # Step-by-step test generation workflow with expert validation
     "challenge": ChallengeTool(),  # Critical challenge prompt wrapper to avoid automatic agreement
+    "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
+    # Archived tools (handled by Claude subagents):
+    # - codereview -> use code-review-specialist subagent
+    # - precommit -> use multiple specialized subagents
+    # - refactor -> use complexity-guard subagent
+    # - testgen -> use universal-test-engineer subagent
+    # - docgen -> use documentation subagents
 }
 TOOLS = filter_disabled_tools(TOOLS)
 
@@ -304,16 +302,6 @@ PROMPT_TEMPLATES = {
         "description": "Step-by-step consensus workflow with multi-model analysis",
         "template": "Start comprehensive consensus workflow with {model}",
     },
-    "codereview": {
-        "name": "review",
-        "description": "Perform a comprehensive code review",
-        "template": "Perform a comprehensive code review with {model}",
-    },
-    "precommit": {
-        "name": "precommit",
-        "description": "Step-by-step pre-commit validation workflow",
-        "template": "Start comprehensive pre-commit validation workflow with {model}",
-    },
     "debug": {
         "name": "debug",
         "description": "Debug an issue or error",
@@ -324,30 +312,15 @@ PROMPT_TEMPLATES = {
         "description": "Comprehensive security audit with OWASP Top 10 coverage",
         "template": "Perform comprehensive security audit with {model}",
     },
-    "docgen": {
-        "name": "docgen",
-        "description": "Generate comprehensive code documentation with complexity analysis",
-        "template": "Generate comprehensive documentation with {model}",
-    },
     "analyze": {
         "name": "analyze",
         "description": "Analyze files and code structure",
         "template": "Analyze these files with {model}",
     },
-    "refactor": {
-        "name": "refactor",
-        "description": "Refactor and improve code structure",
-        "template": "Refactor this code with {model}",
-    },
     "tracer": {
         "name": "tracer",
         "description": "Trace code execution paths",
         "template": "Generate tracer analysis with {model}",
-    },
-    "testgen": {
-        "name": "testgen",
-        "description": "Generate comprehensive tests",
-        "template": "Generate comprehensive tests with {model}",
     },
     "challenge": {
         "name": "challenge",
@@ -762,6 +735,16 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             model_name = resolved_model
             # Update arguments with resolved model
             arguments["model"] = model_name
+
+        # Special case: testguard tool only allows high-quality models
+        if name == "testguard":
+            allowed_models = ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
+            if model_name not in allowed_models:
+                # Default to gemini-2.5-pro if an unsupported model is specified
+                forced_model = "google/gemini-2.5-pro"
+                logger.info(f"Overriding model for testguard: {model_name} → {forced_model} (only high-quality models allowed)")
+                model_name = forced_model
+                arguments["model"] = model_name
 
         # Validate model availability at MCP boundary
         provider = ModelProviderRegistry.get_provider_for_model(model_name)
@@ -1332,7 +1315,7 @@ async def main():
             read_stream,
             write_stream,
             InitializationOptions(
-                server_name="zen",
+                server_name="zen-premium",
                 server_version=__version__,
                 capabilities=ServerCapabilities(
                     tools=ToolsCapability(),  # Advertise tool support capability
