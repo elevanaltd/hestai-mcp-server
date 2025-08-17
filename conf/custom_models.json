@@ -292,6 +292,19 @@
       "description": "DeepSeek-V3 via OpenRouter - Free tier with 128K context (text-only)"
     },
     {
+      "model_name": "openai/gpt-5",
+      "aliases": ["gpt-5", "gpt5", "openrouter-gpt5"],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": true,
+      "max_image_size_mb": 25.0,
+      "supports_temperature": true,
+      "description": "OpenAI GPT-5 via OpenRouter - Next generation flagship model with advanced reasoning"
+    },
+    {
       "model_name": "llama3.2",
       "aliases": ["local-llama", "local", "llama3.2", "ollama-llama"],
       "context_window": 128000,
