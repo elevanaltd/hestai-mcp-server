@@ -1,5 +1,5 @@
 """
-System prompts for Zen-MCP high-end model tools
+System prompts for HestAI-MCP high-end model tools
 Focused on complex, multi-step workflows requiring premium models
 """
 

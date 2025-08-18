@@ -15,7 +15,7 @@ body:
     id: purpose
     attributes:
       label: What is the primary purpose of this tool?
-      description: "Explain the tool's core function and the value it provides to developers using Claude + Zen."
+      description: "Explain the tool's core function and the value it provides to developers using Claude + HestAI."
       placeholder: "This tool will automatically generate comprehensive documentation from code, extracting class and function signatures, docstrings, and creating usage examples."
     validations:
       required: true

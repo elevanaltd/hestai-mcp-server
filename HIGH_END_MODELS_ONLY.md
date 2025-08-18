@@ -1,7 +1,7 @@
-# Zen-MCP High-End Model Configuration
+# HestAI-MCP High-End Model Configuration
 
 ## Overview
-Zen-MCP is now configured for complex, multi-step workflows requiring premium models only.
+HestAI-MCP is now configured for complex, multi-step workflows requiring premium models only.
 Simple, focused tasks are handled by Claude subagents for efficiency.
 
 ## Removed Tools (Handled by Subagents)
