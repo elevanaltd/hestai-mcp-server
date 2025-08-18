@@ -361,7 +361,7 @@ class CommunicationSimulator:
     def print_test_summary(self):
         """Print comprehensive test results summary"""
         self.logger.info("\n" + "=" * 70)
-        self.logger.info("ZEN MCP COMMUNICATION SIMULATOR - TEST RESULTS SUMMARY")
+        self.logger.info("HESTAI MCP COMMUNICATION SIMULATOR - TEST RESULTS SUMMARY")
         self.logger.info("=" * 70)
 
         passed_count = sum(1 for result in self.test_results.values() if result)
