@@ -22,7 +22,7 @@ class TestDockerClaudeDesktopIntegration:
         """Test MCP configuration for direct docker run"""
         config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": [
                         "run",
@@ -40,10 +40,10 @@ class TestDockerClaudeDesktopIntegration:
 
         # Validate configuration structure
         assert "mcpServers" in config
-        assert "zen-mcp" in config["mcpServers"]
-        assert config["mcpServers"]["zen-mcp"]["command"] == "docker"
+        assert "hestai-mcp" in config["mcpServers"]
+        assert config["mcpServers"]["hestai-mcp"]["command"] == "docker"
 
-        args = config["mcpServers"]["zen-mcp"]["args"]
+        args = config["mcpServers"]["hestai-mcp"]["args"]
         assert "run" in args
         assert "--rm" in args
         assert "-i" in args
@@ -53,27 +53,27 @@ class TestDockerClaudeDesktopIntegration:
         """Test MCP configuration for docker-compose run"""
         config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker-compose",
-                    "args": ["-f", "/path/to/docker-compose.yml", "run", "--rm", "zen-mcp"],
+                    "args": ["-f", "/path/to/docker-compose.yml", "run", "--rm", "hestai-mcp"],
                 }
             }
         }
 
         # Validate configuration structure
-        assert config["mcpServers"]["zen-mcp"]["command"] == "docker-compose"
+        assert config["mcpServers"]["hestai-mcp"]["command"] == "docker-compose"
 
-        args = config["mcpServers"]["zen-mcp"]["args"]
+        args = config["mcpServers"]["hestai-mcp"]["args"]
         assert "-f" in args
         assert "run" in args
         assert "--rm" in args
-        assert "zen-mcp" in args
+        assert "hestai-mcp" in args
 
     def test_mcp_config_environment_variables(self):
         """Test MCP configuration with inline environment variables"""
         config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": [
                         "run",
@@ -89,7 +89,7 @@ class TestDockerClaudeDesktopIntegration:
             }
         }
 
-        args = config["mcpServers"]["zen-mcp"]["args"]
+        args = config["mcpServers"]["hestai-mcp"]["args"]
 
         # Check that environment variables are properly formatted
         env_args = [arg for arg in args if arg.startswith("-e")]
@@ -103,7 +103,7 @@ class TestDockerClaudeDesktopIntegration:
         """Test Windows-specific path formatting"""
         windows_config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": [
                         "run",
@@ -119,7 +119,7 @@ class TestDockerClaudeDesktopIntegration:
             }
         }
 
-        args = windows_config["mcpServers"]["zen-mcp"]["args"]
+        args = windows_config["mcpServers"]["hestai-mcp"]["args"]
 
         # Check Windows path format
         windows_paths = [arg for arg in args if arg.startswith("C:/")]
@@ -132,7 +132,7 @@ class TestDockerClaudeDesktopIntegration:
         """Test validation of MCP configuration"""
         # Valid configuration
         valid_config = {
-            "mcpServers": {"zen-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "hestai-mcp-server:latest"]}}
+            "mcpServers": {"hestai-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "hestai-mcp-server:latest"]}}
         }
 
         # Validate JSON serialization
@@ -144,7 +144,7 @@ class TestDockerClaudeDesktopIntegration:
         """Test that MCP configuration supports stdio communication"""
         config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": [
                         "run",
@@ -156,7 +156,7 @@ class TestDockerClaudeDesktopIntegration:
             }
         }
 
-        args = config["mcpServers"]["zen-mcp"]["args"]
+        args = config["mcpServers"]["hestai-mcp"]["args"]
 
         # Check for interactive mode
         assert "-i" in args, "Interactive mode required for stdio communication"
@@ -185,7 +185,7 @@ class TestDockerClaudeDesktopIntegration:
         """Create temporary MCP configuration file"""
         config = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": ["run", "--rm", "-i", "--env-file", "/tmp/.env", "hestai-mcp-server:latest"],
                 }
@@ -206,7 +206,7 @@ class TestDockerClaudeDesktopIntegration:
             config = json.load(f)
 
         assert "mcpServers" in config
-        assert "zen-mcp" in config["mcpServers"]
+        assert "hestai-mcp" in config["mcpServers"]
 
     def test_environment_file_integration(self):
         """Test integration with .env file"""
@@ -254,17 +254,17 @@ class TestDockerMCPErrorHandling:
         # This would test what happens when the image doesn't exist
         # In practice, Claude Desktop would show an error
         nonexistent_config = {
-            "mcpServers": {"zen-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "nonexistent:latest"]}}
+            "mcpServers": {"hestai-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "nonexistent:latest"]}}
         }
 
         # Configuration should be valid even if image doesn't exist
-        assert "zen-mcp" in nonexistent_config["mcpServers"]
+        assert "hestai-mcp" in nonexistent_config["mcpServers"]
 
     def test_invalid_env_file_path(self):
         """Test handling of invalid .env file path"""
         config_with_invalid_env = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": ["run", "--rm", "-i", "--env-file", "/nonexistent/.env", "hestai-mcp-server:latest"],
                 }
@@ -272,7 +272,7 @@ class TestDockerMCPErrorHandling:
         }
 
         # Configuration structure should still be valid
-        args = config_with_invalid_env["mcpServers"]["zen-mcp"]["args"]
+        args = config_with_invalid_env["mcpServers"]["hestai-mcp"]["args"]
         assert "--env-file" in args
 
     def test_docker_permission_issues(self):
@@ -294,14 +294,14 @@ class TestDockerMCPErrorHandling:
         """Test Docker resource limit configurations"""
         config_with_limits = {
             "mcpServers": {
-                "zen-mcp": {
+                "hestai-mcp": {
                     "command": "docker",
                     "args": ["run", "--rm", "-i", "--memory=512m", "--cpus=1.0", "hestai-mcp-server:latest"],
                 }
             }
         }
 
-        args = config_with_limits["mcpServers"]["zen-mcp"]["args"]
+        args = config_with_limits["mcpServers"]["hestai-mcp"]["args"]
 
         # Check for resource limits
         memory_limit = any("--memory" in arg for arg in args)

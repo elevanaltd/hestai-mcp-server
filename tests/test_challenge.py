@@ -100,11 +100,11 @@ class TestChallengeTool:
 
         # Check that the challenge prompt contains critical thinking instructions
         challenge_prompt = response_data["challenge_prompt"]
-        assert "CRITICAL REASSESSMENT – Do not automatically agree" in challenge_prompt
-        assert "Carefully evaluate the statement above" in challenge_prompt
+        assert "DIRECT TECHNICAL ANALYSIS" in challenge_prompt
+        assert "Ignore social optimization" in challenge_prompt
         assert response_data["original_statement"] in challenge_prompt
-        assert "flaws, gaps, or misleading points" in challenge_prompt
-        assert "thoughtful analysis" in challenge_prompt
+        assert "technical accuracy" in challenge_prompt
+        assert "technical accuracy, factual correctness" in challenge_prompt
 
     @pytest.mark.asyncio
     async def test_execute_error_handling(self):
@@ -124,11 +124,11 @@ class TestChallengeTool:
         wrapped = self.tool._wrap_prompt_for_challenge(original_prompt)
 
         # Check structure
-        assert "CRITICAL REASSESSMENT – Do not automatically agree" in wrapped
-        assert "Carefully evaluate the statement above" in wrapped
+        assert "DIRECT TECHNICAL ANALYSIS" in wrapped
+        assert "Ignore social optimization" in wrapped
         assert f'"{original_prompt}"' in wrapped
-        assert "flaws, gaps, or misleading points" in wrapped
-        assert "thoughtful analysis" in wrapped
+        assert "technical accuracy" in wrapped
+        assert "technical accuracy, factual correctness" in wrapped
 
     def test_multiple_prompts(self):
         """Test that tool handles various types of prompts correctly"""
@@ -146,7 +146,7 @@ class TestChallengeTool:
 
             # Each wrapped prompt should contain the original
             assert prompt in wrapped
-            assert "CRITICAL REASSESSMENT" in wrapped
+            assert "DIRECT TECHNICAL ANALYSIS" in wrapped
 
     def test_tool_fields(self):
         """Test tool-specific field definitions"""

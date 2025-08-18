@@ -44,6 +44,7 @@ class TestTestGuardTool:
 
         # Empty prompt should raise validation error
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             RequirementsRequest()
 

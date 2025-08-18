@@ -28,7 +28,7 @@ class TestCriticalEngineerTool:
         """Test tool configuration and requirements"""
         assert self.tool.requires_model() is True
         assert self.tool.get_default_temperature() == 0.2  # TEMPERATURE_ANALYTICAL
-        assert self.tool.get_default_model() == "gemini-2.5-pro"
+        assert self.tool.get_default_model() == "google/gemini-2.5-pro"
 
     def test_model_category(self):
         """Test that tool uses analytical model category"""
@@ -44,6 +44,7 @@ class TestCriticalEngineerTool:
 
         # Empty prompt should raise validation error
         from pydantic import ValidationError
+
         with pytest.raises(ValidationError):
             CriticalEngineerRequest()
 
@@ -59,7 +60,7 @@ class TestCriticalEngineerTool:
         assert model_config["type"] == "string"
         assert "enum" in model_config
         assert "google/gemini-2.5-pro" in model_config["enum"]
-        assert "openai/gpt-5" in model_config["enum"]
+        assert "gpt-4.1-2025-04-14" in model_config["enum"]
         # Should only have these two high-quality models
         assert len(model_config["enum"]) == 2
 
@@ -69,7 +70,7 @@ class TestCriticalEngineerTool:
 
         assert allowed_models is not None
         assert "google/gemini-2.5-pro" in allowed_models
-        assert "openai/gpt-5" in allowed_models
+        assert "gpt-4.1-2025-04-14" in allowed_models
         assert len(allowed_models) == 2
 
     async def test_prepare_prompt_formatting(self):
@@ -172,7 +173,7 @@ class TestCriticalEngineerTool:
 
         assert "prompt" in fields
         assert fields["prompt"]["type"] == "string"
-        assert "technical design" in fields["prompt"]["description"]
+        assert "Technical design" in fields["prompt"]["description"]
         assert "implementation decision" in fields["prompt"]["description"]
 
     def test_required_fields(self):
@@ -186,13 +187,13 @@ class TestCriticalEngineerTool:
         """Test model selection preference and fallback"""
         # Should prefer gemini-2.5-pro
         default_model = self.tool.get_default_model()
-        assert default_model == "gemini-2.5-pro"
+        assert default_model == "google/gemini-2.5-pro"
 
         # Schema should allow both preferred and fallback models
         schema = self.tool.get_input_schema()
         allowed_models = schema["properties"]["model"]["enum"]
         assert "google/gemini-2.5-pro" in allowed_models
-        assert "openai/gpt-5" in allowed_models
+        assert "gpt-4.1-2025-04-14" in allowed_models
 
     def test_integration_with_critical_engineer_protocol(self):
         """Test integration with external critical engineer protocol"""
@@ -267,7 +268,7 @@ class TestCriticalEngineerIntegration:
 
         # Should use high-quality models for reliable validation
         default_model = self.tool.get_default_model()
-        assert default_model in ["gemini-2.5-pro", "openai/gpt-5"]
+        assert default_model in ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
 
         # Should prioritize analytical model category
         from tools.models import ToolModelCategory
