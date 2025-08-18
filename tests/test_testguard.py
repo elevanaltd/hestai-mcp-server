@@ -5,9 +5,6 @@ This module contains unit tests to ensure that the TestGuard tool
 properly detects test manipulation anti-patterns and enforces testing integrity.
 """
 
-import json
-from unittest.mock import patch
-
 import pytest
 
 from tools.testguard import RequirementsRequest, RequirementsTool
@@ -46,7 +43,8 @@ class TestTestGuardTool:
         assert request.prompt == "Let's skip this failing test"
 
         # Empty prompt should raise validation error
-        with pytest.raises(Exception):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             RequirementsRequest()
 
     def test_input_schema_model_restrictions(self):

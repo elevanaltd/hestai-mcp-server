@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import Field, model_validator
 
@@ -94,36 +94,36 @@ class ConsensusRequest(WorkflowRequest):
     confidence: str = Field(default="exploring", exclude=True, description="Not used")
 
     # Consensus-specific fields (only needed in step 1)
-    models: list[dict] | None = Field(None, description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["models"])
-    relevant_files: list[str] | None = Field(
+    models: Optional[list[dict]] = Field(None, description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["models"])
+    relevant_files: Optional[list[str]] = Field(
         default_factory=list,
         description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["relevant_files"],
     )
 
     # Internal tracking fields
-    current_model_index: int | None = Field(
+    current_model_index: Optional[int] = Field(
         0,
         description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["current_model_index"],
     )
-    model_responses: list[dict] | None = Field(
+    model_responses: Optional[list[dict]] = Field(
         default_factory=list,
         description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["model_responses"],
     )
 
     # Optional images for visual debugging
-    images: list[str] | None = Field(default=None, description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["images"])
+    images: Optional[list[str]] = Field(default=None, description=CONSENSUS_WORKFLOW_FIELD_DESCRIPTIONS["images"])
 
     # Override inherited fields to exclude them from schema
-    temperature: float | None = Field(default=None, exclude=True)
-    thinking_mode: str | None = Field(default=None, exclude=True)
-    use_websearch: bool | None = Field(default=None, exclude=True)
+    temperature: Optional[float] = Field(default=None, exclude=True)
+    thinking_mode: Optional[str] = Field(default=None, exclude=True)
+    use_websearch: Optional[bool] = Field(default=None, exclude=True)
 
     # Not used in consensus workflow
-    files_checked: list[str] | None = Field(default_factory=list, exclude=True)
-    relevant_context: list[str] | None = Field(default_factory=list, exclude=True)
-    issues_found: list[dict] | None = Field(default_factory=list, exclude=True)
-    hypothesis: str | None = Field(None, exclude=True)
-    backtrack_from_step: int | None = Field(None, exclude=True)
+    files_checked: Optional[list[str]] = Field(default_factory=list, exclude=True)
+    relevant_context: Optional[list[str]] = Field(default_factory=list, exclude=True)
+    issues_found: Optional[list[dict]] = Field(default_factory=list, exclude=True)
+    hypothesis: Optional[str] = Field(None, exclude=True)
+    backtrack_from_step: Optional[int] = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def validate_step_one_requirements(self):
@@ -160,7 +160,7 @@ class ConsensusTool(WorkflowTool):
 
     def __init__(self):
         super().__init__()
-        self.initial_prompt: str | None = None
+        self.initial_prompt: Optional[str] = None
         self.models_to_consult: list[dict] = []
         self.accumulated_responses: list[dict] = []
         self._current_arguments: dict[str, Any] = {}
@@ -582,7 +582,7 @@ of the evidence, even when it strongly points in one direction.""",
                 "error": str(e),
             }
 
-    def _get_stance_enhanced_prompt(self, stance: str, custom_stance_prompt: str | None = None) -> str:
+    def _get_stance_enhanced_prompt(self, stance: str, custom_stance_prompt: Optional[str] = None) -> str:
         """Get the system prompt with stance injection."""
         base_prompt = CONSENSUS_PROMPT
 

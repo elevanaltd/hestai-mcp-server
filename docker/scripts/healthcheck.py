@@ -19,7 +19,7 @@ def check_process():
 
 def check_python_imports():
     """Check if critical Python modules can be imported"""
-    critical_modules = ["mcp", "google.genai", "openai", "pydantic", "dotenv"]
+    critical_modules = ["mcp", "google.generativeai", "openai", "pydantic", "dotenv"]
 
     for module in critical_modules:
         try:

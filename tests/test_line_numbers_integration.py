@@ -8,7 +8,6 @@ from tools.codereview import CodeReviewTool
 from tools.debug import DebugIssueTool
 from tools.precommit import PrecommitTool
 from tools.refactor import RefactorTool
-from tools.testgen import TestGenTool
 
 
 class TestLineNumbersIntegration:
@@ -22,7 +21,6 @@ class TestLineNumbersIntegration:
             CodeReviewTool(),
             DebugIssueTool(),
             RefactorTool(),
-            TestGenTool(),
             PrecommitTool(),
         ]
 
@@ -38,7 +36,6 @@ class TestLineNumbersIntegration:
             CodeReviewTool,
             DebugIssueTool,
             RefactorTool,
-            TestGenTool,
             PrecommitTool,
         ]
 

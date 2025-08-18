@@ -163,7 +163,7 @@ logger = logging.getLogger(__name__)
 
 # Create the MCP server instance with a unique name identifier
 # This name is used by MCP clients to identify and connect to this specific server
-server: Server = Server("zen-server")
+server: Server = Server("hestai-server")
 
 
 # Constants for tool filtering
@@ -1331,7 +1331,7 @@ async def main():
             read_stream,
             write_stream,
             InitializationOptions(
-                server_name="zen-premium",
+                server_name="hestai-server",
                 server_version=__version__,
                 capabilities=ServerCapabilities(
                     tools=ToolsCapability(),  # Advertise tool support capability

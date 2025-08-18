@@ -127,11 +127,12 @@ class TestGeminiProvider:
         assert provider.supports_thinking_mode("gemini-2.5-flash")
         assert provider.supports_thinking_mode("gemini-2.5-pro")
 
-    @patch("google.genai.Client")
-    def test_generate_content(self, mock_client_class):
+    @patch("google.generativeai.GenerativeModel")
+    @patch("google.generativeai.configure")
+    def test_generate_content(self, mock_configure, mock_model_class):
         """Test content generation"""
-        # Mock the client
-        mock_client = Mock()
+        # Mock the model
+        mock_model = Mock()
         mock_response = Mock()
         mock_response.text = "Generated content"
         # Mock candidates for finish_reason
@@ -143,8 +144,8 @@ class TestGeminiProvider:
         mock_usage.prompt_token_count = 10
         mock_usage.candidates_token_count = 20
         mock_response.usage_metadata = mock_usage
-        mock_client.models.generate_content.return_value = mock_response
-        mock_client_class.return_value = mock_client
+        mock_model.generate_content.return_value = mock_response
+        mock_model_class.return_value = mock_model
 
         provider = GeminiModelProvider(api_key="test-key")
 

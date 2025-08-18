@@ -7,7 +7,6 @@ import time
 from typing import Optional
 
 import google.generativeai as genai
-from google.generativeai import types
 
 from .base import ModelCapabilities, ModelProvider, ModelResponse, ProviderType, create_temperature_constraint
 
@@ -117,15 +116,14 @@ class GeminiModelProvider(ModelProvider):
     def __init__(self, api_key: str, **kwargs):
         """Initialize Gemini provider with API key."""
         super().__init__(api_key, **kwargs)
-        self._client = None
+        self._configured = False
         self._token_counters = {}  # Cache for token counting
 
-    @property
-    def client(self):
-        """Lazy initialization of Gemini client."""
-        if self._client is None:
-            self._client = genai.Client(api_key=self.api_key)
-        return self._client
+    def _ensure_configured(self):
+        """Ensure Gemini API is configured."""
+        if not self._configured:
+            genai.configure(api_key=self.api_key)
+            self._configured = True
 
     def get_capabilities(self, model_name: str) -> ModelCapabilities:
         """Get capabilities for a specific Gemini model."""
@@ -191,25 +189,21 @@ class GeminiModelProvider(ModelProvider):
         # Create contents structure
         contents = [{"parts": parts}]
 
+        # Get capabilities first
+        capabilities = self.get_capabilities(model_name)
+
         # Prepare generation config
-        generation_config = types.GenerateContentConfig(
+        generation_config = genai.GenerationConfig(
             temperature=temperature,
             candidate_count=1,
+            max_output_tokens=max_output_tokens if max_output_tokens else capabilities.max_output_tokens,
         )
 
-        # Add max output tokens if specified
-        if max_output_tokens:
-            generation_config.max_output_tokens = max_output_tokens
-
         # Add thinking configuration for models that support it
-        capabilities = self.get_capabilities(model_name)
+        # Note: The new API doesn't support thinking_config yet
+        # TODO: Update when API adds thinking mode support
         if capabilities.supports_extended_thinking and thinking_mode in self.THINKING_BUDGETS:
-            # Get model's max thinking tokens and calculate actual budget
-            model_config = self.SUPPORTED_MODELS.get(resolved_name)
-            if model_config and model_config.max_thinking_tokens > 0:
-                max_thinking_tokens = model_config.max_thinking_tokens
-                actual_thinking_budget = int(max_thinking_tokens * self.THINKING_BUDGETS[thinking_mode])
-                generation_config.thinking_config = types.ThinkingConfig(thinking_budget=actual_thinking_budget)
+            logger.debug(f"Thinking mode '{thinking_mode}' requested but not yet supported in current API")
 
         # Retry logic with progressive delays
         max_retries = 4  # Total of 4 attempts
@@ -219,12 +213,18 @@ class GeminiModelProvider(ModelProvider):
 
         for attempt in range(max_retries):
             try:
-                # Generate content
-                response = self.client.models.generate_content(
-                    model=resolved_name,
-                    contents=contents,
-                    config=generation_config,
+                # Ensure API is configured
+                self._ensure_configured()
+
+                # Create model instance
+                model = genai.GenerativeModel(
+                    model_name=resolved_name,
+                    generation_config=generation_config,
+                    system_instruction=system_prompt if system_prompt else None,
                 )
+
+                # Generate content
+                response = model.generate_content(contents)
 
                 # Extract usage information if available
                 usage = self._extract_usage(response)
