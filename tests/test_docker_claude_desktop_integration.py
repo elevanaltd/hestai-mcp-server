@@ -132,7 +132,9 @@ class TestDockerClaudeDesktopIntegration:
         """Test validation of MCP configuration"""
         # Valid configuration
         valid_config = {
-            "mcpServers": {"hestai-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "hestai-mcp-server:latest"]}}
+            "mcpServers": {
+                "hestai-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "hestai-mcp-server:latest"]}
+            }
         }
 
         # Validate JSON serialization
