@@ -25,7 +25,7 @@ The consensus tool orchestrates multiple AI models to provide diverse perspectiv
 
 **For/Against Analysis:**
 ```
-Use zen consensus with flash taking a supportive stance and pro being critical to evaluate whether 
+Use hestai consensus with flash taking a supportive stance and pro being critical to evaluate whether 
 we should migrate from REST to GraphQL for our API
 ```
 

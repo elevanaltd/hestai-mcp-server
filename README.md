@@ -1,4 +1,6 @@
-# Zen MCP: Many Workflows. One Context.
+# HestAI MCP: Many Workflows. One Context.
+
+> **Attribution**: This is a fork of [zen-mcp-server](https://github.com/BeehiveInnovations/zen-mcp-server) by Beehive Innovations, rebranded and modified by Elevana Ltd. under the Apache License 2.0.
 
 [zen_web.webm](https://github.com/user-attachments/assets/851e3911-7f06-47c0-a4ab-a2601236697c)
 
@@ -21,7 +23,7 @@ with context carrying forward seamlessly.
 **Think of it as Claude Code _for_ Claude Code.** This MCP isn't magic. It's just **super-glue**.
 
 > **Remember:** Claude stays in full control — but **YOU** call the shots.
-> Zen is designed to have Claude engage other models only when needed — and to follow through with meaningful back-and-forth.
+> HestAI is designed to have Claude engage other models only when needed — and to follow through with meaningful back-and-forth.
 > **You're** the one who crafts the powerful prompt that makes Claude bring in Gemini, Flash, O3 — or fly solo.
 > You're the guide. The prompter. The puppeteer.
 > ### You are the AI - **Actually Intelligent**.
@@ -82,7 +84,7 @@ Claude is brilliant, but sometimes you need:
 > compacts, since the continuation info is kept within MCP's memory, you can ask it to _continue_ discussing
 > the plan with `o3`, and it will suddenly revive Claude because O3 would know what was being talked about and
 > relay this back in a way that re-ignites Claude's understanding. All this without wasting context on asking Claude to
-> ingest lengthy documents / code again and re-prompting it to communicate with another model. Zen manages that internally. The model's response
+> ingest lengthy documents / code again and re-prompting it to communicate with another model. HestAI manages that internally. The model's response
 > revives Claude with better context around the discussion than an automatic summary ever can.
 
 **[📖 Read the complete technical deep-dive on how this revolutionary system works](docs/context-revival.md)**
@@ -210,7 +212,7 @@ Edit `~/.gemini/settings.json` and add:
 }
 ```
 
-**Note**: While Zen MCP Server connects successfully to Gemini CLI, tool invocation is not working correctly yet. See [Gemini CLI Setup](docs/gemini-setup.md) for updates.
+**Note**: While HestAI MCP Server connects successfully to Gemini CLI, tool invocation is not working correctly yet. See [Gemini CLI Setup](docs/gemini-setup.md) for updates.
 </details>
 
 **What this does:**
@@ -227,7 +229,7 @@ Edit `~/.gemini/settings.json` and add:
 git clone https://github.com/elevanaltd/hestai-mcp-server.git
 cd hestai-mcp-server
 
-# One-command setup installs Zen in Claude
+# One-command setup installs HestAI in Claude
 ./run-server.sh
 
 # Or for Windows users using PowerShell:
@@ -297,10 +299,10 @@ If you were already running a `claude` code session, please exit and start a new
 ### 4. Start Using It!
 
 Just ask Claude naturally:
-- "Think deeper about this architecture design with zen" → Claude picks best model + `thinkdeep`
-- "Using zen perform a code review of this code for security issues" → Claude might pick Gemini Pro + `codereview`
-- "Use zen and debug why this test is failing, the bug might be in my_class.swift" → Claude might pick O3 + `debug`
-- "With zen, analyze these files to understand the data flow" → Claude picks appropriate model + `analyze`
+- "Think deeper about this architecture design with hestai" → Claude picks best model + `thinkdeep`
+- "Using hestai perform a code review of this code for security issues" → Claude might pick Gemini Pro + `codereview`
+- "Use hestai and debug why this test is failing, the bug might be in my_class.swift" → Claude might pick O3 + `debug`
+- "With hestai, analyze these files to understand the data flow" → Claude picks appropriate model + `analyze`
 - "Use flash to suggest how to format this code based on the specs mentioned in policy.md" → Uses Gemini Flash specifically
 - "Think deeply about this and get o3 to debug this logic error I found in the checkOrders() function" → Uses O3 specifically
 - "Brainstorm scaling strategies with pro. Study the code, pick your preferred strategy and debate with pro to settle on two best approaches" → Uses Gemini Pro specifically
@@ -357,7 +359,7 @@ and feel the difference.
 Your thinking partner for brainstorming, getting second opinions, and validating approaches. Perfect for technology comparisons, architecture discussions, and collaborative problem-solving.
 
 ```
-Chat with zen about the best approach for user authentication in my React app
+Chat with hestai about the best approach for user authentication in my React app
 ```
 
 **[📖 Read More](docs/tools/chat.md)** - Detailed features, examples, and best practices
@@ -436,7 +438,7 @@ save on tokens and cost, and Claude proceeds directly to fixing the issue.
 ```
 See logs under /Users/me/project/diagnostics.log and related code under the sync folder.
 Logs show that sync works but sometimes it gets stuck and there are no errors displayed to
-the user. Using zen's debug tool with gemini pro, find out why this is happening and what the root
+the user. Using hestai's debug tool with gemini pro, find out why this is happening and what the root
 cause is and its fix
 ```
 
@@ -465,7 +467,7 @@ Use gemini to analyze main.py to understand how it works
 Creates detailed analysis prompts for call-flow mapping and dependency tracing. Generates structured analysis requests for precision execution flow or dependency mapping.
 
 ```
-Use zen tracer to analyze how UserAuthManager.authenticate is used and why
+Use hestai tracer to analyze how UserAuthManager.authenticate is used and why
 ```
 
 **[📖 Read More](docs/tools/tracer.md)** - Prompt generation and analysis modes
@@ -483,7 +485,7 @@ Perform a secaudit with o3 on this e-commerce web application focusing on paymen
 Display all available AI models organized by provider, showing capabilities, context windows, and configuration status.
 
 ```
-Use zen to list available models
+Use hestai to list available models
 ```
 
 **[📖 Read More](docs/tools/listmodels.md)** - Model capabilities and configuration details
@@ -492,7 +494,7 @@ Use zen to list available models
 Get server version, configuration details, and system status for debugging and troubleshooting.
 
 ```
-What version of zen do I have
+What version of hestai do I have
 ```
 
 **[📖 Read More](docs/tools/version.md)** - Server diagnostics and configuration verification
@@ -501,30 +503,30 @@ For detailed tool parameters and configuration options, see the [Advanced Usage 
 
 ### Prompt Support
 
-Zen supports powerful structured prompts in Claude Code for quick access to tools and models:
+HestAI supports powerful structured prompts in Claude Code for quick access to tools and models:
 
 #### Tool Prompts
-- `/zen:chat ask local-llama what 2 + 2 is` - Use chat tool with auto-selected model
-- `/zen:thinkdeep use o3 and tell me why the code isn't working in sorting.swift` - Use thinkdeep tool with auto-selected model
-- `/zen:planner break down the microservices migration project into manageable steps` - Use planner tool with auto-selected model
-- `/zen:consensus use o3:for and flash:against and tell me if adding feature X is a good idea for the project. Pass them a summary of what it does.` - Use consensus tool with default configuration
-- `/zen:debug table view is not scrolling properly, very jittery, I suspect the code is in my_controller.m` - Use debug tool with auto-selected model
-- `/zen:analyze examine these files and tell me what if I'm using the CoreAudio framework properly` - Use analyze tool with auto-selected model
+- `/hestai:chat ask local-llama what 2 + 2 is` - Use chat tool with auto-selected model
+- `/hestai:thinkdeep use o3 and tell me why the code isn't working in sorting.swift` - Use thinkdeep tool with auto-selected model
+- `/hestai:planner break down the microservices migration project into manageable steps` - Use planner tool with auto-selected model
+- `/hestai:consensus use o3:for and flash:against and tell me if adding feature X is a good idea for the project. Pass them a summary of what it does.` - Use consensus tool with default configuration
+- `/hestai:debug table view is not scrolling properly, very jittery, I suspect the code is in my_controller.m` - Use debug tool with auto-selected model
+- `/hestai:analyze examine these files and tell me what if I'm using the CoreAudio framework properly` - Use analyze tool with auto-selected model
 
 #### Continuation Prompts
-- `/zen:chat continue and ask gemini pro if framework B is better` - Continue previous conversation using chat tool
+- `/hestai:chat continue and ask gemini pro if framework B is better` - Continue previous conversation using chat tool
 
 #### Advanced Examples
-- `/zen:thinkdeeper check if the algorithm in @sort.py is performant and if there are alternatives we could explore`
-- `/zen:planner create a step-by-step plan for migrating our authentication system to OAuth2, including dependencies and rollback strategies`
-- `/zen:consensus debate whether we should migrate to GraphQL for our API`
-- `/zen:precommit confirm these changes match our requirements in COOL_FEATURE.md`
-- `/zen:testgen write me tests for class ABC`
-- `/zen:docgen document the payment processing module with gotchas and complexity analysis`
-- `/zen:refactor propose a decomposition strategy, make a plan and save it in FIXES.md`
+- `/hestai:thinkdeeper check if the algorithm in @sort.py is performant and if there are alternatives we could explore`
+- `/hestai:planner create a step-by-step plan for migrating our authentication system to OAuth2, including dependencies and rollback strategies`
+- `/hestai:consensus debate whether we should migrate to GraphQL for our API`
+- `/hestai:precommit confirm these changes match our requirements in COOL_FEATURE.md`
+- `/hestai:testgen write me tests for class ABC`
+- `/hestai:docgen document the payment processing module with gotchas and complexity analysis`
+- `/hestai:refactor propose a decomposition strategy, make a plan and save it in FIXES.md`
 
 #### Syntax Format
-The prompt format is: `/zen:[tool] [your_message]`
+The prompt format is: `/hestai:[tool] [your_message]`
 
 - `[tool]` - Any available tool name (chat, thinkdeep, planner, consensus, codereview, debug, analyze, docgen, etc.)
 - `[your_message]` - Your request, question, or instructions for the tool
@@ -542,7 +544,7 @@ This server enables **true AI collaboration** between Claude and multiple AI mod
 
 ## Configuration
 
-Configure the Zen MCP Server through environment variables in your `.env` file. Supports multiple AI providers, model restrictions, conversation settings, and advanced options.
+Configure the HestAI MCP Server through environment variables in your `.env` file. Supports multiple AI providers, model restrictions, conversation settings, and advanced options.
 
 ```env
 # Quick start - Auto mode (recommended)

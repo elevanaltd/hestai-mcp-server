@@ -2,7 +2,7 @@
 
 ## **The Most Profound Feature: Context Revival After Reset**
 
-**This powerful feature cannot be highlighted enough**: The Zen MCP Server implements a simple continuation system that seemingly transcends Claude's context limitations. 
+**This powerful feature cannot be highlighted enough**: The HestAI MCP Server implements a simple continuation system that seemingly transcends Claude's context limitations. 
 
 ## How Context Revival Works
 
@@ -37,19 +37,19 @@ The system employs a sophisticated **"newest-first"** approach that ensures opti
 Here's how this works in practice with a modern AI/ML workflow:
 
 **Session 1 - Claude's Initial Context (before reset):**
-You: "Help me design a RAG system for our customer support chatbot. I want to integrate vector embeddings with real-time retrieval. think deeply with zen using 03 after you've come up with a detailed plan."
+You: "Help me design a RAG system for our customer support chatbot. I want to integrate vector embeddings with real-time retrieval. think deeply with hestai using 03 after you've come up with a detailed plan."
 
 Claude: "I'll analyze your requirements and design a comprehensive RAG architecture..."
 → Uses [`thinkdeep`](../README.md#1-chat---general-development-chat--collaborative-thinking) to brainstorm the overall approach
-→ Zen creates a new thread: abc123-def456-ghi789
-→ Zen responds, Claude finalizes the plan and presents it to you
+→ HestAI creates a new thread: abc123-def456-ghi789
+→ HestAI responds, Claude finalizes the plan and presents it to you
 
 *[Claude's context gets reset/compacted after extensive analysis]*
 
 **Session 2 - After Context Reset:**
 You: "Continue our RAG system discussion with O3 - I want to focus on the real-time inference optimization we talked about"
 
-→ Claude re-uses the last continuation identifier it received, _only_ poses the new prompt (since Zen is supposed to know what was being talked about) thus saving on tokens trying to re-prompt Claude
+→ Claude re-uses the last continuation identifier it received, _only_ poses the new prompt (since HestAI is supposed to know what was being talked about) thus saving on tokens trying to re-prompt Claude
 → O3 receives the FULL conversation history from Zen
 → O3 sees the complete context: "Claude was designing a RAG system, comparing vector databases, and analyzing embedding strategies for customer support..."
 → O3 continues: "Building on our previous vector database analysis, for real-time inference optimization, I recommend implementing semantic caching with embedding similarity thresholds..."
@@ -61,11 +61,11 @@ Claude: "Ah yes, excellent plan! Based on O3's optimization insights and our ear
 
 ## Why This Changes Everything
 
-**Before Zen MCP**: Claude's context resets meant losing entire conversation threads. 
+**Before HestAI MCP**: Claude's context resets meant losing entire conversation threads. 
 Complex multi-step analyses were fragmented and had to restart from scratch. You most likely need to re-prompt Claude or to make it re-read some previously
-saved document / `CLAUDE.md` etc - no need. Zen remembers.
+saved document / `CLAUDE.md` etc - no need. HestAI remembers.
 
-**With Zen MCP**: Claude can orchestrate multi-hour, multi-tool workflows where:
+**With HestAI MCP**: Claude can orchestrate multi-hour, multi-tool workflows where:
 - **O3** handles logical analysis and debugging
 - **Gemini Pro** performs deep architectural reviews  
 - **Flash** provides quick formatting and style checks

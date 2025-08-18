@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Zen MCP Server - Run Integration Tests
+# HestAI MCP Server - Run Integration Tests
 # This script runs integration tests that require API keys
 # Run this locally on your Mac to ensure everything works end-to-end
 
 set -e  # Exit on any error
 
-echo "🧪 Running Integration Tests for Zen MCP Server"
+echo "🧪 Running Integration Tests for HestAI MCP Server"
 echo "=============================================="
 echo "These tests use real API calls with your configured keys"
 echo ""

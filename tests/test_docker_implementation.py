@@ -1,5 +1,5 @@
 """
-Unit tests for Docker configuration and implementation of Zen MCP Server
+Unit tests for Docker configuration and implementation of HestAI MCP Server
 
 This module tests:
 - Docker and MCP configuration
@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class TestDockerConfiguration:
-    """Tests for Docker configuration of Zen MCP Server"""
+    """Tests for Docker configuration of HestAI MCP Server"""
 
     def setup_method(self):
         """Setup for each test"""

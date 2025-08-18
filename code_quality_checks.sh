@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Zen MCP Server - Code Quality Checks
+# HestAI MCP Server - Code Quality Checks
 # This script runs all required linting and testing checks before committing changes.
 # ALL checks must pass 100% for CI/CD to succeed.
 
 set -e  # Exit on any error
 
-echo "🔍 Running Code Quality Checks for Zen MCP Server"
+echo "🔍 Running Code Quality Checks for HestAI MCP Server"
 echo "================================================="
 
 # Determine Python command

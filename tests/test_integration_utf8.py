@@ -459,13 +459,13 @@ def run_unit_tests():
 
 def main():
     """Main function."""
-    print("🇫🇷 UTF-8 Integration Test - Zen MCP Server")
+    print("🇫🇷 UTF-8 Integration Test - HestAI MCP Server")
     print("=" * 60)
 
     try:
         run_utf8_integration_tests()
         print("\n🎉 SUCCESS: All UTF-8 integration tests passed!")
-        print("🚀 Zen MCP server fully supports French localization!")
+        print("🚀 HestAI MCP server fully supports French localization!")
         return 0
 
     except AssertionError as e:

@@ -32,7 +32,7 @@ function Write-Emoji {
     Write-ColorText $Text -Color $Color
 }
 
-Write-Emoji "🔍" "Running Code Quality Checks for Zen MCP Server" -Color Cyan
+Write-Emoji "🔍" "Running Code Quality Checks for HestAI MCP Server" -Color Cyan
 Write-ColorText "=================================================" -Color Cyan
 
 # Determine Python command

@@ -1,5 +1,5 @@
 """
-Workflow Mixin for Zen MCP Tools
+Workflow Mixin for HestAI MCP Tools
 
 This module provides a sophisticated workflow-based pattern that enables tools to
 perform multi-step work with structured findings and expert analysis.

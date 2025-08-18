@@ -528,9 +528,9 @@ fi"""
             return venv_python
 
         # Try .hestai_venv as fallback
-        zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
-        if os.path.exists(zen_venv_python):
-            return zen_venv_python
+        hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
+        if os.path.exists(hestai_venv_python):
+            return hestai_venv_python
 
         # Fallback to system python if venv doesn't exist
         self.logger.warning("Virtual environment not found, using system python")
@@ -544,16 +544,16 @@ fi"""
         # Check for different venv structures
         if platform.system() == "Windows":
             # Windows paths
-            zen_venv_python = os.path.join(current_dir, ".hestai_venv", "Scripts", "python.exe")
+            hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "Scripts", "python.exe")
             venv_python = os.path.join(current_dir, "venv", "Scripts", "python.exe")
         else:
             # Unix/Linux/macOS paths
-            zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
+            hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
             venv_python = os.path.join(current_dir, "venv", "bin", "python")
 
         # Try .hestai_venv first (preferred)
-        if os.path.exists(zen_venv_python):
-            return zen_venv_python
+        if os.path.exists(hestai_venv_python):
+            return hestai_venv_python
 
         # Try venv as fallback
         if os.path.exists(venv_python):
@@ -633,13 +633,13 @@ fi"""
         # Check for different venv structures
         if platform.system() == "Windows":
             # Windows paths
-            zen_venv_python = os.path.join(current_dir, ".hestai_venv", "Scripts", "python.exe")
+            hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "Scripts", "python.exe")
         else:
             # Unix/Linux/macOS paths
-            zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
+            hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
 
-        if os.path.exists(zen_venv_python):
-            return zen_venv_python
+        if os.path.exists(hestai_venv_python):
+            return hestai_venv_python
 
         # Fallback to system python if venv doesn't exist
         self.logger.warning("Virtual environment not found, using system python")

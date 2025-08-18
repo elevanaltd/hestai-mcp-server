@@ -14,7 +14,7 @@ param(
 )
 
 # ============================================================================
-# Zen MCP Server Setup Script for Windows PowerShell
+# HestAI MCP Server Setup Script for Windows PowerShell
 # 
 # A Windows-compatible setup script that handles environment setup, 
 # dependency installation, and configuration.
@@ -230,8 +230,8 @@ function Cleanup-Docker {
         "gemini-mcp-server",
         "gemini-mcp-redis", 
         "hestai-mcp-server",
-        "zen-mcp-redis",
-        "zen-mcp-log-monitor"
+        "hestai-mcp-redis",
+        "hestai-mcp-log-monitor"
     )
     
     # Remove containers
@@ -667,7 +667,7 @@ function Test-ClaudeDesktopIntegration {
         Write-Host @"
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "$PythonPath",
       "args": ["$ServerPath"]
     }
@@ -678,7 +678,7 @@ function Test-ClaudeDesktopIntegration {
     }
     
     Write-Host ""
-    $response = Read-Host "Configure Zen for Claude Desktop? (Y/n)"
+    $response = Read-Host "Configure HestAI for Claude Desktop? (Y/n)"
     if ($response -eq 'n' -or $response -eq 'N') {
         Write-Info "Skipping Claude Desktop integration"
         New-Item -Path $DESKTOP_CONFIG_FLAG -ItemType File -Force | Out-Null
@@ -707,11 +707,11 @@ function Test-ClaudeDesktopIntegration {
             $config = $existingContent | ConvertFrom-Json
             
             # Check for old Docker config and remove it
-            if ($existingContent -match "docker.*compose.*zen|zen.*docker") {
+            if ($existingContent -match "docker.*compose.*zen|hestai.*docker") {
                 Write-Warning "Removing old Docker-based MCP configuration..."
                 if ($config.mcpServers -and $config.mcpServers.zen) {
                     $config.mcpServers.PSObject.Properties.Remove('zen')
-                    Write-Success "Removed old zen MCP configuration"
+                    Write-Success "Removed old hestai MCP configuration"
                 }
             }
         } else {
@@ -723,13 +723,13 @@ function Test-ClaudeDesktopIntegration {
             $config | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value @{} -Force
         }
         
-        # Add zen server configuration
+        # Add hestai server configuration
         $serverConfig = @{
             command = $PythonPath
             args = @($ServerPath)
         }
         
-        $config.mcpServers | Add-Member -MemberType NoteProperty -Name "zen" -Value $serverConfig -Force
+        $config.mcpServers | Add-Member -MemberType NoteProperty -Name "hestai" -Value $serverConfig -Force
         
         # Write updated config
         $config | ConvertTo-Json -Depth 10 | Out-File $claudeConfigPath -Encoding UTF8
@@ -748,7 +748,7 @@ function Test-ClaudeDesktopIntegration {
         Write-Host @"
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "$PythonPath",
       "args": ["$ServerPath"]
     }
@@ -770,15 +770,15 @@ function Test-ClaudeCliIntegration {
     
     try {
         $claudeConfig = claude config list 2>$null
-        if ($claudeConfig -match "zen") {
-            Write-Success "Claude CLI already configured for zen server"
+        if ($claudeConfig -match "hestai") {
+            Write-Success "Claude CLI already configured for hestai server"
         } else {
-            Write-Info "To add zen server to Claude CLI, run:"
-            Write-Host "  claude config add-server zen $PythonPath $ServerPath" -ForegroundColor Cyan
+            Write-Info "To add hestai server to Claude CLI, run:"
+            Write-Host "  claude config add-server hestai $PythonPath $ServerPath" -ForegroundColor Cyan
         }
     } catch {
         Write-Info "To configure Claude CLI manually, run:"
-        Write-Host "  claude config add-server zen $PythonPath $ServerPath" -ForegroundColor Cyan
+        Write-Host "  claude config add-server hestai $PythonPath $ServerPath" -ForegroundColor Cyan
     }
 }
 
@@ -786,7 +786,7 @@ function Test-ClaudeCliIntegration {
 function Test-GeminiCliIntegration {
     param([string]$ScriptDir)
     
-    $zenWrapper = Join-Path $ScriptDir "hestai-mcp-server.cmd"
+    $hestaiWrapper = Join-Path $ScriptDir "hestai-mcp-server.cmd"
     
     # Check if Gemini settings file exists (Windows path)
     $geminiConfig = "$env:USERPROFILE\.gemini\settings.json"
@@ -795,23 +795,23 @@ function Test-GeminiCliIntegration {
         return
     }
     
-    # Check if zen is already configured
+    # Check if hestai is already configured
     $configContent = Get-Content $geminiConfig -Raw -ErrorAction SilentlyContinue
-    if ($configContent -and $configContent -match '"zen"') {
+    if ($configContent -and $configContent -match '"hestai"') {
         # Already configured
         return
     }
     
-    # Ask user if they want to add Zen to Gemini CLI
+    # Ask user if they want to add HestAI to Gemini CLI
     Write-Host ""
-    $response = Read-Host "Configure Zen for Gemini CLI? (Y/n)"
+    $response = Read-Host "Configure HestAI for Gemini CLI? (Y/n)"
     if ($response -eq 'n' -or $response -eq 'N') {
         Write-Info "Skipping Gemini CLI integration"
         return
     }
     
     # Ensure wrapper script exists
-    if (!(Test-Path $zenWrapper)) {
+    if (!(Test-Path $hestaiWrapper)) {
         Write-Info "Creating wrapper script for Gemini CLI..."
         @"
 @echo off
@@ -821,7 +821,7 @@ if exist ".hestai_venv\Scripts\python.exe" (
 ) else (
     python server.py %*
 )
-"@ | Out-File -FilePath $zenWrapper -Encoding UTF8
+"@ | Out-File -FilePath $hestaiWrapper -Encoding UTF8
         
         Write-Success "Created hestai-mcp-server.cmd wrapper script"
     }
@@ -845,19 +845,19 @@ if exist ".hestai_venv\Scripts\python.exe" (
             $config | Add-Member -MemberType NoteProperty -Name "mcpServers" -Value @{} -Force
         }
         
-        # Add zen server
-        $zenConfig = @{
-            command = $zenWrapper
+        # Add hestai server
+        $hestaiConfig = @{
+            command = $hestaiWrapper
         }
         
-        $config.mcpServers | Add-Member -MemberType NoteProperty -Name "zen" -Value $zenConfig -Force
+        $config.mcpServers | Add-Member -MemberType NoteProperty -Name "hestai" -Value $hestaiConfig -Force
         
         # Write updated config
         $config | ConvertTo-Json -Depth 10 | Out-File $geminiConfig -Encoding UTF8
         
         Write-Success "Successfully configured Gemini CLI"
         Write-Host "  Config: $geminiConfig" -ForegroundColor Gray
-        Write-Host "  Restart Gemini CLI to use Zen MCP Server" -ForegroundColor Gray
+        Write-Host "  Restart Gemini CLI to use HestAI MCP Server" -ForegroundColor Gray
         
     } catch {
         Write-Error "Failed to update Gemini CLI config: $_"
@@ -867,8 +867,8 @@ if exist ".hestai_venv\Scripts\python.exe" (
         Write-Host @"
 {
   "mcpServers": {
-    "zen": {
-      "command": "$zenWrapper"
+    "hestai": {
+      "command": "$hestaiWrapper"
     }
   }
 }
@@ -882,13 +882,13 @@ function Show-ConfigInstructions {
     
     # Get script directory for Gemini CLI config
     $scriptDir = Split-Path $ServerPath -Parent
-    $zenWrapper = Join-Path $scriptDir "hestai-mcp-server.cmd"
+    $hestaiWrapper = Join-Path $scriptDir "hestai-mcp-server.cmd"
     
     Write-Host ""
-    Write-Host "===== ZEN MCP SERVER CONFIGURATION =====" -ForegroundColor Cyan
+    Write-Host "===== HESTAI MCP SERVER CONFIGURATION =====" -ForegroundColor Cyan
     Write-Host "==========================================" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "To use Zen MCP Server with your Claude clients:"
+    Write-Host "To use HestAI MCP Server with your Claude clients:"
     Write-Host ""
     
     Write-Info "1. For Claude Desktop:"
@@ -898,7 +898,7 @@ function Show-ConfigInstructions {
     
     $configJson = @{
         mcpServers = @{
-            zen = @{
+            hestai = @{
                 command = $PythonPath
                 args = @($ServerPath)
             }
@@ -915,8 +915,8 @@ function Show-ConfigInstructions {
     
     $geminiConfigJson = @{
         mcpServers = @{
-            zen = @{
-                command = $zenWrapper
+            hestai = @{
+                command = $hestaiWrapper
             }
         }
     } | ConvertTo-Json -Depth 5
@@ -958,7 +958,7 @@ function Follow-Logs {
 function Show-Help {
     $version = Get-Version
     Write-Host ""
-    Write-Host "🤖 Zen MCP Server v$version" -ForegroundColor Cyan
+    Write-Host "🤖 HestAI MCP Server v$version" -ForegroundColor Cyan
     Write-Host "=============================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Usage: .\run-server.ps1 [OPTIONS]"
@@ -999,7 +999,7 @@ function Show-SetupInstructions {
     Write-Host "===== SETUP COMPLETE =====" -ForegroundColor Green
     Write-Host "===========================" -ForegroundColor Green
     Write-Host ""
-    Write-Success "Zen is ready to use!"
+    Write-Success "HestAI is ready to use!"
     Write-Host ""
 }
 
@@ -1032,7 +1032,7 @@ function Initialize-EnvFile {
         } else {
             Write-Warning ".env.example not found, creating basic .env file"
             @"
-# Zen MCP Server Configuration
+# HestAI MCP Server Configuration
 # Add your API keys here
 
 # Google/Gemini API Key
@@ -1064,7 +1064,7 @@ LOGGING_LEVEL=INFO
 
 # Main server start function
 function Start-Server {
-    Write-Step "Starting Zen MCP Server"
+    Write-Step "Starting HestAI MCP Server"
     
     # Load environment variables
     Import-EnvFile
@@ -1129,7 +1129,7 @@ function Start-MainProcess {
     
     # Display header
     Write-Host ""
-    Write-Host "🤖 Zen MCP Server" -ForegroundColor Cyan
+    Write-Host "🤖 HestAI MCP Server" -ForegroundColor Cyan
     Write-Host "=================" -ForegroundColor Cyan
     
     # Get and display version

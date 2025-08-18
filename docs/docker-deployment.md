@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-This guide covers deploying Zen MCP Server using Docker and Docker Compose for production environments.
+This guide covers deploying HestAI MCP Server using Docker and Docker Compose for production environments.
 
 ## Quick Start
 
@@ -113,7 +113,7 @@ The Dockerfile uses a multi-stage build for optimal image size:
 
 ### Security Features
 
-- **Non-root user**: Runs as `zenuser` (UID/GID 1000)
+- **Non-root user**: Runs as `hestaiuser` (UID/GID 1000)
 - **Read-only filesystem**: Container filesystem is immutable
 - **No new privileges**: Prevents privilege escalation
 - **Secure tmpfs**: Temporary directories with strict permissions

@@ -161,8 +161,8 @@ cleanup_docker() {
         "gemini-mcp-server"
         "gemini-mcp-redis"
         "hestai-mcp-server"
-        "zen-mcp-redis"
-        "zen-mcp-log-monitor"
+        "hestai-mcp-redis"
+        "hestai-mcp-log-monitor"
     )
     
     # Remove containers
@@ -1133,23 +1133,23 @@ check_claude_cli_integration() {
         return 1
     fi
     
-    # Check if zen is registered
+    # Check if hestai is registered
     local mcp_list=$(claude mcp list 2>/dev/null)
-    if echo "$mcp_list" | grep -q "zen"; then
+    if echo "$mcp_list" | grep -q "hestai"; then
         # Check if it's using the old Docker command
-        if echo "$mcp_list" | grep -E "zen.*docker|zen.*compose" &>/dev/null; then
+        if echo "$mcp_list" | grep -E "hestai.*docker|zen.*compose" &>/dev/null; then
             print_warning "Found old Docker-based HestAI registration, updating..."
-            claude mcp remove zen -s user 2>/dev/null || true
+            claude mcp remove hestai -s user 2>/dev/null || true
             
             # Re-add with correct Python command
-            if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
+            if claude mcp add hestai -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
                 print_success "Updated HestAI to become a standalone script"
                 return 0
             else
                 echo ""
                 echo "Failed to update MCP registration. Please run manually:"
-                echo "  claude mcp remove zen -s user"
-                echo "  claude mcp add zen -s user -- $python_cmd $server_path"
+                echo "  claude mcp remove hestai -s user"
+                echo "  claude mcp add hestai -s user -- $python_cmd $server_path"
                 return 1
             fi
         else
@@ -1159,16 +1159,16 @@ check_claude_cli_integration() {
                 return 0
             else
                 print_warning "HestAI registered with different path, updating..."
-                claude mcp remove zen -s user 2>/dev/null || true
+                claude mcp remove hestai -s user 2>/dev/null || true
                 
-                if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
+                if claude mcp add hestai -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
                     print_success "Updated HestAI with current path"
                     return 0
                 else
                     echo ""
                     echo "Failed to update MCP registration. Please run manually:"
-                    echo "  claude mcp remove zen -s user"
-                    echo "  claude mcp add zen -s user -- $python_cmd $server_path"
+                    echo "  claude mcp remove hestai -s user"
+                    echo "  claude mcp add hestai -s user -- $python_cmd $server_path"
                     return 1
                 fi
             fi
@@ -1180,18 +1180,18 @@ check_claude_cli_integration() {
         echo ""
         if [[ $REPLY =~ ^[Nn]$ ]]; then
             print_info "To add manually later, run:"
-            echo "  claude mcp add zen -s user -- $python_cmd $server_path"
+            echo "  claude mcp add hestai -s user -- $python_cmd $server_path"
             return 0
         fi
         
         print_info "Registering HestAI with Claude Code..."
-        if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
+        if claude mcp add hestai -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
             print_success "Successfully added HestAI to Claude Code"
             return 0
         else
             echo ""
             echo "Failed to add automatically. To add manually, run:"
-            echo "  claude mcp add zen -s user -- $python_cmd $server_path"
+            echo "  claude mcp add hestai -s user -- $python_cmd $server_path"
             return 1
         fi
     fi
@@ -1231,12 +1231,12 @@ check_claude_desktop_integration() {
         print_info "Updating existing Claude Desktop config..."
         
         # Check for old Docker config and remove it
-        if grep -q "docker.*compose.*zen\|zen.*docker" "$config_path" 2>/dev/null; then
+        if grep -q "docker.*compose.*zen\|hestai.*docker" "$config_path" 2>/dev/null; then
             print_warning "Removing old Docker-based MCP configuration..."
             # Create backup
             cp "$config_path" "${config_path}.backup_$(date +%Y%m%d_%H%M%S)"
             
-            # Remove old zen config using a more robust approach
+            # Remove old hestai config using a more robust approach
             local temp_file=$(mktemp)
             python3 -c "
 import json
@@ -1246,10 +1246,10 @@ try:
     with open('$config_path', 'r') as f:
         config = json.load(f)
     
-    # Remove zen from mcpServers if it exists
+    # Remove hestai from mcpServers if it exists
     if 'mcpServers' in config and 'zen' in config['mcpServers']:
         del config['mcpServers']['zen']
-        print('Removed old zen MCP configuration')
+        print('Removed old hestai MCP configuration')
     
     with open('$temp_file', 'w') as f:
         json.dump(config, f, indent=2)
@@ -1276,8 +1276,8 @@ except:
 if 'mcpServers' not in config:
     config['mcpServers'] = {}
 
-# Add zen server
-config['mcpServers']['zen'] = {
+# Add hestai server
+config['mcpServers']['hestai'] = {
     'command': '$python_cmd',
     'args': ['$server_path']
 }
@@ -1291,7 +1291,7 @@ with open('$temp_file', 'w') as f:
         cat > "$config_path" << EOF
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "$python_cmd",
       "args": ["$server_path"]
     }
@@ -1312,7 +1312,7 @@ EOF
         cat << EOF
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "$python_cmd",
       "args": ["$server_path"]
     }
@@ -1334,8 +1334,8 @@ check_gemini_cli_integration() {
         return 0
     fi
     
-    # Check if zen is already configured
-    if grep -q '"zen"' "$gemini_config" 2>/dev/null; then
+    # Check if hestai is already configured
+    if grep -q '"hestai"' "$gemini_config" 2>/dev/null; then
         # Already configured
         return 0
     fi
@@ -1369,7 +1369,7 @@ EOF
     # Create backup
     cp "$gemini_config" "${gemini_config}.backup_$(date +%Y%m%d_%H%M%S)"
     
-    # Add zen configuration using Python for proper JSON handling
+    # Add hestai configuration using Python for proper JSON handling
     local temp_file=$(mktemp)
     python3 -c "
 import json
@@ -1383,8 +1383,8 @@ try:
     if 'mcpServers' not in config:
         config['mcpServers'] = {}
     
-    # Add zen server
-    config['mcpServers']['zen'] = {
+    # Add hestai server
+    config['mcpServers']['hestai'] = {
         'command': '$hestai_wrapper'
     }
     
@@ -1407,7 +1407,7 @@ except Exception as e:
         cat << EOF
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "$hestai_wrapper"
     }
   }
@@ -1433,7 +1433,7 @@ display_config_instructions() {
     echo ""
     
     print_info "1. For Claude Code (CLI):"
-    echo -e "   ${GREEN}claude mcp add zen -s user -- $python_cmd $server_path${NC}"
+    echo -e "   ${GREEN}claude mcp add hestai -s user -- $python_cmd $server_path${NC}"
     echo ""
     
     print_info "2. For Claude Desktop:"
@@ -1442,7 +1442,7 @@ display_config_instructions() {
     cat << EOF
    {
      "mcpServers": {
-       "zen": {
+       "hestai": {
          "command": "$python_cmd",
          "args": ["$server_path"]
        }
@@ -1468,7 +1468,7 @@ EOF
     cat << EOF
    {
      "mcpServers": {
-       "zen": {
+       "hestai": {
          "command": "$script_dir/hestai-mcp-server"
        }
      }

@@ -1,10 +1,10 @@
-# Adding Tools to Zen MCP Server
+# Adding Tools to HestAI MCP Server
 
-This guide explains how to add new tools to the Zen MCP Server. Tools enable Claude to interact with AI models for specialized tasks like code analysis, debugging, and collaborative thinking.
+This guide explains how to add new tools to the HestAI MCP Server. Tools enable Claude to interact with AI models for specialized tasks like code analysis, debugging, and collaborative thinking.
 
 ## Tool Types
 
-Zen supports two tool architectures:
+HestAI supports two tool architectures:
 
 ### Simple Tools
 - **Pattern**: Single request → AI response → formatted output
