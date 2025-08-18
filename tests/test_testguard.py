@@ -43,7 +43,8 @@ class TestTestGuardTool:
         assert request.prompt == "Let's skip this failing test"
 
         # Empty prompt should raise validation error
-        with pytest.raises(Exception):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             RequirementsRequest()
 
     def test_input_schema_model_restrictions(self):

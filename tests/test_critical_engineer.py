@@ -43,7 +43,8 @@ class TestCriticalEngineerTool:
         assert request.prompt == "Should I use microservices or monolith?"
 
         # Empty prompt should raise validation error
-        with pytest.raises(Exception):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             CriticalEngineerRequest()
 
     def test_input_schema_model_restrictions(self):

@@ -21,7 +21,7 @@ architectural decisions, and breaking down large problems into manageable steps.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import Field, field_validator
 
@@ -67,12 +67,12 @@ class PlannerRequest(WorkflowRequest):
     next_step_required: bool = Field(..., description=PLANNER_FIELD_DESCRIPTIONS["next_step_required"])
 
     # Optional revision/branching fields (planning-specific)
-    is_step_revision: bool | None = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["is_step_revision"])
-    revises_step_number: int | None = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["revises_step_number"])
-    is_branch_point: bool | None = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["is_branch_point"])
-    branch_from_step: int | None = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["branch_from_step"])
-    branch_id: str | None = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["branch_id"])
-    more_steps_needed: bool | None = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["more_steps_needed"])
+    is_step_revision: Optional[bool] = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["is_step_revision"])
+    revises_step_number: Optional[int] = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["revises_step_number"])
+    is_branch_point: Optional[bool] = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["is_branch_point"])
+    branch_from_step: Optional[int] = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["branch_from_step"])
+    branch_id: Optional[str] = Field(None, description=PLANNER_FIELD_DESCRIPTIONS["branch_id"])
+    more_steps_needed: Optional[bool] = Field(False, description=PLANNER_FIELD_DESCRIPTIONS["more_steps_needed"])
 
     # Exclude all investigation/analysis fields that aren't relevant to planning
     findings: str = Field(
@@ -85,15 +85,15 @@ class PlannerRequest(WorkflowRequest):
     )
     issues_found: list[dict] = Field(default_factory=list, exclude=True, description="Planning doesn't find issues")
     confidence: str = Field(default="planning", exclude=True, description="Planning uses different confidence model")
-    hypothesis: str | None = Field(default=None, exclude=True, description="Planning doesn't use hypothesis")
-    backtrack_from_step: int | None = Field(default=None, exclude=True, description="Planning uses revision instead")
+    hypothesis: Optional[str] = Field(default=None, exclude=True, description="Planning doesn't use hypothesis")
+    backtrack_from_step: Optional[int] = Field(default=None, exclude=True, description="Planning uses revision instead")
 
     # Exclude other non-planning fields
-    temperature: float | None = Field(default=None, exclude=True)
-    thinking_mode: str | None = Field(default=None, exclude=True)
-    use_websearch: bool | None = Field(default=None, exclude=True)
-    use_assistant_model: bool | None = Field(default=False, exclude=True, description="Planning is self-contained")
-    images: list | None = Field(default=None, exclude=True, description="Planning doesn't use images")
+    temperature: Optional[float] = Field(default=None, exclude=True)
+    thinking_mode: Optional[str] = Field(default=None, exclude=True)
+    use_websearch: Optional[bool] = Field(default=None, exclude=True)
+    use_assistant_model: Optional[bool] = Field(default=False, exclude=True, description="Planning is self-contained")
+    images: Optional[list] = Field(default=None, exclude=True, description="Planning doesn't use images")
 
     @field_validator("step_number")
     @classmethod
