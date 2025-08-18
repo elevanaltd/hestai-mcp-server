@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
 from config import TEMPERATURE_ANALYTICAL
-from systemprompts import PRECOMMIT_PROMPT
+from systemprompts._archived_conflicts.precommit_prompt import PRECOMMIT_PROMPT
 from tools.shared.base_models import WorkflowRequest
 
 from .workflow.base import WorkflowTool

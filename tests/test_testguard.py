@@ -5,8 +5,6 @@ This module contains unit tests to ensure that the TestGuard tool
 properly detects test manipulation anti-patterns and enforces testing integrity.
 """
 
-import json
-from unittest.mock import patch
 
 import pytest
 

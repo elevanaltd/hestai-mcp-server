@@ -5,8 +5,6 @@ This module contains unit tests to ensure that the Critical Engineer tool
 properly validates technical designs and identifies failure modes.
 """
 
-import json
-from unittest.mock import patch
 
 import pytest
 

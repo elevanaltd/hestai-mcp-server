@@ -68,7 +68,7 @@ class TestDockerHealthCheck:
 
     def test_optional_modules_graceful_failure(self):
         """Test graceful handling of optional module import failures"""
-        optional_modules = ["mcp", "google.genai", "openai"]
+        optional_modules = ["mcp", "google.generativeai", "openai"]
 
         for module_name in optional_modules:
             try:
