@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================================
-# Zen MCP Server Setup Script
+# HestAI MCP Server Setup Script
 # 
 # A platform-agnostic setup script that works on macOS, Linux, and WSL.
 # Handles environment setup, dependency installation, and configuration.
@@ -887,7 +887,7 @@ install_dependencies() {
     fi
     
     echo ""
-    print_info "Setting up Zen MCP Server..."
+    print_info "Setting up HestAI MCP Server..."
     echo "Installing required components:"
     echo "  • MCP protocol library"
     echo "  • AI model connectors"
@@ -1118,7 +1118,7 @@ check_claude_cli_integration() {
         echo ""
         print_warning "Claude CLI not found"
         echo ""
-        read -p "Would you like to add Zen to Claude Code? (Y/n): " -n 1 -r
+        read -p "Would you like to add HestAI to Claude Code? (Y/n): " -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Nn]$ ]]; then
             print_info "Skipping Claude Code integration"
@@ -1138,12 +1138,12 @@ check_claude_cli_integration() {
     if echo "$mcp_list" | grep -q "zen"; then
         # Check if it's using the old Docker command
         if echo "$mcp_list" | grep -E "zen.*docker|zen.*compose" &>/dev/null; then
-            print_warning "Found old Docker-based Zen registration, updating..."
+            print_warning "Found old Docker-based HestAI registration, updating..."
             claude mcp remove zen -s user 2>/dev/null || true
             
             # Re-add with correct Python command
             if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
-                print_success "Updated Zen to become a standalone script"
+                print_success "Updated HestAI to become a standalone script"
                 return 0
             else
                 echo ""
@@ -1158,11 +1158,11 @@ check_claude_cli_integration() {
             if echo "$mcp_list" | grep -F "$server_path" &>/dev/null; then
                 return 0
             else
-                print_warning "Zen registered with different path, updating..."
+                print_warning "HestAI registered with different path, updating..."
                 claude mcp remove zen -s user 2>/dev/null || true
                 
                 if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
-                    print_success "Updated Zen with current path"
+                    print_success "Updated HestAI with current path"
                     return 0
                 else
                     echo ""
@@ -1176,7 +1176,7 @@ check_claude_cli_integration() {
     else
         # Not registered at all, ask user if they want to add it
         echo ""
-        read -p "Add Zen to Claude Code? (Y/n): " -n 1 -r
+        read -p "Add HestAI to Claude Code? (Y/n): " -n 1 -r
         echo ""
         if [[ $REPLY =~ ^[Nn]$ ]]; then
             print_info "To add manually later, run:"
@@ -1184,9 +1184,9 @@ check_claude_cli_integration() {
             return 0
         fi
         
-        print_info "Registering Zen with Claude Code..."
+        print_info "Registering HestAI with Claude Code..."
         if claude mcp add zen -s user -- "$python_cmd" "$server_path" 2>/dev/null; then
-            print_success "Successfully added Zen to Claude Code"
+            print_success "Successfully added HestAI to Claude Code"
             return 0
         else
             echo ""
@@ -1214,7 +1214,7 @@ check_claude_desktop_integration() {
     fi
     
     echo ""
-    read -p "Configure Zen for Claude Desktop? (Y/n): " -n 1 -r
+    read -p "Configure HestAI for Claude Desktop? (Y/n): " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Nn]$ ]]; then
         print_info "Skipping Claude Desktop integration"
@@ -1340,9 +1340,9 @@ check_gemini_cli_integration() {
         return 0
     fi
     
-    # Ask user if they want to add Zen to Gemini CLI
+    # Ask user if they want to add HestAI to Gemini CLI
     echo ""
-    read -p "Configure Zen for Gemini CLI? (Y/n): " -n 1 -r
+    read -p "Configure HestAI for Gemini CLI? (Y/n): " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Nn]$ ]]; then
         print_info "Skipping Gemini CLI integration"
@@ -1399,7 +1399,7 @@ except Exception as e:
     if [[ $? -eq 0 ]]; then
         print_success "Successfully configured Gemini CLI"
         echo "  Config: $gemini_config"
-        echo "  Restart Gemini CLI to use Zen MCP Server"
+        echo "  Restart Gemini CLI to use HestAI MCP Server"
     else
         print_error "Failed to update Gemini CLI config"
         echo "Manual config location: $gemini_config"
@@ -1425,11 +1425,11 @@ display_config_instructions() {
     local script_dir=$(dirname "$server_path")
     
     echo ""
-    local config_header="ZEN MCP SERVER CONFIGURATION"
+    local config_header="HESTAI MCP SERVER CONFIGURATION"
     echo "===== $config_header ====="
     printf '%*s\n' "$((${#config_header} + 12))" | tr ' ' '='
     echo ""
-    echo "To use Zen MCP Server with your Claude clients:"
+    echo "To use HestAI MCP Server with your Claude clients:"
     echo ""
     
     print_info "1. For Claude Code (CLI):"
@@ -1487,7 +1487,7 @@ display_setup_instructions() {
     echo "===== $setup_header ====="
     printf '%*s\n' "$((${#setup_header} + 12))" | tr ' ' '='
     echo ""
-    print_success "Zen is ready to use!"
+    print_success "HestAI is ready to use!"
 }
 
 # ----------------------------------------------------------------------------
@@ -1497,7 +1497,7 @@ display_setup_instructions() {
 # Show help message
 show_help() {
     local version=$(get_version)
-    local header="🤖 Zen MCP Server v$version"
+    local header="🤖 HestAI MCP Server v$version"
     echo "$header"
     printf '%*s\n' "${#header}" | tr ' ' '='
     echo ""
@@ -1593,7 +1593,7 @@ main() {
     esac
     
     # Display header
-    local main_header="🤖 Zen MCP Server"
+    local main_header="🤖 HestAI MCP Server"
     echo "$main_header"
     printf '%*s\n' "${#main_header}" | tr ' ' '='
     
