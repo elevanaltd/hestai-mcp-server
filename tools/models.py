@@ -14,6 +14,7 @@ class ToolModelCategory(Enum):
     EXTENDED_REASONING = "extended_reasoning"  # Requires deep thinking capabilities
     FAST_RESPONSE = "fast_response"  # Speed and cost efficiency preferred
     BALANCED = "balanced"  # Balance of capability and performance
+    ANALYTICAL = "analytical"  # Focused analytical work requiring precision
 
 
 class ContinuationOffer(BaseModel):

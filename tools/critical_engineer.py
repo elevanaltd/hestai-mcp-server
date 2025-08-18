@@ -140,17 +140,17 @@ class CriticalEngineerTool(SimpleTool):
         return CriticalEngineerRequest
 
     def get_default_model(self) -> Optional[str]:
-        """Prefer Gemini 2.5 Pro for technical validation analysis, with GPT-5 as fallback"""
-        return "gemini-2.5-pro"
+        """Prefer Gemini 2.5 Pro for technical validation analysis, with GPT-4.1 as fallback"""
+        return "google/gemini-2.5-pro"
 
     def get_allowed_models(self) -> Optional[list[str]]:
         """Return list of high-quality models allowed for critical engineering validation"""
-        return ["google/gemini-2.5-pro", "openai/gpt-5"]
+        return ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
 
     def get_input_schema(self) -> dict[str, Any]:
         """
         Override input schema to only allow high-quality models for critical engineering validation.
-        Restricted to gemini-2.5-pro (preferred) and gpt-5 (fallback).
+        Restricted to gemini-2.5-pro (preferred) and gpt-4.1-2025-04-14 (fallback).
         """
         # Get the base schema from SimpleTool
         schema = super().get_input_schema()
@@ -159,9 +159,9 @@ class CriticalEngineerTool(SimpleTool):
         if "model" in schema.get("properties", {}):
             schema["properties"]["model"] = {
                 "type": "string",
-                "enum": ["google/gemini-2.5-pro", "openai/gpt-5"],
+                "enum": ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"],
                 "default": "google/gemini-2.5-pro",
-                "description": "AI model to use for critical engineering validation (gemini-2.5-pro preferred, gpt-5 fallback)",
+                "description": "AI model to use for critical engineering validation (gemini-2.5-pro preferred, gpt-4.1-2025-04-14 fallback)",
             }
 
         return schema

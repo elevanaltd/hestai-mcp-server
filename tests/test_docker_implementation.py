@@ -51,7 +51,7 @@ class TestDockerConfiguration:
         # Basic YAML syntax check
         content = self.docker_compose_path.read_text()
         assert "services:" in content, "docker-compose.yml must have services"
-        assert "zen-mcp" in content, "Service zen-mcp must be defined"
+        assert "hestai-mcp" in content, "Service hestai-mcp must be defined"
         assert "build:" in content, "Build configuration must be present"
 
     def test_environment_file_template(self):
@@ -189,7 +189,7 @@ class TestMCPIntegration:
         # Expected MCP configuration
         expected_config = {
             "servers": {
-                "zen-docker": {
+                "hestai-docker": {
                     "command": "docker",
                     "args": [
                         "run",
@@ -210,11 +210,11 @@ class TestMCPIntegration:
 
         # Check structure
         assert "servers" in expected_config
-        zen_docker = expected_config["servers"]["zen-docker"]
-        assert zen_docker["command"] == "docker"
-        assert "run" in zen_docker["args"]
-        assert "--rm" in zen_docker["args"]
-        assert "-i" in zen_docker["args"]
+        hestai_docker = expected_config["servers"]["hestai-docker"]
+        assert hestai_docker["command"] == "docker"
+        assert "run" in hestai_docker["args"]
+        assert "--rm" in hestai_docker["args"]
+        assert "-i" in hestai_docker["args"]
 
     def test_stdio_communication_structure(self):
         """Test structure of stdio communication"""
