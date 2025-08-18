@@ -73,6 +73,34 @@ class TestDockerMCPConfiguration:
         else:
             assert logs_dir.is_dir(), "logs should be a directory"
 
+    def test_docker_compose_environment_variables(self):
+        """Test docker-compose.yml environment variables"""
+        project_root = Path(__file__).parent.parent
+        compose_file = project_root / "docker-compose.yml"
+
+        if not compose_file.exists():
+            pytest.skip("docker-compose.yml not found")
+
+        content = compose_file.read_text()
+
+        # Check for essential API key variables aligned with .env.example
+        expected_vars = [
+            "GEMINI_API_KEY",
+            "OPENAI_API_KEY",
+            "XAI_API_KEY",
+            "DIAL_API_KEY",
+        ]
+        for var in expected_vars:
+            assert f"- {var}=${{{var}}}" in content
+
+        # Check that old/incorrect variables are not present
+        unexpected_vars = [
+            "GOOGLE_API_KEY",
+            "ANTHROPIC_API_KEY",
+        ]
+        for var in unexpected_vars:
+            assert var not in content
+
 
 class TestDockerCommandValidation:
     """Docker command validation tests"""

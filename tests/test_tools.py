@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from tools import AnalyzeTool, ChatTool, CodeReviewTool, ThinkDeepTool
+from tools import AnalyzeTool, ChatTool, ThinkDeepTool
 
 
 class TestThinkDeepTool:

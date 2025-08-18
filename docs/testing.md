@@ -77,7 +77,7 @@ python communication_simulator_test.py --individual basic_conversation
 # Examples of available tests:
 python communication_simulator_test.py --individual content_validation
 python communication_simulator_test.py --individual cross_tool_continuation
-python communication_simulator_test.py --individual memory_validation
+python communication_simulator_test.py --individual planner_validation
 ```
 
 #### Other Options
@@ -122,7 +122,6 @@ Validate real-world usage scenarios by simulating actual Claude prompts:
 - **File deduplication**: Efficient handling of repeated file references
 - **Model selection**: Proper routing to configured providers
 - **Token allocation**: Context window management in practice
-- **Redis validation**: Conversation persistence and retrieval
 
 ## Contributing
 

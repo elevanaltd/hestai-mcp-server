@@ -10,10 +10,8 @@ import pytest
 from providers.registry import ModelProviderRegistry, ProviderType
 from tools.analyze import AnalyzeTool
 from tools.chat import ChatTool
-from tools.codereview import CodeReviewTool
 from tools.debug import DebugIssueTool
 from tools.models import ToolModelCategory
-from tools.precommit import PrecommitTool
 from tools.shared.base_tool import BaseTool
 from tools.thinkdeep import ThinkDeepTool
 
@@ -33,17 +31,9 @@ class TestToolModelCategories:
         tool = AnalyzeTool()
         assert tool.get_model_category() == ToolModelCategory.EXTENDED_REASONING
 
-    def test_precommit_category(self):
-        tool = PrecommitTool()
-        assert tool.get_model_category() == ToolModelCategory.EXTENDED_REASONING
-
     def test_chat_category(self):
         tool = ChatTool()
         assert tool.get_model_category() == ToolModelCategory.FAST_RESPONSE
-
-    def test_codereview_category(self):
-        tool = CodeReviewTool()
-        assert tool.get_model_category() == ToolModelCategory.EXTENDED_REASONING
 
     def test_base_tool_default_category(self):
         # Test that BaseTool defaults to BALANCED

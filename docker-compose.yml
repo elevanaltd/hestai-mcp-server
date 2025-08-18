@@ -21,9 +21,7 @@ services:
       
       # API Keys (use Docker secrets in production)
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - XAI_API_KEY=${XAI_API_KEY}
       - DIAL_API_KEY=${DIAL_API_KEY}
       - DIAL_API_HOST=${DIAL_API_HOST}

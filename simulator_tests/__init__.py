@@ -9,7 +9,6 @@ from .base_test import BaseSimulatorTest
 from .test_analyze_validation import AnalyzeValidationTest
 from .test_basic_conversation import BasicConversationTest
 from .test_chat_simple_validation import ChatSimpleValidationTest
-from .test_codereview_validation import CodeReviewValidationTest
 from .test_consensus_conversation import TestConsensusConversation
 from .test_consensus_three_models import TestConsensusThreeModels
 from .test_consensus_workflow_accurate import TestConsensusWorkflowAccurate
@@ -30,13 +29,10 @@ from .test_openrouter_models import OpenRouterModelsTest
 from .test_per_tool_deduplication import PerToolDeduplicationTest
 from .test_planner_continuation_history import PlannerContinuationHistoryTest
 from .test_planner_validation import PlannerValidationTest
-from .test_precommitworkflow_validation import PrecommitWorkflowValidationTest
 from .test_prompt_size_limit_bug import PromptSizeLimitBugTest
 
 # Redis validation test removed - no longer needed for standalone server
-from .test_refactor_validation import RefactorValidationTest
 from .test_secaudit_validation import SecauditValidationTest
-from .test_testgen_validation import TestGenValidationTest
 from .test_thinkdeep_validation import ThinkDeepWorkflowValidationTest
 from .test_token_allocation_validation import TokenAllocationValidationTest
 from .test_vision_capability import VisionCapabilityTest
@@ -46,7 +42,6 @@ from .test_xai_models import XAIModelsTest
 TEST_REGISTRY = {
     "basic_conversation": BasicConversationTest,
     "chat_validation": ChatSimpleValidationTest,
-    "codereview_validation": CodeReviewValidationTest,
     "content_validation": ContentValidationTest,
     "per_tool_deduplication": PerToolDeduplicationTest,
     "cross_tool_continuation": CrossToolContinuationTest,
@@ -61,11 +56,8 @@ TEST_REGISTRY = {
     "openrouter_models": OpenRouterModelsTest,
     "planner_validation": PlannerValidationTest,
     "planner_continuation_history": PlannerContinuationHistoryTest,
-    "precommit_validation": PrecommitWorkflowValidationTest,
     "token_allocation_validation": TokenAllocationValidationTest,
-    "testgen_validation": TestGenValidationTest,
     "thinkdeep_validation": ThinkDeepWorkflowValidationTest,
-    "refactor_validation": RefactorValidationTest,
     "secaudit_validation": SecauditValidationTest,
     "debug_validation": DebugValidationTest,
     "debug_certain_confidence": DebugCertainConfidenceTest,
@@ -84,7 +76,6 @@ __all__ = [
     "BaseSimulatorTest",
     "BasicConversationTest",
     "ChatSimpleValidationTest",
-    "CodeReviewValidationTest",
     "ContentValidationTest",
     "PerToolDeduplicationTest",
     "CrossToolContinuationTest",
@@ -99,11 +90,8 @@ __all__ = [
     "OpenRouterModelsTest",
     "PlannerValidationTest",
     "PlannerContinuationHistoryTest",
-    "PrecommitWorkflowValidationTest",
     "TokenAllocationValidationTest",
-    "TestGenValidationTest",
     "ThinkDeepWorkflowValidationTest",
-    "RefactorValidationTest",
     "SecauditValidationTest",
     "DebugValidationTest",
     "DebugCertainConfidenceTest",

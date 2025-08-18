@@ -33,11 +33,6 @@ class ToolOutput(BaseModel):
         "success",
         "error",
         "files_required_to_continue",
-        "full_codereview_required",
-        "focused_review_required",
-        "test_sample_needed",
-        "more_tests_required",
-        "refactor_analysis_complete",
         "trace_complete",
         "resend_prompt",
         "code_too_large",
@@ -64,81 +59,6 @@ class FilesNeededRequest(BaseModel):
         None,
         description="Suggested tool call with parameters after getting clarification",
     )
-
-
-class FullCodereviewRequired(BaseModel):
-    """Request for full code review when scope is too large for quick review"""
-
-    status: Literal["full_codereview_required"] = "full_codereview_required"
-    important: Optional[str] = Field(None, description="Important message about escalation")
-    reason: Optional[str] = Field(None, description="Reason why full review is needed")
-
-
-class FocusedReviewRequired(BaseModel):
-    """Request for Agent to provide smaller, focused subsets of code for review"""
-
-    status: Literal["focused_review_required"] = "focused_review_required"
-    reason: str = Field(..., description="Why the current scope is too large for effective review")
-    suggestion: str = Field(
-        ..., description="Suggested approach for breaking down the review into smaller, focused parts"
-    )
-
-
-class TestSampleNeeded(BaseModel):
-    """Request for additional test samples to determine testing framework"""
-
-    status: Literal["test_sample_needed"] = "test_sample_needed"
-    reason: str = Field(..., description="Reason why additional test samples are required")
-
-
-class MoreTestsRequired(BaseModel):
-    """Request for continuation to generate additional tests"""
-
-    status: Literal["more_tests_required"] = "more_tests_required"
-    pending_tests: str = Field(..., description="List of pending tests to be generated")
-
-
-class RefactorOpportunity(BaseModel):
-    """A single refactoring opportunity with precise targeting information"""
-
-    id: str = Field(..., description="Unique identifier for this refactoring opportunity")
-    type: Literal["decompose", "codesmells", "modernize", "organization"] = Field(
-        ..., description="Type of refactoring"
-    )
-    severity: Literal["critical", "high", "medium", "low"] = Field(..., description="Severity level")
-    file: str = Field(..., description="Absolute path to the file")
-    start_line: int = Field(..., description="Starting line number")
-    end_line: int = Field(..., description="Ending line number")
-    context_start_text: str = Field(..., description="Exact text from start line for verification")
-    context_end_text: str = Field(..., description="Exact text from end line for verification")
-    issue: str = Field(..., description="Clear description of what needs refactoring")
-    suggestion: str = Field(..., description="Specific refactoring action to take")
-    rationale: str = Field(..., description="Why this improves the code")
-    code_to_replace: str = Field(..., description="Original code that should be changed")
-    replacement_code_snippet: str = Field(..., description="Refactored version of the code")
-    new_code_snippets: Optional[list[dict]] = Field(
-        default_factory=list, description="Additional code snippets to be added"
-    )
-
-
-class RefactorAction(BaseModel):
-    """Next action for Agent to implement refactoring"""
-
-    action_type: Literal["EXTRACT_METHOD", "SPLIT_CLASS", "MODERNIZE_SYNTAX", "REORGANIZE_CODE", "DECOMPOSE_FILE"] = (
-        Field(..., description="Type of action to perform")
-    )
-    target_file: str = Field(..., description="Absolute path to target file")
-    source_lines: str = Field(..., description="Line range (e.g., '45-67')")
-    description: str = Field(..., description="Step-by-step action description for CLI Agent")
-
-
-class RefactorAnalysisComplete(BaseModel):
-    """Complete refactor analysis with prioritized opportunities"""
-
-    status: Literal["refactor_analysis_complete"] = "refactor_analysis_complete"
-    refactor_opportunities: list[RefactorOpportunity] = Field(..., description="List of refactoring opportunities")
-    priority_sequence: list[str] = Field(..., description="Recommended order of refactoring IDs")
-    next_actions: list[RefactorAction] = Field(..., description="Specific actions for the agent to implement")
 
 
 class CodeTooLargeRequest(BaseModel):
@@ -360,11 +280,6 @@ class NoBugFound(BaseModel):
 # Registry mapping status strings to their corresponding Pydantic models
 SPECIAL_STATUS_MODELS = {
     "files_required_to_continue": FilesNeededRequest,
-    "full_codereview_required": FullCodereviewRequired,
-    "focused_review_required": FocusedReviewRequired,
-    "test_sample_needed": TestSampleNeeded,
-    "more_tests_required": MoreTestsRequired,
-    "refactor_analysis_complete": RefactorAnalysisComplete,
     "trace_complete": TraceComplete,
     "resend_prompt": ResendPromptRequest,
     "code_too_large": CodeTooLargeRequest,
