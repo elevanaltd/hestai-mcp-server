@@ -126,7 +126,7 @@ class TestModelSelection:
             }
 
             model = ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.BALANCED)
-            assert model == "o4-mini"  # Balanced prefers o4-mini when OpenAI available
+            assert model == "o3"  # Balanced prefers o3 (highest quality) when OpenAI available
 
     def test_no_category_uses_balanced_logic(self):
         """Test that no category specified uses balanced logic."""
@@ -138,8 +138,8 @@ class TestModelSelection:
             }
 
             model = ModelProviderRegistry.get_preferred_fallback_model()
-            # Should pick a reasonable default, preferring flash for balanced use
-            assert "flash" in model or model == "gemini-2.5-flash"
+            # Should pick a reasonable default, preferring pro for balanced quality
+            assert "pro" in model or model == "gemini-2.5-pro"
 
 
 class TestFlexibleModelSelection:

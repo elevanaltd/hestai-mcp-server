@@ -82,7 +82,7 @@ class TestAutoModeComprehensive:
                 {
                     "EXTENDED_REASONING": "gemini-2.5-pro",  # Pro for deep thinking
                     "FAST_RESPONSE": "gemini-2.5-flash",  # Flash for speed
-                    "BALANCED": "gemini-2.5-flash",  # Flash as balanced
+                    "BALANCED": "gemini-2.5-pro",  # Pro for balanced quality
                 },
             ),
             # Only OpenAI API available
@@ -96,7 +96,7 @@ class TestAutoModeComprehensive:
                 {
                     "EXTENDED_REASONING": "o3",  # O3 for deep reasoning
                     "FAST_RESPONSE": "o4-mini",  # O4-mini for speed
-                    "BALANCED": "o4-mini",  # O4-mini as balanced
+                    "BALANCED": "o3",  # O3 for balanced quality
                 },
             ),
             # Only X.AI API available
@@ -122,9 +122,9 @@ class TestAutoModeComprehensive:
                     "OPENROUTER_API_KEY": None,
                 },
                 {
-                    "EXTENDED_REASONING": "o3",  # Prefer O3 for deep reasoning
+                    "EXTENDED_REASONING": "gemini-2.5-pro",  # Prefer Gemini Pro for deep reasoning
                     "FAST_RESPONSE": "o4-mini",  # Prefer O4-mini for speed
-                    "BALANCED": "o4-mini",  # Prefer OpenAI for balanced
+                    "BALANCED": "gemini-2.5-pro",  # Prefer Gemini Pro for balanced quality
                 },
             ),
             # All native APIs available - should prefer based on tool category
@@ -136,9 +136,9 @@ class TestAutoModeComprehensive:
                     "OPENROUTER_API_KEY": None,
                 },
                 {
-                    "EXTENDED_REASONING": "o3",  # Prefer O3 for deep reasoning
+                    "EXTENDED_REASONING": "gemini-2.5-pro",  # Prefer Gemini Pro for deep reasoning
                     "FAST_RESPONSE": "o4-mini",  # Prefer O4-mini for speed
-                    "BALANCED": "o4-mini",  # Prefer OpenAI for balanced
+                    "BALANCED": "gemini-2.5-pro",  # Prefer Gemini Pro for balanced quality
                 },
             ),
         ],
