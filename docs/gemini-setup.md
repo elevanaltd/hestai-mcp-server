@@ -19,24 +19,24 @@ This guide explains how to configure Zen MCP Server to work with [Gemini CLI](ht
 {
   "mcpServers": {
     "zen": {
-      "command": "/path/to/zen-mcp-server/zen-mcp-server"
+      "command": "/path/to/hestai-mcp-server/hestai-mcp-server"
     }
   }
 }
 ```
 
-2. Replace `/path/to/zen-mcp-server` with your actual Zen installation path.
+2. Replace `/path/to/hestai-mcp-server` with your actual Zen installation path.
 
-3. If the `zen-mcp-server` wrapper script doesn't exist, create it:
+3. If the `hestai-mcp-server` wrapper script doesn't exist, create it:
 
 ```bash
 #!/bin/bash
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
-exec .zen_venv/bin/python server.py "$@"
+exec .hestai_venv/bin/python server.py "$@"
 ```
 
-Then make it executable: `chmod +x zen-mcp-server`
+Then make it executable: `chmod +x hestai-mcp-server`
 
 4. Restart Gemini CLI.
 

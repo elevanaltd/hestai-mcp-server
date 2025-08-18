@@ -29,7 +29,7 @@ readonly RED='\033[0;31m'
 readonly NC='\033[0m' # No Color
 
 # Configuration
-readonly VENV_PATH=".zen_venv"
+readonly VENV_PATH=".hestai_venv"
 readonly DOCKER_CLEANED_FLAG=".docker_cleaned"
 readonly DESKTOP_CONFIG_FLAG=".desktop_configured"
 readonly LOG_DIR="logs"
@@ -160,7 +160,7 @@ cleanup_docker() {
     local containers=(
         "gemini-mcp-server"
         "gemini-mcp-redis"
-        "zen-mcp-server"
+        "hestai-mcp-server"
         "zen-mcp-redis"
         "zen-mcp-log-monitor"
     )
@@ -179,7 +179,7 @@ cleanup_docker() {
     done
     
     # Remove images
-    local images=("gemini-mcp-server:latest" "zen-mcp-server:latest")
+    local images=("gemini-mcp-server:latest" "hestai-mcp-server:latest")
     for image in "${images[@]}"; do
         if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^${image}$" 2>/dev/null; then
             if [[ "$found_artifacts" == false ]]; then
@@ -741,7 +741,7 @@ setup_venv() {
                     print_error "Permission denied creating virtual environment"
                     echo ""
                     echo "Try running in a different directory:"
-                    echo "  cd ~ && git clone <repository-url> && cd zen-mcp-server && ./run-server.sh"
+                    echo "  cd ~ && git clone <repository-url> && cd hestai-mcp-server && ./run-server.sh"
                     echo ""
                     exit 1
                 else
@@ -1325,7 +1325,7 @@ EOF
 # Check and update Gemini CLI configuration
 check_gemini_cli_integration() {
     local script_dir="$1"
-    local zen_wrapper="$script_dir/zen-mcp-server"
+    local hestai_wrapper="$script_dir/hestai-mcp-server"
     
     # Check if Gemini settings file exists
     local gemini_config="$HOME/.gemini/settings.json"
@@ -1350,17 +1350,17 @@ check_gemini_cli_integration() {
     fi
     
     # Ensure wrapper script exists
-    if [[ ! -f "$zen_wrapper" ]]; then
+    if [[ ! -f "$hestai_wrapper" ]]; then
         print_info "Creating wrapper script for Gemini CLI..."
-        cat > "$zen_wrapper" << 'EOF'
+        cat > "$hestai_wrapper" << 'EOF'
 #!/bin/bash
 # Wrapper script for Gemini CLI compatibility
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
-exec .zen_venv/bin/python server.py "$@"
+exec .hestai_venv/bin/python server.py "$@"
 EOF
-        chmod +x "$zen_wrapper"
-        print_success "Created zen-mcp-server wrapper script"
+        chmod +x "$hestai_wrapper"
+        print_success "Created hestai-mcp-server wrapper script"
     fi
     
     # Update Gemini settings
@@ -1385,7 +1385,7 @@ try:
     
     # Add zen server
     config['mcpServers']['zen'] = {
-        'command': '$zen_wrapper'
+        'command': '$hestai_wrapper'
     }
     
     with open('$temp_file', 'w') as f:
@@ -1408,7 +1408,7 @@ except Exception as e:
 {
   "mcpServers": {
     "zen": {
-      "command": "$zen_wrapper"
+      "command": "$hestai_wrapper"
     }
   }
 }
@@ -1469,7 +1469,7 @@ EOF
    {
      "mcpServers": {
        "zen": {
-         "command": "$script_dir/zen-mcp-server"
+         "command": "$script_dir/hestai-mcp-server"
        }
      }
    }
@@ -1518,7 +1518,7 @@ show_help() {
     echo "  $0 --clear-cache Clear Python cache (fixes import issues)"
     echo ""
     echo "For more information, visit:"
-    echo "  https://github.com/BeehiveInnovations/zen-mcp-server"
+    echo "  https://github.com/elevanaltd/hestai-mcp-server"
 }
 
 # Show version only

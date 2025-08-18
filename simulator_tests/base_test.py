@@ -43,8 +43,8 @@ class BaseSimulatorTest:
         if os.path.exists(venv_python):
             return venv_python
 
-        # Try .zen_venv as fallback
-        zen_venv_python = os.path.join(current_dir, ".zen_venv", "bin", "python")
+        # Try .hestai_venv as fallback
+        zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
         if os.path.exists(zen_venv_python):
             return zen_venv_python
 

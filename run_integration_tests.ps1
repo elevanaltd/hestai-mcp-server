@@ -42,7 +42,7 @@ Write-ColorText "These tests use real API calls with your configured keys"
 Write-Host ""
 
 # Check for virtual environment
-$venvPath = ".zen_venv"
+$venvPath = ".hestai_venv"
 $activateScript = if ($IsWindows -or $env:OS -eq "Windows_NT") {
     "$venvPath\Scripts\Activate.ps1"
 } else {

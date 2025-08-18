@@ -27,7 +27,7 @@ $ErrorActionPreference = "Stop"
 # Constants and Configuration  
 # ----------------------------------------------------------------------------
 
-$script:VENV_PATH = ".zen_venv"
+$script:VENV_PATH = ".hestai_venv"
 $script:DOCKER_CLEANED_FLAG = ".docker_cleaned"
 $script:DESKTOP_CONFIG_FLAG = ".desktop_configured"
 $script:LOG_DIR = "logs"
@@ -229,7 +229,7 @@ function Cleanup-Docker {
     $containers = @(
         "gemini-mcp-server",
         "gemini-mcp-redis", 
-        "zen-mcp-server",
+        "hestai-mcp-server",
         "zen-mcp-redis",
         "zen-mcp-log-monitor"
     )
@@ -253,7 +253,7 @@ function Cleanup-Docker {
     }
     
     # Remove images
-    $images = @("gemini-mcp-server:latest", "zen-mcp-server:latest")
+    $images = @("gemini-mcp-server:latest", "hestai-mcp-server:latest")
     foreach ($image in $images) {
         try {
             $exists = docker images --format "{{.Repository}}:{{.Tag}}" | Where-Object { $_ -eq $image }
@@ -786,7 +786,7 @@ function Test-ClaudeCliIntegration {
 function Test-GeminiCliIntegration {
     param([string]$ScriptDir)
     
-    $zenWrapper = Join-Path $ScriptDir "zen-mcp-server.cmd"
+    $zenWrapper = Join-Path $ScriptDir "hestai-mcp-server.cmd"
     
     # Check if Gemini settings file exists (Windows path)
     $geminiConfig = "$env:USERPROFILE\.gemini\settings.json"
@@ -816,14 +816,14 @@ function Test-GeminiCliIntegration {
         @"
 @echo off
 cd /d "%~dp0"
-if exist ".zen_venv\Scripts\python.exe" (
-    .zen_venv\Scripts\python.exe server.py %*
+if exist ".hestai_venv\Scripts\python.exe" (
+    .hestai_venv\Scripts\python.exe server.py %*
 ) else (
     python server.py %*
 )
 "@ | Out-File -FilePath $zenWrapper -Encoding UTF8
         
-        Write-Success "Created zen-mcp-server.cmd wrapper script"
+        Write-Success "Created hestai-mcp-server.cmd wrapper script"
     }
     
     # Update Gemini settings
@@ -882,7 +882,7 @@ function Show-ConfigInstructions {
     
     # Get script directory for Gemini CLI config
     $scriptDir = Split-Path $ServerPath -Parent
-    $zenWrapper = Join-Path $scriptDir "zen-mcp-server.cmd"
+    $zenWrapper = Join-Path $scriptDir "hestai-mcp-server.cmd"
     
     Write-Host ""
     Write-Host "===== ZEN MCP SERVER CONFIGURATION =====" -ForegroundColor Cyan
@@ -981,7 +981,7 @@ function Show-Help {
     Write-Host "  .\run-server.ps1 -ClearCache  Clear Python cache (fixes import issues)"
     Write-Host ""
     Write-Host "For more information, visit:"
-    Write-Host "  https://github.com/BeehiveInnovations/zen-mcp-server"
+    Write-Host "  https://github.com/elevanaltd/hestai-mcp-server"
     Write-Host ""
 }
 

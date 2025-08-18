@@ -1,5 +1,5 @@
 """
-Zen MCP Server - Main server implementation
+HestAI MCP Server - Main server implementation
 
 This module implements the core MCP (Model Context Protocol) server that provides
 AI-powered tools for code analysis, review, and assistance using multiple AI models.
@@ -337,7 +337,7 @@ PROMPT_TEMPLATES = {
     "version": {
         "name": "version",
         "description": "Show server version and system information",
-        "template": "Show Zen MCP Server version",
+        "template": "Show HestAI MCP Server version",
     },
 }
 
@@ -1302,7 +1302,7 @@ async def main():
     configure_providers()
 
     # Log startup message
-    logger.info("Zen MCP Server starting up...")
+    logger.info("HestAI MCP Server starting up...")
     logger.info(f"Log level: {log_level}")
 
     # Note: MCP client info will be logged during the protocol handshake
@@ -1342,7 +1342,7 @@ async def main():
 
 
 def run():
-    """Console script entry point for zen-mcp-server."""
+    """Console script entry point for hestai-mcp-server."""
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

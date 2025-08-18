@@ -32,7 +32,7 @@ class TestDockerClaudeDesktopIntegration:
                         "/path/to/.env",
                         "-v",
                         "/path/to/logs:/app/logs",
-                        "zen-mcp-server:latest",
+                        "hestai-mcp-server:latest",
                     ],
                 }
             }
@@ -83,7 +83,7 @@ class TestDockerClaudeDesktopIntegration:
                         "GEMINI_API_KEY=test_key",
                         "-e",
                         "LOG_LEVEL=INFO",
-                        "zen-mcp-server:latest",
+                        "hestai-mcp-server:latest",
                     ],
                 }
             }
@@ -110,10 +110,10 @@ class TestDockerClaudeDesktopIntegration:
                         "--rm",
                         "-i",
                         "--env-file",
-                        "C:/Users/User/zen-mcp-server/.env",
+                        "C:/Users/User/hestai-mcp-server/.env",
                         "-v",
-                        "C:/Users/User/zen-mcp-server/logs:/app/logs",
-                        "zen-mcp-server:latest",
+                        "C:/Users/User/hestai-mcp-server/logs:/app/logs",
+                        "hestai-mcp-server:latest",
                     ],
                 }
             }
@@ -132,7 +132,7 @@ class TestDockerClaudeDesktopIntegration:
         """Test validation of MCP configuration"""
         # Valid configuration
         valid_config = {
-            "mcpServers": {"zen-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "zen-mcp-server:latest"]}}
+            "mcpServers": {"zen-mcp": {"command": "docker", "args": ["run", "--rm", "-i", "hestai-mcp-server:latest"]}}
         }
 
         # Validate JSON serialization
@@ -150,7 +150,7 @@ class TestDockerClaudeDesktopIntegration:
                         "run",
                         "--rm",
                         "-i",  # Interactive mode for stdio
-                        "zen-mcp-server:latest",
+                        "hestai-mcp-server:latest",
                     ],
                 }
             }
@@ -168,9 +168,9 @@ class TestDockerClaudeDesktopIntegration:
     def test_docker_image_reference(self):
         """Test that Docker image is properly referenced"""
         configs = [
-            {"image": "zen-mcp-server:latest"},
-            {"image": "zen-mcp-server:v1.0.0"},
-            {"image": "registry/zen-mcp-server:latest"},
+            {"image": "hestai-mcp-server:latest"},
+            {"image": "hestai-mcp-server:v1.0.0"},
+            {"image": "registry/hestai-mcp-server:latest"},
         ]
 
         for config in configs:
@@ -187,7 +187,7 @@ class TestDockerClaudeDesktopIntegration:
             "mcpServers": {
                 "zen-mcp": {
                     "command": "docker",
-                    "args": ["run", "--rm", "-i", "--env-file", "/tmp/.env", "zen-mcp-server:latest"],
+                    "args": ["run", "--rm", "-i", "--env-file", "/tmp/.env", "hestai-mcp-server:latest"],
                 }
             }
         }
@@ -266,7 +266,7 @@ class TestDockerMCPErrorHandling:
             "mcpServers": {
                 "zen-mcp": {
                     "command": "docker",
-                    "args": ["run", "--rm", "-i", "--env-file", "/nonexistent/.env", "zen-mcp-server:latest"],
+                    "args": ["run", "--rm", "-i", "--env-file", "/nonexistent/.env", "hestai-mcp-server:latest"],
                 }
             }
         }
@@ -296,7 +296,7 @@ class TestDockerMCPErrorHandling:
             "mcpServers": {
                 "zen-mcp": {
                     "command": "docker",
-                    "args": ["run", "--rm", "-i", "--memory=512m", "--cpus=1.0", "zen-mcp-server:latest"],
+                    "args": ["run", "--rm", "-i", "--memory=512m", "--cpus=1.0", "hestai-mcp-server:latest"],
                 }
             }
         }

@@ -237,7 +237,7 @@ python -m pytest tests/ -v
 ### Development Workflow
 
 #### Before Making Changes
-1. Ensure virtual environment is activated: `source .zen_venv/bin/activate`
+1. Ensure virtual environment is activated: `source .hestai_venv/bin/activate`
 2. Run quality checks: `./code_quality_checks.sh`
 3. Check logs to ensure server is healthy: `tail -n 50 logs/mcp_server.log`
 
@@ -268,7 +268,7 @@ grep "ERROR" logs/mcp_server.log | tail -20
 
 # Check virtual environment
 which python
-# Should show: .../zen-mcp-server/.zen_venv/bin/python
+# Should show: .../hestai-mcp-server/.hestai_venv/bin/python
 ```
 
 #### Test Failures

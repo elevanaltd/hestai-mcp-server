@@ -79,14 +79,14 @@ See [Logging Documentation](logging.md) for more details on accessing logs.
 
 **Python module not found**
 - Run `./run-server.sh` to reinstall dependencies
-- Check virtual environment is activated: should see `.zen_venv` in the Python path
+- Check virtual environment is activated: should see `.hestai_venv` in the Python path
 
 ### 6. Environment Issues
 
 **Virtual Environment Problems**
 ```bash
 # Reset environment completely
-rm -rf .zen_venv
+rm -rf .hestai_venv
 ./run-server.sh
 ```
 
