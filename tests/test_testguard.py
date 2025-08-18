@@ -5,7 +5,6 @@ This module contains unit tests to ensure that the TestGuard tool
 properly detects test manipulation anti-patterns and enforces testing integrity.
 """
 
-
 import pytest
 
 from tools.testguard import RequirementsRequest, RequirementsTool
