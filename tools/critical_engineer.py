@@ -1,7 +1,7 @@
 """
 Critical Engineer tool - Validates technical designs and implementation decisions
 
-This tool identifies what will break, what's missing, and what's over-engineered in 
+This tool identifies what will break, what's missing, and what's over-engineered in
 technical designs. It provides expert validation before major implementations or when
 uncertainty exists. Acts as a "what will break?" analysis engine.
 
@@ -142,7 +142,7 @@ class CriticalEngineerTool(SimpleTool):
     def get_default_model(self) -> Optional[str]:
         """Prefer Gemini 2.5 Pro for technical validation analysis, with GPT-5 as fallback"""
         return "gemini-2.5-pro"
-    
+
     def get_allowed_models(self) -> Optional[list[str]]:
         """Return list of high-quality models allowed for critical engineering validation"""
         return ["google/gemini-2.5-pro", "openai/gpt-5"]
@@ -154,31 +154,31 @@ class CriticalEngineerTool(SimpleTool):
         """
         # Get the base schema from SimpleTool
         schema = super().get_input_schema()
-        
+
         # Restrict model options to high-quality models only
         if "model" in schema.get("properties", {}):
             schema["properties"]["model"] = {
                 "type": "string",
                 "enum": ["google/gemini-2.5-pro", "openai/gpt-5"],
                 "default": "google/gemini-2.5-pro",
-                "description": "AI model to use for critical engineering validation (gemini-2.5-pro preferred, gpt-5 fallback)"
+                "description": "AI model to use for critical engineering validation (gemini-2.5-pro preferred, gpt-5 fallback)",
             }
-            
+
         return schema
 
     async def prepare_prompt(self, request: CriticalEngineerRequest) -> str:
         """
         Prepare the critical engineer prompt with the technical decision to validate.
-        
+
         Args:
             request: The validated request containing the technical decision to analyze
-            
+
         Returns:
             The formatted prompt for the AI model
         """
         return (
             f"🔍 CRITICAL ENGINEERING VALIDATION REQUIRED 🔍\n\n"
-            f"Technical decision/design to validate: \"{request.prompt}\"\n\n"
+            f'Technical decision/design to validate: "{request.prompt}"\n\n'
             f"Apply the Critical Engineer validation protocol:\n\n"
             f"1. UNDERSTAND: Analyze the technical decision thoroughly\n"
             f"2. STRESS_TEST: Identify what will break under pressure\n"
@@ -196,15 +196,17 @@ class CriticalEngineerTool(SimpleTool):
             f"Provide your expert validation with specific, actionable recommendations."
         )
 
-    def format_response(self, response: str, request: CriticalEngineerRequest, model_info: Optional[dict] = None) -> str:
+    def format_response(
+        self, response: str, request: CriticalEngineerRequest, model_info: Optional[dict] = None
+    ) -> str:
         """
         Format the critical engineer response with clear validation structure.
-        
+
         Args:
             response: The AI model's validation response
             request: The original request
             model_info: Optional model information
-            
+
         Returns:
             Formatted response for the user
         """

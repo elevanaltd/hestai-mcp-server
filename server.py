@@ -744,17 +744,21 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
             if model_name not in allowed_models:
                 # Default to gemini-2.5-pro if an unsupported model is specified
                 forced_model = "google/gemini-2.5-pro"
-                logger.info(f"Overriding model for testguard: {model_name} → {forced_model} (only high-quality models allowed)")
+                logger.info(
+                    f"Overriding model for testguard: {model_name} → {forced_model} (only high-quality models allowed)"
+                )
                 model_name = forced_model
                 arguments["model"] = model_name
-        
+
         # Special case: critical-engineer tool only allows high-quality models
         if name == "critical-engineer":
             allowed_models = ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
             if model_name not in allowed_models:
                 # Default to gemini-2.5-pro if an unsupported model is specified
                 forced_model = "google/gemini-2.5-pro"
-                logger.info(f"Overriding model for critical-engineer: {model_name} → {forced_model} (only high-quality models allowed)")
+                logger.info(
+                    f"Overriding model for critical-engineer: {model_name} → {forced_model} (only high-quality models allowed)"
+                )
                 model_name = forced_model
                 arguments["model"] = model_name
 

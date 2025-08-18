@@ -182,10 +182,10 @@ class ChallengeTool(SimpleTool):
     def _wrap_prompt_for_challenge(self, prompt: str) -> str:
         """
         Wrap the user's statement in instructions that enforce direct technical analysis.
-        
+
         Args:
             prompt: The original user statement to wrap
-        
+
         Returns:
             The statement wrapped in direct analysis instructions
         """

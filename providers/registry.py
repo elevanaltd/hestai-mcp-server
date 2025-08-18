@@ -351,23 +351,23 @@ class ModelProviderRegistry:
 
         # BALANCED or no category specified - prioritize high-quality models
         # Priority order: gemini-2.5-pro > o3 > gpt-4.1 > other high-end models
-        
+
         # First choice: Gemini 2.5 Pro (native or via OpenRouter)
         if gemini_available and any("2.5-pro" in m for m in gemini_models):
             return next(m for m in gemini_models if "2.5-pro" in m)
         elif openrouter_available and any("gemini-2.5-pro" in m for m in openrouter_models):
             return next(m for m in openrouter_models if "gemini-2.5-pro" in m)
-        
+
         # Second choice: OpenAI o3 (full reasoning model)
         elif openai_available and "o3" in openai_models:
             return "o3"
-            
+
         # Third choice: GPT-4.1 (via OpenAI or OpenRouter)
         elif openai_available and any("gpt-4.1" in m or "4.1" in m for m in openai_models):
             return next(m for m in openai_models if "gpt-4.1" in m or "4.1" in m)
         elif openrouter_available and any("gpt-4.1" in m for m in openrouter_models):
             return next(m for m in openrouter_models if "gpt-4.1" in m)
-            
+
         # Fallback to other high-quality models
         elif gemini_available and any("pro" in m for m in gemini_models):
             # Any other pro model (like 1.5-pro)

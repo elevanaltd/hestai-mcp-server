@@ -6,33 +6,32 @@ Focused on complex, multi-step workflows requiring premium models
 from .analyze import AnalyzeTool
 from .challenge import ChallengeTool
 from .chat import ChatTool
+from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
 from .critical_engineer import CriticalEngineerTool
 from .debug import DebugIssueTool
 from .listmodels import ListModelsTool
 from .planner import PlannerTool
-from .testguard import RequirementsTool
+from .precommit import PrecommitTool
+from .refactor import RefactorTool
 from .secaudit import SecauditTool
+from .testguard import RequirementsTool
 from .thinkdeep import ThinkDeepTool
 from .tracer import TracerTool
 from .version import VersionTool
-
-# Archived tools (handled by Claude subagents):
-# - CodeReviewTool -> use code-review-specialist subagent
-# - PrecommitTool -> use multiple specialized subagents
-# - RefactorTool -> use complexity-guard subagent
-# - TestGenTool -> use universal-test-engineer subagent
-# - DocgenTool -> use documentation subagents
 
 __all__ = [
     "ThinkDeepTool",
     "DebugIssueTool",
     "AnalyzeTool",
     "ChatTool",
+    "CodeReviewTool",
     "ConsensusTool",
     "CriticalEngineerTool",
     "ListModelsTool",
     "PlannerTool",
+    "PrecommitTool",
+    "RefactorTool",
     "ChallengeTool",
     "RequirementsTool",
     "SecauditTool",

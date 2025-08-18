@@ -86,7 +86,7 @@ class RequirementsTool(SimpleTool):
             "- Modifying assertions to match broken code\n"
             "- Reducing coverage to avoid failures\n"
             "- Adding workarounds instead of fixes\n"
-            "- Commenting out failing tests\n" 
+            "- Commenting out failing tests\n"
             "- Lowering quality thresholds\n"
             "- Adjusting expectations instead of fixing problems\n\n"
             "GUARDIAN QUESTION: 'Are we fixing the code or hiding the problem?'\n\n"
@@ -128,7 +128,7 @@ class RequirementsTool(SimpleTool):
     def get_default_model(self) -> Optional[str]:
         """Prefer Gemini 2.5 Pro for test methodology analysis, with GPT-5 as fallback"""
         return "google/gemini-2.5-pro"
-    
+
     def get_allowed_models(self) -> Optional[list[str]]:
         """Return list of high-quality models allowed for test methodology validation"""
         return ["google/gemini-2.5-pro", "openai/gpt-5"]
@@ -140,51 +140,50 @@ class RequirementsTool(SimpleTool):
         """
         # Get the base schema from SimpleTool
         schema = super().get_input_schema()
-        
+
         # Restrict model options to high-quality models only
         if "model" in schema.get("properties", {}):
             schema["properties"]["model"] = {
                 "type": "string",
                 "enum": ["google/gemini-2.5-pro", "openai/gpt-5"],
                 "default": "google/gemini-2.5-pro",
-                "description": "AI model to use for test methodology analysis (gemini-2.5-pro preferred, gpt-5 fallback)"
+                "description": "AI model to use for test methodology analysis (gemini-2.5-pro preferred, gpt-5 fallback)",
             }
-            
+
         return schema
-    
 
     async def prepare_prompt(self, request: RequirementsRequest) -> str:
         """
         Prepare the test guard prompt with the consideration to analyze.
-        
+
         Args:
             request: The validated request containing the consideration to analyze
-            
+
         Returns:
             The formatted prompt for the AI model
         """
         return (
             f"🚨 TEST METHODOLOGY ANALYSIS REQUIRED 🚨\n\n"
-            f"Current consideration: \"{request.prompt}\"\n\n"
+            f'Current consideration: "{request.prompt}"\n\n'
             f"Analyze this consideration for test manipulation anti-patterns. Apply the Test Methodology Guardian protocol:\n\n"
             f"1. DETECT: Identify any test manipulation patterns\n"
             f"2. ANALYZE: Determine the specific anti-pattern type\n"
             f"3. EDUCATE: Explain why this violates testing principles\n"
             f"4. REDIRECT: Provide the proper approach\n"
             f"5. ENFORCE: Demand acknowledgment if intervention required\n\n"
-            f"Key question: \"Are we fixing the code or hiding the problem?\"\n\n"
+            f'Key question: "Are we fixing the code or hiding the problem?"\n\n'
             f"Provide your analysis and intervention if needed."
         )
 
     def format_response(self, response: str, request: RequirementsRequest, model_info: Optional[dict] = None) -> str:
         """
         Format the test guard response with clear intervention formatting.
-        
+
         Args:
             response: The AI model's analysis response
             request: The original request
             model_info: Optional model information
-            
+
         Returns:
             Formatted response for the user
         """
