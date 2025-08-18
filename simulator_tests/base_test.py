@@ -44,9 +44,9 @@ class BaseSimulatorTest:
             return venv_python
 
         # Try .hestai_venv as fallback
-        zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
-        if os.path.exists(zen_venv_python):
-            return zen_venv_python
+        hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
+        if os.path.exists(hestai_venv_python):
+            return hestai_venv_python
 
         # Fallback to system python if venv doesn't exist
         self.logger.warning("Virtual environment not found, using system python")

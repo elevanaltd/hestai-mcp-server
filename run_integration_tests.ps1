@@ -36,7 +36,7 @@ function Write-Emoji {
     Write-ColorText $Text -Color $Color
 }
 
-Write-Emoji "🧪" "Running Integration Tests for Zen MCP Server" -Color Cyan
+Write-Emoji "🧪" "Running Integration Tests for HestAI MCP Server" -Color Cyan
 Write-ColorText "==============================================" -Color Cyan
 Write-ColorText "These tests use real API calls with your configured keys"
 Write-Host ""

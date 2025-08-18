@@ -1,13 +1,13 @@
 # Gemini CLI Setup
 
-> **Note**: While Zen MCP Server connects successfully to Gemini CLI, tool invocation is not working
+> **Note**: While HestAI MCP Server connects successfully to Gemini CLI, tool invocation is not working
 > correctly yet. We'll update this guide once the integration is fully functional.
 
-This guide explains how to configure Zen MCP Server to work with [Gemini CLI](https://github.com/google-gemini/gemini-cli).
+This guide explains how to configure HestAI MCP Server to work with [Gemini CLI](https://github.com/google-gemini/gemini-cli).
 
 ## Prerequisites
 
-- Zen MCP Server installed and configured
+- HestAI MCP Server installed and configured
 - Gemini CLI installed
 - At least one API key configured in your `.env` file
 
@@ -18,14 +18,14 @@ This guide explains how to configure Zen MCP Server to work with [Gemini CLI](ht
 ```json
 {
   "mcpServers": {
-    "zen": {
+    "hestai": {
       "command": "/path/to/hestai-mcp-server/hestai-mcp-server"
     }
   }
 }
 ```
 
-2. Replace `/path/to/hestai-mcp-server` with your actual Zen installation path.
+2. Replace `/path/to/hestai-mcp-server` with your actual HestAI installation path.
 
 3. If the `hestai-mcp-server` wrapper script doesn't exist, create it:
 
@@ -40,4 +40,4 @@ Then make it executable: `chmod +x hestai-mcp-server`
 
 4. Restart Gemini CLI.
 
-All 15 Zen tools are now available in your Gemini CLI session.
+All 15 HestAI tools are now available in your Gemini CLI session.

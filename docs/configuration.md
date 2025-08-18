@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers all configuration options for the Zen MCP Server. The server is configured through environment variables defined in your `.env` file.
+This guide covers all configuration options for the HestAI MCP Server. The server is configured through environment variables defined in your `.env` file.
 
 ## Quick Start Configuration
 

@@ -11,7 +11,7 @@ The `chat` tool is your collaborative thinking partner for development conversat
 ## Example Prompt
 
 ```
-Chat with zen and pick the best model for this job. I need to pick between Redis and Memcached for session storage 
+Chat with hestai and pick the best model for this job. I need to pick between Redis and Memcached for session storage 
 and I need an expert opinion for the project I'm working on. Get a good idea of what the project does, pick one of the two options
 and then debate with the other models to give me a final verdict
 ```
@@ -45,7 +45,7 @@ and then debate with the other models to give me a final verdict
 
 **Basic Development Chat:**
 ```
-"Chat with zen about the best approach for user authentication in my React app"
+"Chat with hestai about the best approach for user authentication in my React app"
 ```
 
 **Technology Comparison:**

@@ -7,7 +7,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${GREEN}=== Building Zen MCP Server Docker Image ===${NC}"
+echo -e "${GREEN}=== Building HestAI MCP Server Docker Image ===${NC}"
 
 # Check if .env file exists
 if [[ ! -f .env ]]; then

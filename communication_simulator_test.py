@@ -1,7 +1,7 @@
 """
-Communication Simulator Test for Zen MCP Server
+Communication Simulator Test for HestAI MCP Server
 
-This script provides comprehensive end-to-end testing of the Zen MCP server
+This script provides comprehensive end-to-end testing of the HestAI MCP server
 by simulating real Claude CLI communications and validating conversation
 continuity, file handling, deduplication features, and clarification scenarios.
 
@@ -146,9 +146,9 @@ class CommunicationSimulator:
             return venv_python
 
         # Try .hestai_venv as fallback
-        zen_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
-        if os.path.exists(zen_venv_python):
-            return zen_venv_python
+        hestai_venv_python = os.path.join(current_dir, ".hestai_venv", "bin", "python")
+        if os.path.exists(hestai_venv_python):
+            return hestai_venv_python
 
         # Fallback to system python if venv doesn't exist
         self.logger.warning("Virtual environment not found, using system python")
@@ -388,7 +388,7 @@ class CommunicationSimulator:
     def run_full_test_suite(self) -> bool:
         """Run the complete test suite"""
         try:
-            self.logger.info("Starting Zen MCP Communication Simulator Test Suite")
+            self.logger.info("Starting HestAI MCP Communication Simulator Test Suite")
 
             # Setup
             if not self.setup_test_environment():
@@ -450,7 +450,7 @@ class CommunicationSimulator:
 
 def parse_arguments():
     """Parse and validate command line arguments"""
-    parser = argparse.ArgumentParser(description="Zen MCP Communication Simulator Test")
+    parser = argparse.ArgumentParser(description="HestAI MCP Communication Simulator Test")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--keep-logs", action="store_true", help="Keep logs for inspection after test completion")
     parser.add_argument("--tests", "-t", nargs="+", help="Specific tests to run (space-separated)")

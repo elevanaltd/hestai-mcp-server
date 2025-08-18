@@ -181,8 +181,11 @@ Apache License
       the brackets!)  The text should be enclosed in comments for the
       particular file format. An identification line is also useful.
 
-      Copyright 2025 Beehive Innovations
-      https://github.com/BeehiveInnovations
+      Original work Copyright 2025 Beehive Innovations
+      https://github.com/BeehiveInnovations/zen-mcp-server
+      
+      Modified work Copyright 2025 Elevana Ltd.
+      https://github.com/elevanaltd/hestai-mcp-server
 
       Licensed under the Apache License, Version 2.0 (the "License");
       you may not use this file except in compliance with the License.

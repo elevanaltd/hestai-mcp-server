@@ -55,11 +55,11 @@ Using planner, plan the architecture for a new real-time chat system with 100k c
 ```
 
 ```
-Create a plan using zen for migrating our React app from JavaScript to TypeScript
+Create a plan using hestai for migrating our React app from JavaScript to TypeScript
 ```
 
 ```
-Develop a plan using zen for implementing CI/CD pipelines across our development teams
+Develop a plan using hestai for implementing CI/CD pipelines across our development teams
 ```
 
 ## Best Practices

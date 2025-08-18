@@ -1,6 +1,6 @@
 # WSL (Windows Subsystem for Linux) Setup Guide
 
-This guide provides detailed instructions for setting up Zen MCP Server on Windows using WSL.
+This guide provides detailed instructions for setting up HestAI MCP Server on Windows using WSL.
 
 ## Prerequisites for WSL
 
@@ -68,7 +68,7 @@ python3 -m pip install --upgrade pip
 
 ```bash
 # If Claude Code can't connect to the MCP server, check the configuration
-cat ~/.claude.json | grep -A 10 "zen"
+cat ~/.claude.json | grep -A 10 "hestai"
 
 # The configuration should show the correct WSL path to the Python executable
 # Example: "/home/YourName/hestai-mcp-server/.hestai_venv/bin/python"

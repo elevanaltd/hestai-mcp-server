@@ -94,13 +94,13 @@ Set DEFAULT_MODEL to "auto" to force explicit model selection:
 export DEFAULT_MODEL=auto
 ```
 
-This ensures Claude must explicitly choose a high-end model for each zen-mcp invocation.
+This ensures Claude must explicitly choose a high-end model for each hestai-mcp invocation.
 
 ## Usage Pattern
 
 ```python
-# When invoking zen-mcp tools, always specify a premium model:
-await mcp__zen__thinkdeep(
+# When invoking hestai-mcp tools, always specify a premium model:
+await mcp__hestai__thinkdeep(
     model="o3",  # or "gemini-2.5-pro" or "gpt-4.1-2025-04-14"
     # ... other parameters
 )
@@ -108,7 +108,7 @@ await mcp__zen__thinkdeep(
 
 ## Enforcement
 
-The zen-mcp server will:
+The hestai-mcp server will:
 1. Require explicit model selection when DEFAULT_MODEL=auto
 2. Show only available premium models in the enum
 3. Tools are configured with appropriate ToolModelCategory for guidance

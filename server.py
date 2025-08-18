@@ -1139,7 +1139,7 @@ async def handle_list_prompts() -> list[Prompt]:
     """
     List all available prompts for Claude Code shortcuts.
 
-    This handler returns prompts that enable shortcuts like /zen:thinkdeeper.
+    This handler returns prompts that enable shortcuts like /hestai:thinkdeeper.
     We automatically generate prompts from all tools (1:1 mapping) plus add
     a few marketing aliases with richer templates for commonly used tools.
 
@@ -1189,7 +1189,7 @@ async def handle_get_prompt(name: str, arguments: dict[str, Any] = None) -> GetP
     """
     Get prompt details and generate the actual prompt text.
 
-    This handler is called when a user invokes a prompt (e.g., /zen:thinkdeeper or /zen:chat:o3).
+    This handler is called when a user invokes a prompt (e.g., /hestai:thinkdeeper or /hestai:chat:o3).
     It generates the appropriate text that Claude will then use to call the
     underlying tool.
 
@@ -1211,14 +1211,14 @@ async def handle_get_prompt(name: str, arguments: dict[str, Any] = None) -> GetP
 
     # Handle special "continue" case
     if name.lower() == "continue":
-        # This is "/zen:continue" - use chat tool as default for continuation
+        # This is "/hestai:continue" - use chat tool as default for continuation
         tool_name = "chat"
         template_info = {
             "name": "continue",
             "description": "Continue the previous conversation",
             "template": "Continue the conversation",
         }
-        logger.debug("Using /zen:continue - defaulting to chat tool")
+        logger.debug("Using /hestai:continue - defaulting to chat tool")
     else:
         # Find the corresponding tool by checking prompt names
         tool_name = None
@@ -1266,7 +1266,7 @@ async def handle_get_prompt(name: str, arguments: dict[str, Any] = None) -> GetP
 
     # Generate tool call instruction
     if name.lower() == "continue":
-        # "/zen:continue" case
+        # "/hestai:continue" case
         tool_instruction = f"Continue the previous conversation using the {tool_name} tool"
     else:
         # Simple prompt case

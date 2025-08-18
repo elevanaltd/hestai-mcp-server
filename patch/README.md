@@ -1,6 +1,6 @@
 # Cross-Platform Compatibility Patches
 
-This directory contains patch scripts to improve the cross-platform compatibility of the zen-mcp server.
+This directory contains patch scripts to improve the cross-platform compatibility of the hestai-mcp server.
 
 ## Files
 

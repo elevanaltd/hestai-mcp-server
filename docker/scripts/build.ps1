@@ -21,7 +21,7 @@ function Write-ColorText {
     }
 }
 
-Write-ColorText "=== Building Zen MCP Server Docker Image ===" -Color Green
+Write-ColorText "=== Building HestAI MCP Server Docker Image ===" -Color Green
 
 # Check if .env file exists
 if (!(Test-Path ".env")) {

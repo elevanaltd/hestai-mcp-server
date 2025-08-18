@@ -1,6 +1,6 @@
 # Custom Models & API Setup
 
-This guide covers setting up multiple AI model providers including OpenRouter, custom API endpoints, and local model servers. The Zen MCP server supports a unified configuration for all these providers through a single model registry.
+This guide covers setting up multiple AI model providers including OpenRouter, custom API endpoints, and local model servers. The HestAI MCP server supports a unified configuration for all these providers through a single model registry.
 
 ## Supported Providers
 
@@ -109,7 +109,7 @@ CUSTOM_MODEL_NAME=llama3.2                          # Default model to use
 
 **Local Model Connection**
 
-The Zen MCP server runs natively, so you can use standard localhost URLs to connect to local models:
+The HestAI MCP server runs natively, so you can use standard localhost URLs to connect to local models:
 
 ```bash
 # For Ollama, vLLM, LM Studio, etc. running on your machine
@@ -153,9 +153,9 @@ CUSTOM_MODEL_NAME=your-loaded-model
 # OpenRouter models:
 "Use opus for deep analysis"         # → anthropic/claude-opus-4
 "Use sonnet to review this code"     # → anthropic/claude-sonnet-4
-"Use pro via zen to analyze this"    # → google/gemini-2.5-pro
-"Use gpt4o via zen to analyze this"  # → openai/gpt-4o
-"Use mistral via zen to optimize"    # → mistral/mistral-large
+"Use pro via hestai to analyze this"    # → google/gemini-2.5-pro
+"Use gpt4o via hestai to analyze this"  # → openai/gpt-4o
+"Use mistral via hestai to optimize"    # → mistral/mistral-large
 
 # Local models (with custom URL configured):
 "Use local-llama to analyze this code"     # → llama3.2 (local)
@@ -165,13 +165,13 @@ CUSTOM_MODEL_NAME=your-loaded-model
 **Using full model names:**
 ```
 # OpenRouter models:
-"Use anthropic/claude-opus-4 via zen for deep analysis"
-"Use openai/gpt-4o via zen to debug this"
-"Use deepseek/deepseek-coder via zen to generate code"
+"Use anthropic/claude-opus-4 via hestai for deep analysis"
+"Use openai/gpt-4o via hestai to debug this"
+"Use deepseek/deepseek-coder via hestai to generate code"
 
 # Local/custom models:
-"Use llama3.2 via zen to review this"
-"Use meta-llama/Llama-2-7b-chat-hf via zen to analyze"
+"Use llama3.2 via hestai to review this"
+"Use meta-llama/Llama-2-7b-chat-hf via hestai to analyze"
 ```
 
 **For OpenRouter:** Check current model pricing at [openrouter.ai/models](https://openrouter.ai/models).  

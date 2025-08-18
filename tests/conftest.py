@@ -1,5 +1,5 @@
 """
-Pytest configuration for Zen MCP Server tests
+Pytest configuration for HestAI MCP Server tests
 """
 
 import asyncio

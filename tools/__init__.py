@@ -1,5 +1,5 @@
 """
-Tool implementations for Zen MCP Server - Premium High-End Models Only
+Tool implementations for HestAI MCP Server - Premium High-End Models Only
 Focused on complex, multi-step workflows requiring premium models
 """
 
