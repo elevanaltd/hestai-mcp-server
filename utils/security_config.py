@@ -17,6 +17,16 @@ DANGEROUS_PATHS = {
     "/var",
     "/root",
     "/home",
+    # macOS system paths (which resolve through /private)
+    "/private/etc",
+    "/private/var/log",
+    "/private/var/root",
+    "/private/var/audit",
+    "/private/var/at",
+    "/System",
+    "/Library",
+    "/Applications",
+    # Windows paths
     "C:\\",
     "C:\\Windows",
     "C:\\Program Files",
@@ -99,6 +109,21 @@ def is_dangerous_path(path: Path) -> bool:
     """
     try:
         resolved = path.resolve()
-        return str(resolved) in DANGEROUS_PATHS or resolved.parent == resolved
+        path_str = str(resolved)
+
+        # Check if path is exactly in dangerous paths
+        if path_str in DANGEROUS_PATHS:
+            return True
+
+        # Check if path is a child of any dangerous path
+        for dangerous_path in DANGEROUS_PATHS:
+            if path_str.startswith(dangerous_path + "/") or path_str == dangerous_path:
+                return True
+
+        # Check if path is root directory
+        if resolved.parent == resolved:
+            return True
+
+        return False
     except Exception:
         return True  # If we can't resolve, consider it dangerous
