@@ -317,4 +317,24 @@ isort --check-only .
 - All dependencies from `requirements.txt` installed
 - Proper API keys configured in `.env` file
 
+### Enhanced File Context for Validation Tools (New Feature)
+
+The critical-engineer and testguard tools now support optional file context parameters to enhance their validation capabilities:
+
+#### Critical-Engineer Enhanced Parameters
+- `files`: List[str] - Paths to files for validation context (use ["auto"] for auto-discovery)
+- `include_tree`: bool - Include directory tree structure (default: False)
+- `include_related`: bool - Auto-find related test/config files (default: False)  
+- `max_file_tokens`: int - Token budget for file content (default: 5000)
+- `max_depth`: int - Max depth for tree traversal (default: 3)
+
+#### TestGuard Enhanced Parameters
+- `files`: List[str] - Test/implementation files to analyze
+- `include_test_context`: bool - Gather comprehensive test context (default: False)
+- `check_coverage`: bool - Check coverage configuration (default: False)
+- `include_related`: bool - Auto-find related files (default: False)
+- `compare_changes`: bool - Compare test vs implementation changes (default: False)
+
+These enhancements enable the validation tools to make more informed decisions based on actual code context rather than just descriptions.
+
 This guide provides everything needed to efficiently work with the HestAI MCP Server codebase using Claude. Always run quality checks before and after making changes to ensure code integrity.

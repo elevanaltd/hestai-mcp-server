@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 from config import TEMPERATURE_ANALYTICAL
 from tools.shared.base_models import ToolRequest
+from utils.file_context_processor import FileContextProcessor
 
 from .simple.base import SimpleTool
 
@@ -27,13 +28,38 @@ CRITICAL_ENGINEER_FIELD_DESCRIPTIONS = {
         "Include context about the system, requirements, constraints, and specific concerns. "
         "The more detail you provide, the more thorough the validation can be."
     ),
+    "files": (
+        "Optional list of file paths to provide context for validation. "
+        "Can include implementation files, configuration files, or documentation. "
+        "Use 'auto' as first element to auto-discover architectural context."
+    ),
+    "include_tree": (
+        "Include directory tree structure for architectural awareness. "
+        "Helps understand project organization and identify structural issues."
+    ),
+    "max_depth": (
+        "Maximum depth for directory tree traversal (default: 3). "
+        "Deeper traversal provides more context but uses more tokens."
+    ),
+    "include_related": (
+        "Automatically find and include related files (tests, configs). "
+        "Helps identify missing test coverage or configuration issues."
+    ),
+    "max_file_tokens": (
+        "Maximum tokens to use for file content (default: 5000). " "Manages token budget for efficient processing."
+    ),
 }
 
 
 class CriticalEngineerRequest(ToolRequest):
-    """Request model for Critical Engineer tool"""
+    """Request model for Critical Engineer tool with enhanced file context support"""
 
     prompt: str = Field(..., description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["prompt"])
+    files: Optional[list[str]] = Field(default=None, description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["files"])
+    include_tree: bool = Field(default=False, description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_tree"])
+    max_depth: int = Field(default=3, description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_depth"])
+    include_related: bool = Field(default=False, description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_related"])
+    max_file_tokens: int = Field(default=5000, description=CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_file_tokens"])
 
 
 class CriticalEngineerTool(SimpleTool):
@@ -149,7 +175,7 @@ class CriticalEngineerTool(SimpleTool):
 
     def get_input_schema(self) -> dict[str, Any]:
         """
-        Override input schema to only allow high-quality models for critical engineering validation.
+        Override input schema to include file context fields and restrict to high-quality models.
         Restricted to gemini-2.5-pro (preferred) and gpt-4.1-2025-04-14 (fallback).
         """
         # Get the base schema from SimpleTool
@@ -164,37 +190,148 @@ class CriticalEngineerTool(SimpleTool):
                 "description": "AI model to use for critical engineering validation (gemini-2.5-pro preferred, gpt-4.1-2025-04-14 fallback)",
             }
 
+        # Add file context fields to schema
+        schema["properties"].update(
+            {
+                "files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["files"],
+                },
+                "include_tree": {
+                    "type": "boolean",
+                    "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_tree"],
+                    "default": False,
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_depth"],
+                    "default": 3,
+                },
+                "include_related": {
+                    "type": "boolean",
+                    "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_related"],
+                    "default": False,
+                },
+                "max_file_tokens": {
+                    "type": "integer",
+                    "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_file_tokens"],
+                    "default": 5000,
+                },
+            }
+        )
+
         return schema
 
     async def prepare_prompt(self, request: CriticalEngineerRequest) -> str:
         """
-        Prepare the critical engineer prompt with the technical decision to validate.
+        Prepare the critical engineer prompt with the technical decision to validate,
+        including file context when provided.
 
         Args:
             request: The validated request containing the technical decision to analyze
 
         Returns:
-            The formatted prompt for the AI model
+            The formatted prompt for the AI model with file context
         """
-        return (
+        prompt_parts = [
             f"🔍 CRITICAL ENGINEERING VALIDATION REQUIRED 🔍\n\n"
             f'Technical decision/design to validate: "{request.prompt}"\n\n'
-            f"Apply the Critical Engineer validation protocol:\n\n"
-            f"1. UNDERSTAND: Analyze the technical decision thoroughly\n"
-            f"2. STRESS_TEST: Identify what will break under pressure\n"
-            f"3. IDENTIFY_GAPS: Find missing pieces and unhandled scenarios\n"
-            f"4. VALIDATE: Assess technical viability and risks\n"
-            f"5. RECOMMEND: Provide specific improvements with rationale\n\n"
-            f"Critical validation question: 'What will break this in production?'\n\n"
-            f"Focus on:\n"
-            f"- Scalability: Will it handle 10x load?\n"
-            f"- Reliability: Single points of failure?\n"
-            f"- Security: Attack vectors and vulnerabilities?\n"
-            f"- Maintainability: Can others understand and fix it?\n"
-            f"- Performance: Bottlenecks and resource usage?\n"
-            f"- Complexity: Is it over-engineered or under-engineered?\n\n"
-            f"Provide your expert validation with specific, actionable recommendations."
+        ]
+
+        # Add file context if provided
+        if request.files or request.include_tree:
+            processor = FileContextProcessor()
+
+            # Handle directory tree if requested
+            if request.include_tree:
+                tree_context = processor.get_file_tree(".", max_depth=request.max_depth)
+                if tree_context and "structure" in tree_context:
+                    prompt_parts.append(
+                        f"📁 DIRECTORY STRUCTURE:\n"
+                        f"```\n{tree_context['structure']}\n```\n"
+                        f"Total: {tree_context.get('total_files', 0)} files, "
+                        f"{tree_context.get('total_dirs', 0)} directories\n\n"
+                    )
+
+            # Handle file content
+            if request.files:
+                files_to_process = []
+
+                # Check for auto-discovery
+                if request.files and request.files[0] == "auto":
+                    # Auto-discover architectural context
+                    arch_context = processor.get_architectural_context(".")
+                    prompt_parts.append(
+                        f"🏗️ ARCHITECTURAL CONTEXT:\n"
+                        f"Configuration files: {', '.join(arch_context['configs'][:5]) if arch_context['configs'] else 'None found'}\n"
+                        f"Entry points: {', '.join(arch_context['entry_points'][:5]) if arch_context['entry_points'] else 'None found'}\n"
+                        f"Test structure: {', '.join(arch_context['test_structure']) if arch_context['test_structure'] else 'No test directories found'}\n"
+                        f"Dependencies: {', '.join(arch_context.get('dependencies', [])[:5]) if arch_context.get('dependencies') else 'Not detected'}\n\n"
+                    )
+                    # Use discovered files
+                    files_to_process = arch_context.get("configs", [])[:3] + arch_context.get("entry_points", [])[:2]
+                else:
+                    files_to_process = request.files
+
+                    # Add related files if requested
+                    if request.include_related and files_to_process:
+                        for file_path in files_to_process[:3]:  # Limit to first 3 to avoid explosion
+                            related = processor.find_related_files(file_path, include_configs=True)
+                            files_to_process.extend(related[:2])  # Add up to 2 related files per file
+
+                # Get file contents within token budget
+                if files_to_process:
+                    file_context = processor.get_relevant_files(
+                        files_to_process, token_budget=request.max_file_tokens, prioritize=True
+                    )
+
+                    if file_context and file_context["files"]:
+                        prompt_parts.append(f"📄 FILE CONTEXT ({file_context['total_tokens']} tokens):\n\n")
+
+                        for file_info in file_context["files"]:
+                            if "error" in file_info:
+                                prompt_parts.append(f"❌ {file_info['path']}: {file_info['error']}\n\n")
+                            else:
+                                truncated_note = " [TRUNCATED]" if file_info.get("truncated") else ""
+                                prompt_parts.append(
+                                    f"File: {file_info['path']}{truncated_note}\n"
+                                    f"```\n{file_info.get('content', '')}\n```\n\n"
+                                )
+
+                        if file_context.get("truncated"):
+                            prompt_parts.append("⚠️ Note: Some files were truncated to fit within token budget.\n\n")
+
+        # Add validation protocol
+        prompt_parts.extend(
+            [
+                "Apply the Critical Engineer validation protocol:\n\n"
+                "1. UNDERSTAND: Analyze the technical decision thoroughly\n"
+                "2. STRESS_TEST: Identify what will break under pressure\n"
+                "3. IDENTIFY_GAPS: Find missing pieces and unhandled scenarios\n"
+                "4. VALIDATE: Assess technical viability and risks\n"
+                "5. RECOMMEND: Provide specific improvements with rationale\n\n"
+                "Critical validation question: 'What will break this in production?'\n\n"
+                "Focus on:\n"
+                "- Scalability: Will it handle 10x load?\n"
+                "- Reliability: Single points of failure?\n"
+                "- Security: Attack vectors and vulnerabilities?\n"
+                "- Maintainability: Can others understand and fix it?\n"
+                "- Performance: Bottlenecks and resource usage?\n"
+                "- Complexity: Is it over-engineered or under-engineered?\n\n"
+            ]
         )
+
+        # Add context-aware note if files were provided
+        if request.files:
+            prompt_parts.append(
+                "Use the provided file context to make your validation more specific and actionable.\n"
+                "Reference actual code patterns, configurations, and structures in your analysis.\n\n"
+            )
+
+        prompt_parts.append("Provide your expert validation with specific, actionable recommendations.")
+
+        return "".join(prompt_parts)
 
     def format_response(
         self, response: str, request: CriticalEngineerRequest, model_info: Optional[dict] = None
@@ -219,11 +356,36 @@ class CriticalEngineerTool(SimpleTool):
         )
 
     def get_tool_fields(self) -> dict[str, dict[str, Any]]:
-        """Tool-specific field definitions for Critical Engineer"""
+        """Tool-specific field definitions for Critical Engineer with file context"""
         return {
             "prompt": {
                 "type": "string",
                 "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["prompt"],
+            },
+            "files": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["files"],
+            },
+            "include_tree": {
+                "type": "boolean",
+                "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_tree"],
+                "default": False,
+            },
+            "max_depth": {
+                "type": "integer",
+                "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_depth"],
+                "default": 3,
+            },
+            "include_related": {
+                "type": "boolean",
+                "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["include_related"],
+                "default": False,
+            },
+            "max_file_tokens": {
+                "type": "integer",
+                "description": CRITICAL_ENGINEER_FIELD_DESCRIPTIONS["max_file_tokens"],
+                "default": 5000,
             },
         }
 

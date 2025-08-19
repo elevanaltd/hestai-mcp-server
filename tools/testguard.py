@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 from config import TEMPERATURE_ANALYTICAL
 from tools.shared.base_models import ToolRequest
+from utils.file_context_processor import FileContextProcessor
 
 from .simple.base import SimpleTool
 
@@ -26,13 +27,39 @@ REQUIREMENTS_FIELD_DESCRIPTIONS = {
         "The user's message or your internal reasoning to analyze for test integrity. "
         "Pass the complete context including what you're considering doing with tests."
     ),
+    "files": (
+        "Optional list of file paths (test files, implementation files, configs) to analyze. "
+        "Helps detect test manipulation by comparing test changes with implementation."
+    ),
+    "include_test_context": (
+        "Include comprehensive test context (test files, configs, coverage settings). "
+        "Helps identify testing framework and existing test patterns."
+    ),
+    "check_coverage": (
+        "Check coverage configuration to detect threshold manipulation. " "Prevents lowering of quality thresholds."
+    ),
+    "include_related": (
+        "Automatically find related test/implementation files for comparison. "
+        "Helps detect when tests are changed without corresponding code changes."
+    ),
+    "compare_changes": (
+        "Compare test changes with implementation changes to detect manipulation. "
+        "Identifies when tests are 'fixed' instead of fixing the actual code."
+    ),
 }
 
 
 class RequirementsRequest(ToolRequest):
-    """Request model for Test Methodology Guardian tool"""
+    """Request model for Test Methodology Guardian tool with enhanced file context"""
 
     prompt: str = Field(..., description=REQUIREMENTS_FIELD_DESCRIPTIONS["prompt"])
+    files: Optional[list[str]] = Field(default=None, description=REQUIREMENTS_FIELD_DESCRIPTIONS["files"])
+    include_test_context: bool = Field(
+        default=False, description=REQUIREMENTS_FIELD_DESCRIPTIONS["include_test_context"]
+    )
+    check_coverage: bool = Field(default=False, description=REQUIREMENTS_FIELD_DESCRIPTIONS["check_coverage"])
+    include_related: bool = Field(default=False, description=REQUIREMENTS_FIELD_DESCRIPTIONS["include_related"])
+    compare_changes: bool = Field(default=False, description=REQUIREMENTS_FIELD_DESCRIPTIONS["compare_changes"])
 
 
 class RequirementsTool(SimpleTool):
@@ -135,7 +162,7 @@ class RequirementsTool(SimpleTool):
 
     def get_input_schema(self) -> dict[str, Any]:
         """
-        Override input schema to only allow high-quality models for test methodology analysis.
+        Override input schema to include file context fields and restrict to high-quality models.
         Restricted to gemini-2.5-pro (preferred) and gpt-4.1-2025-04-14 (fallback).
         """
         # Get the base schema from SimpleTool
@@ -150,30 +177,195 @@ class RequirementsTool(SimpleTool):
                 "description": "AI model to use for test methodology analysis (gemini-2.5-pro preferred, gpt-4.1-2025-04-14 fallback)",
             }
 
+        # Add file context fields to schema
+        schema["properties"].update(
+            {
+                "files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": REQUIREMENTS_FIELD_DESCRIPTIONS["files"],
+                },
+                "include_test_context": {
+                    "type": "boolean",
+                    "description": REQUIREMENTS_FIELD_DESCRIPTIONS["include_test_context"],
+                    "default": False,
+                },
+                "check_coverage": {
+                    "type": "boolean",
+                    "description": REQUIREMENTS_FIELD_DESCRIPTIONS["check_coverage"],
+                    "default": False,
+                },
+                "include_related": {
+                    "type": "boolean",
+                    "description": REQUIREMENTS_FIELD_DESCRIPTIONS["include_related"],
+                    "default": False,
+                },
+                "compare_changes": {
+                    "type": "boolean",
+                    "description": REQUIREMENTS_FIELD_DESCRIPTIONS["compare_changes"],
+                    "default": False,
+                },
+            }
+        )
+
         return schema
 
     async def prepare_prompt(self, request: RequirementsRequest) -> str:
         """
-        Prepare the test guard prompt with the consideration to analyze.
+        Prepare the test guard prompt with the consideration to analyze,
+        including file context when provided.
 
         Args:
             request: The validated request containing the consideration to analyze
 
         Returns:
-            The formatted prompt for the AI model
+            The formatted prompt for the AI model with file context
         """
-        return (
-            f"🚨 TEST METHODOLOGY ANALYSIS REQUIRED 🚨\n\n"
-            f'Current consideration: "{request.prompt}"\n\n'
-            f"Analyze this consideration for test manipulation anti-patterns. Apply the Test Methodology Guardian protocol:\n\n"
-            f"1. DETECT: Identify any test manipulation patterns\n"
-            f"2. ANALYZE: Determine the specific anti-pattern type\n"
-            f"3. EDUCATE: Explain why this violates testing principles\n"
-            f"4. REDIRECT: Provide the proper approach\n"
-            f"5. ENFORCE: Demand acknowledgment if intervention required\n\n"
-            f'Key question: "Are we fixing the code or hiding the problem?"\n\n'
-            f"Provide your analysis and intervention if needed."
+        prompt_parts = [
+            f"🚨 TEST METHODOLOGY ANALYSIS REQUIRED 🚨\n\n" f'Current consideration: "{request.prompt}"\n\n'
+        ]
+
+        # Add file context if provided
+        if request.files or request.include_test_context or request.check_coverage:
+            processor = FileContextProcessor()
+
+            # Handle test context gathering
+            if request.include_test_context:
+                test_context = processor.get_test_context(".")
+                if test_context:
+                    prompt_parts.append(
+                        f"🧪 TEST CONTEXT:\n"
+                        f"Test Framework: {test_context.get('test_framework', 'Unknown')}\n"
+                        f"Test Files: {len(test_context.get('test_files', []))} test files found\n"
+                        f"Test Configs: {', '.join(test_context.get('test_configs', [])[:5]) if test_context.get('test_configs') else 'None'}\n"
+                        f"Coverage Config: {test_context.get('coverage_config', 'Not found')}\n"
+                        f"Test Patterns: {', '.join(test_context.get('test_patterns', [])) if test_context.get('test_patterns') else 'Not detected'}\n\n"
+                    )
+
+            # Handle coverage configuration check
+            if request.check_coverage:
+                coverage_files = [".coveragerc", "coverage.json", "pytest.ini", "setup.cfg", "pyproject.toml"]
+                coverage_content = None
+                for cov_file in coverage_files:
+                    try:
+                        from pathlib import Path
+
+                        cov_path = Path(cov_file)
+                        if cov_path.exists():
+                            from utils.file_utils import read_file_safely
+
+                            coverage_content = read_file_safely(str(cov_path))
+                            if coverage_content:
+                                prompt_parts.append(
+                                    f"📊 COVERAGE CONFIGURATION ({cov_file}):\n"
+                                    f"```\n{coverage_content[:500]}\n```\n\n"
+                                )
+                                break
+                    except Exception:
+                        pass
+
+            # Handle file content
+            if request.files:
+                files_to_process = list(request.files)
+
+                # Add related files if requested
+                if request.include_related and files_to_process:
+                    for file_path in files_to_process[:2]:  # Limit to avoid explosion
+                        related = processor.find_related_files(file_path)
+                        files_to_process.extend(related[:2])
+
+                # Get file contents
+                file_context = processor.get_relevant_files(
+                    files_to_process, token_budget=4000, prioritize=True  # Smaller budget for testguard
+                )
+
+                if file_context and file_context["files"]:
+                    prompt_parts.append(f"📄 FILE CONTEXT ({file_context['total_tokens']} tokens):\n\n")
+
+                    # Group files by type for better analysis
+                    test_files = []
+                    impl_files = []
+                    config_files = []
+
+                    for file_info in file_context["files"]:
+                        if "error" in file_info:
+                            prompt_parts.append(f"❌ {file_info['path']}: {file_info['error']}\n")
+                        else:
+                            path = file_info["path"].lower()
+                            if "test" in path or "spec" in path:
+                                test_files.append(file_info)
+                            elif any(ext in path for ext in [".json", ".ini", ".cfg", ".toml", ".yml", ".yaml"]):
+                                config_files.append(file_info)
+                            else:
+                                impl_files.append(file_info)
+
+                    # Show implementation files first (for context)
+                    if impl_files:
+                        prompt_parts.append("📝 IMPLEMENTATION FILES:\n")
+                        for file_info in impl_files:
+                            truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
+                            prompt_parts.append(
+                                f"\nFile: {file_info['path']}{truncated}\n"
+                                f"```\n{file_info.get('content', '')}\n```\n"
+                            )
+
+                    # Then show test files (to check for manipulation)
+                    if test_files:
+                        prompt_parts.append("\n🧪 TEST FILES:\n")
+                        for file_info in test_files:
+                            truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
+                            prompt_parts.append(
+                                f"\nFile: {file_info['path']}{truncated}\n"
+                                f"```\n{file_info.get('content', '')}\n```\n"
+                            )
+
+                    # Finally show config files
+                    if config_files:
+                        prompt_parts.append("\n⚙️ CONFIGURATION FILES:\n")
+                        for file_info in config_files:
+                            truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
+                            prompt_parts.append(
+                                f"\nFile: {file_info['path']}{truncated}\n"
+                                f"```\n{file_info.get('content', '')}\n```\n"
+                            )
+
+                    prompt_parts.append("\n")
+
+            # Add comparison note if requested
+            if request.compare_changes and request.files:
+                prompt_parts.append(
+                    "⚠️ COMPARISON DIRECTIVE:\n"
+                    "Compare test changes with implementation changes.\n"
+                    "Detect if tests are being 'fixed' to match buggy behavior.\n"
+                    "Look for expectation adjustments without corresponding code fixes.\n\n"
+                )
+
+        # Add analysis protocol
+        prompt_parts.extend(
+            [
+                "Analyze this consideration for test manipulation anti-patterns. Apply the Test Methodology Guardian protocol:\n\n"
+                "1. DETECT: Identify any test manipulation patterns\n"
+                "2. ANALYZE: Determine the specific anti-pattern type\n"
+                "3. EDUCATE: Explain why this violates testing principles\n"
+                "4. REDIRECT: Provide the proper approach\n"
+                "5. ENFORCE: Demand acknowledgment if intervention required\n\n"
+                'Key question: "Are we fixing the code or hiding the problem?"\n\n'
+            ]
         )
+
+        # Add context-aware analysis if files provided
+        if request.files:
+            prompt_parts.append(
+                "Use the provided file context to:\n"
+                "- Identify specific test manipulation patterns in the code\n"
+                "- Compare test assertions with actual implementation\n"
+                "- Detect coverage threshold manipulations\n"
+                "- Find commented out or skipped tests\n\n"
+            )
+
+        prompt_parts.append("Provide your analysis and intervention if needed.")
+
+        return "".join(prompt_parts)
 
     def format_response(self, response: str, request: RequirementsRequest, model_info: Optional[dict] = None) -> str:
         """
@@ -196,11 +388,36 @@ class RequirementsTool(SimpleTool):
         )
 
     def get_tool_fields(self) -> dict[str, dict[str, Any]]:
-        """Tool-specific field definitions for Test Guard"""
+        """Tool-specific field definitions for Test Guard with file context"""
         return {
             "prompt": {
                 "type": "string",
                 "description": REQUIREMENTS_FIELD_DESCRIPTIONS["prompt"],
+            },
+            "files": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": REQUIREMENTS_FIELD_DESCRIPTIONS["files"],
+            },
+            "include_test_context": {
+                "type": "boolean",
+                "description": REQUIREMENTS_FIELD_DESCRIPTIONS["include_test_context"],
+                "default": False,
+            },
+            "check_coverage": {
+                "type": "boolean",
+                "description": REQUIREMENTS_FIELD_DESCRIPTIONS["check_coverage"],
+                "default": False,
+            },
+            "include_related": {
+                "type": "boolean",
+                "description": REQUIREMENTS_FIELD_DESCRIPTIONS["include_related"],
+                "default": False,
+            },
+            "compare_changes": {
+                "type": "boolean",
+                "description": REQUIREMENTS_FIELD_DESCRIPTIONS["compare_changes"],
+                "default": False,
             },
         }
 
