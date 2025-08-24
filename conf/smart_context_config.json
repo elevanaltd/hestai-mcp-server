@@ -45,8 +45,7 @@
         ]
       },
       "context_files": [
-        "/Volumes/HestAI/docs/workflow/001-WORKFLOW-NORTH-STAR.md",
-        "/Users/shaunbuswell/.claude/protocols/WORKFLOW-NORTH-STAR.md"
+        "/Volumes/HestAI/docs/workflow/001-WORKFLOW-NORTH-STAR.md"
       ],
       "confidence_threshold": 0.7,
       "notification_template": "📋 Workflow context automatically included for phase execution guidance"
@@ -75,22 +74,29 @@
     "smartsuite_integration": {
       "priority": 80,
       "triggers": {
-        "keywords": ["smartsuite", "table", "record", "field", "API", "workspace"],
+        "keywords": ["smartsuite", "table", "record", "field", "API", "workspace", "solution", "EAV", "TEST"],
         "combinations": [
           ["smartsuite", "table"],
           ["create", "record"],
-          ["field", "mapping"]
+          ["field", "mapping"],
+          ["TEST", "EAV"],
+          ["EAV", "Management"],
+          ["EAV", "Production"],
+          ["workspace", "s3qnmox1"],
+          ["solution", "ID"]
         ],
         "regex_patterns": [
-          "\\b6613[a-f0-9]{20}\\b",
-          "\\bs3qnmox1\\b"
+          "\\b(6613|68a8|68ab)[a-f0-9]{20}\\b",
+          "\\bs3qnmox1\\b",
+          "\\bTEST\\s+EAV\\b",
+          "\\bEAV\\s+(Management|Production|MGMT|PROD)\\b"
         ]
       },
       "context_files": [
         "/Volumes/HestAI/docs/smartsuite/integration-guide.md"
       ],
-      "confidence_threshold": 0.8,
-      "notification_template": "📊 SmartSuite integration context included"
+      "confidence_threshold": 0.7,
+      "notification_template": "📊 SmartSuite integration context included (Production & TEST environments)"
     },
     "error_resolution": {
       "priority": 95,
