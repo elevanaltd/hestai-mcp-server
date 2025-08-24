@@ -1,0 +1,122 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "feature_flags": {
+    "global_enabled": true,
+    "per_tool_override": {
+      "chat": true,
+      "analyze": true,
+      "debug": true,
+      "codereview": true,
+      "consensus": false,
+      "planner": false
+    },
+    "user_notification": true,
+    "caching_enabled": true,
+    "dry_run_mode": false
+  },
+  "performance": {
+    "cache_ttl_seconds": 3600,
+    "max_cache_size_mb": 100,
+    "pattern_match_timeout_ms": 50,
+    "max_context_injection_ms": 100,
+    "min_regex_timeout_ms": 2
+  },
+  "scoring": {
+    "weights": {
+      "keywords": 0.4,
+      "combinations": 0.4,
+      "regex": 0.2
+    }
+  },
+  "patterns": {
+    "workflow_north_star": {
+      "priority": 100,
+      "triggers": {
+        "keywords": ["workflow", "phase", "D1", "D2", "D3", "B0", "B1", "B2", "B3", "B4"],
+        "combinations": [
+          ["workflow", "phase"],
+          ["workflow", "north", "star"],
+          ["phase", "execution"]
+        ],
+        "regex_patterns": [
+          "\\b(D[0-3]|B[0-5])\\b",
+          "\\bworkflow\\s+(phase|execution|pattern)\\b"
+        ]
+      },
+      "context_files": [
+        "/Volumes/HestAI/docs/workflow/001-WORKFLOW-NORTH-STAR.md",
+        "/Users/shaunbuswell/.claude/protocols/WORKFLOW-NORTH-STAR.md"
+      ],
+      "confidence_threshold": 0.7,
+      "notification_template": "📋 Workflow context automatically included for phase execution guidance"
+    },
+    "agent_capabilities": {
+      "priority": 90,
+      "triggers": {
+        "keywords": ["agent", "capability", "role", "activation", "specialist"],
+        "combinations": [
+          ["agent", "capability"],
+          ["role", "selection"],
+          ["which", "agent"]
+        ],
+        "regex_patterns": [
+          "\\b(technical-architect|code-review-specialist|error-architect)\\b",
+          "/role\\s+\\w+"
+        ]
+      },
+      "context_files": [
+        "/Volumes/HestAI/docs/guides/102-DOC-AGENT-CAPABILITY-LOOKUP.oct.md",
+        "/Volumes/HestAI/docs/guides/101-DOC-AGENT-ACCOUNTABILITY-MATRIX.md"
+      ],
+      "confidence_threshold": 0.6,
+      "notification_template": "🤖 Agent capability documentation included for role selection"
+    },
+    "smartsuite_integration": {
+      "priority": 80,
+      "triggers": {
+        "keywords": ["smartsuite", "table", "record", "field", "API", "workspace"],
+        "combinations": [
+          ["smartsuite", "table"],
+          ["create", "record"],
+          ["field", "mapping"]
+        ],
+        "regex_patterns": [
+          "\\b6613[a-f0-9]{20}\\b",
+          "\\bs3qnmox1\\b"
+        ]
+      },
+      "context_files": [
+        "/Volumes/HestAI/docs/smartsuite/integration-guide.md"
+      ],
+      "confidence_threshold": 0.8,
+      "notification_template": "📊 SmartSuite integration context included"
+    },
+    "error_resolution": {
+      "priority": 95,
+      "triggers": {
+        "keywords": ["error", "failure", "CI", "build", "test", "broken"],
+        "combinations": [
+          ["CI", "error"],
+          ["build", "failure"],
+          ["test", "failing"]
+        ],
+        "regex_patterns": [
+          "\\berror:\\s+",
+          "\\bfailed\\s+(to|with)\\b"
+        ]
+      },
+      "context_files": [
+        "/Users/shaunbuswell/.claude/protocols/CI_ERROR_RESOLUTION.md"
+      ],
+      "confidence_threshold": 0.75,
+      "notification_template": "🔧 Error resolution protocol included for systematic debugging"
+    }
+  },
+  "logging": {
+    "log_pattern_matches": true,
+    "log_context_injections": true,
+    "log_performance_metrics": true,
+    "log_user_notifications": true
+  }
+}
