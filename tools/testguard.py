@@ -159,10 +159,10 @@ class RequirementsTool(SimpleTool):
 
     def _validate_filesystem_reality(self, project_path: str) -> dict[str, Any]:
         """Cross-validate reported context against filesystem reality
-        
+
         Args:
             project_path: Path to the project root
-            
+
         Returns:
             Dictionary with reality check results and discrepancy warnings
         """
@@ -170,20 +170,27 @@ class RequirementsTool(SimpleTool):
             "config_files_exist": [],
             "test_files_exist": 0,
             "package_json_scripts": None,
-            "discrepancies": []
+            "discrepancies": [],
         }
 
         try:
             from pathlib import Path
+
             # Context7: consulted for pathlib (standard library)
 
             root = Path(project_path).resolve()
 
             # Check for common config files
             common_configs = [
-                "pytest.ini", "pytest.cfg", "jest.config.js", "jest.config.ts",
-                "vitest.config.js", "vitest.config.ts", "vite.config.js",
-                "vite.config.ts", "package.json"
+                "pytest.ini",
+                "pytest.cfg",
+                "jest.config.js",
+                "jest.config.ts",
+                "vitest.config.js",
+                "vitest.config.ts",
+                "vite.config.js",
+                "vite.config.ts",
+                "package.json",
             ]
 
             for config in common_configs:
@@ -193,9 +200,16 @@ class RequirementsTool(SimpleTool):
 
             # Count test files using common patterns
             test_patterns = [
-                "**/*.test.js", "**/*.spec.js", "**/*.test.ts", "**/*.spec.ts",
-                "**/*.test.jsx", "**/*.spec.jsx", "**/*.test.tsx", "**/*.spec.tsx",
-                "**/test_*.py", "**/*_test.py"
+                "**/*.test.js",
+                "**/*.spec.js",
+                "**/*.test.ts",
+                "**/*.spec.ts",
+                "**/*.test.jsx",
+                "**/*.spec.jsx",
+                "**/*.test.tsx",
+                "**/*.spec.tsx",
+                "**/test_*.py",
+                "**/*_test.py",
             ]
 
             test_files = set()
@@ -219,14 +233,10 @@ class RequirementsTool(SimpleTool):
                         pkg = json.loads(content)
                         reality_check["package_json_scripts"] = pkg.get("scripts", {})
                 except (json.JSONDecodeError, Exception):
-                    reality_check["discrepancies"].append(
-                        "⚠️ package.json exists but could not be parsed"
-                    )
+                    reality_check["discrepancies"].append("⚠️ package.json exists but could not be parsed")
 
         except Exception as e:
-            reality_check["discrepancies"].append(
-                f"⚠️ Filesystem validation error: {str(e)}"
-            )
+            reality_check["discrepancies"].append(f"⚠️ Filesystem validation error: {str(e)}")
 
         return reality_check
 

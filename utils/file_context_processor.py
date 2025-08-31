@@ -413,12 +413,12 @@ class FileContextProcessor:
                 "jest.config.mjs",
                 "karma.conf.js",
                 "mocha.opts",
-                "vitest.config.js",      # Add Vitest patterns
-                "vitest.config.ts",      # Add Vitest patterns
-                "vitest.config.mjs",     # Add Vitest patterns
-                "vite.config.js",        # Add Vite patterns (Vitest often configured here)
-                "vite.config.ts",        # Add Vite patterns
-                "package.json",          # Add package.json (check scripts section)
+                "vitest.config.js",  # Add Vitest patterns
+                "vitest.config.ts",  # Add Vitest patterns
+                "vitest.config.mjs",  # Add Vitest patterns
+                "vite.config.js",  # Add Vite patterns (Vitest often configured here)
+                "vite.config.ts",  # Add Vite patterns
+                "package.json",  # Add package.json (check scripts section)
                 ".coveragerc",
                 "coverage.json",
                 "phpunit.xml",
@@ -448,6 +448,7 @@ class FileContextProcessor:
                             try:
                                 # Context7: consulted for json (standard library)
                                 import json
+
                                 content = read_file_safely(str(config_file))
                                 if content:
                                     pkg = json.loads(content)
@@ -462,13 +463,20 @@ class FileContextProcessor:
 
             # Find test files
             test_patterns = [
-                "test_*.py", "*_test.py",    # Python
-                "*.test.js", "*.spec.js",    # JavaScript
-                "*.test.ts", "*.spec.ts",    # TypeScript
-                "*.test.jsx", "*.spec.jsx",  # JSX
-                "*.test.tsx", "*.spec.tsx",  # TSX
-                "test/*.js", "test/*.ts",    # Test directory patterns
-                "__tests__/*.js", "__tests__/*.ts", # Jest convention
+                "test_*.py",
+                "*_test.py",  # Python
+                "*.test.js",
+                "*.spec.js",  # JavaScript
+                "*.test.ts",
+                "*.spec.ts",  # TypeScript
+                "*.test.jsx",
+                "*.spec.jsx",  # JSX
+                "*.test.tsx",
+                "*.spec.tsx",  # TSX
+                "test/*.js",
+                "test/*.ts",  # Test directory patterns
+                "__tests__/*.js",
+                "__tests__/*.ts",  # Jest convention
             ]
             for pattern in test_patterns:
                 for test_file in root.rglob(pattern):

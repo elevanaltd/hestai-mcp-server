@@ -76,14 +76,8 @@ class TestVitestPatternRecognition:
 
             # Create package.json with Vitest scripts
             package_json = {
-                "scripts": {
-                    "test": "vitest",
-                    "test:ui": "vitest --ui",
-                    "build": "vite build"
-                },
-                "devDependencies": {
-                    "vitest": "^1.0.0"
-                }
+                "scripts": {"test": "vitest", "test:ui": "vitest --ui", "build": "vite build"},
+                "devDependencies": {"vitest": "^1.0.0"},
             }
             (temp_path / "package.json").write_text(json.dumps(package_json, indent=2))
 
@@ -127,7 +121,14 @@ class TestVitestPatternRecognition:
 
             # Should detect expanded patterns
             patterns = context["test_patterns"]
-            expected_patterns = ["*.test.jsx", "*.spec.tsx", "__tests__/*.js", "__tests__/*.ts", "test/*.js", "test/*.ts"]
+            expected_patterns = [
+                "*.test.jsx",
+                "*.spec.tsx",
+                "__tests__/*.js",
+                "__tests__/*.ts",
+                "test/*.js",
+                "test/*.ts",
+            ]
             for pattern in expected_patterns:
                 assert pattern in patterns
 
