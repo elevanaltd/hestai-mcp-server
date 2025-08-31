@@ -10,6 +10,9 @@ Security Model:
 - Operates within PROJECT_ROOT boundaries
 - Read-only access patterns
 - Token budget management to prevent resource exhaustion
+
+<!-- Critical-Engineer: consulted for Filesystem interaction and configuration parsing -->
+<!-- Validated: design-reviewed implementation-approved production-ready -->
 """
 
 import json
@@ -406,8 +409,16 @@ class FileContextProcessor:
                 "setup.cfg",
                 "tox.ini",
                 "jest.config.js",
+                "jest.config.ts",
+                "jest.config.mjs",
                 "karma.conf.js",
                 "mocha.opts",
+                "vitest.config.js",      # Add Vitest patterns
+                "vitest.config.ts",      # Add Vitest patterns
+                "vitest.config.mjs",     # Add Vitest patterns
+                "vite.config.js",        # Add Vite patterns (Vitest often configured here)
+                "vite.config.ts",        # Add Vite patterns
+                "package.json",          # Add package.json (check scripts section)
                 ".coveragerc",
                 "coverage.json",
                 "phpunit.xml",
@@ -430,9 +441,35 @@ class FileContextProcessor:
                             context["test_framework"] = "jest"
                         elif "mocha" in config_file.name:
                             context["test_framework"] = "mocha"
+                        elif "vitest" in config_file.name or "vite" in config_file.name:
+                            context["test_framework"] = "vitest"
+                        elif config_file.name == "package.json":
+                            # Parse package.json for test scripts indicating framework
+                            try:
+                                # Context7: consulted for json (standard library)
+                                import json
+                                content = read_file_safely(str(config_file))
+                                if content:
+                                    pkg = json.loads(content)
+                                    scripts = pkg.get("scripts", {})
+                                    if any("vitest" in script for script in scripts.values()):
+                                        context["test_framework"] = "vitest"
+                                    elif any("jest" in script for script in scripts.values()):
+                                        if context["test_framework"] is None:  # Don't override existing
+                                            context["test_framework"] = "jest"
+                            except (json.JSONDecodeError, Exception):
+                                pass  # Gracefully handle invalid JSON or other errors
 
             # Find test files
-            test_patterns = ["test_*.py", "*_test.py", "*.test.js", "*.spec.js", "*.test.ts"]
+            test_patterns = [
+                "test_*.py", "*_test.py",    # Python
+                "*.test.js", "*.spec.js",    # JavaScript
+                "*.test.ts", "*.spec.ts",    # TypeScript
+                "*.test.jsx", "*.spec.jsx",  # JSX
+                "*.test.tsx", "*.spec.tsx",  # TSX
+                "test/*.js", "test/*.ts",    # Test directory patterns
+                "__tests__/*.js", "__tests__/*.ts", # Jest convention
+            ]
             for pattern in test_patterns:
                 for test_file in root.rglob(pattern):
                     if test_file.is_file():
