@@ -171,7 +171,7 @@ class RequirementsTool(SimpleTool):
         # Dynamically build model options from get_allowed_models() - single source of truth
         allowed_models = self.get_allowed_models()
         default_model = self.get_default_model()
-        
+
         # Restrict model options to high-quality models only
         if "model" in schema.get("properties", {}) and allowed_models:
             schema["properties"]["model"] = {

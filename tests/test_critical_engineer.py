@@ -60,7 +60,7 @@ class TestCriticalEngineerTool:
         assert model_config["type"] == "string"
         assert "enum" in model_config
         assert "google/gemini-2.5-pro" in model_config["enum"]
-        assert "gpt-4.1-2025-04-14" in model_config["enum"]
+        assert "openai/gpt-5" in model_config["enum"]
         # Should only have these two high-quality models
         assert len(model_config["enum"]) == 2
 
@@ -70,7 +70,7 @@ class TestCriticalEngineerTool:
 
         assert allowed_models is not None
         assert "google/gemini-2.5-pro" in allowed_models
-        assert "gpt-4.1-2025-04-14" in allowed_models
+        assert "openai/gpt-5" in allowed_models
         assert len(allowed_models) == 2
 
     async def test_prepare_prompt_formatting(self):
@@ -193,7 +193,7 @@ class TestCriticalEngineerTool:
         schema = self.tool.get_input_schema()
         allowed_models = schema["properties"]["model"]["enum"]
         assert "google/gemini-2.5-pro" in allowed_models
-        assert "gpt-4.1-2025-04-14" in allowed_models
+        assert "openai/gpt-5" in allowed_models
 
     def test_integration_with_critical_engineer_protocol(self):
         """Test integration with external critical engineer protocol"""
@@ -268,7 +268,7 @@ class TestCriticalEngineerIntegration:
 
         # Should use high-quality models for reliable validation
         default_model = self.tool.get_default_model()
-        assert default_model in ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
+        assert default_model in ["google/gemini-2.5-pro", "openai/gpt-5"]
 
         # Should prioritize analytical model category
         from tools.models import ToolModelCategory
