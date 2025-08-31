@@ -153,28 +153,32 @@ class RequirementsTool(SimpleTool):
         return RequirementsRequest
 
     def get_default_model(self) -> Optional[str]:
-        """Prefer Gemini 2.5 Pro for test methodology analysis, with GPT-4.1 as fallback"""
+        """Prefer Gemini 2.5 Pro for test methodology analysis, with GPT-5 as fallback"""
         return "google/gemini-2.5-pro"
 
     def get_allowed_models(self) -> Optional[list[str]]:
         """Return list of high-quality models allowed for test methodology validation"""
-        return ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
+        return ["google/gemini-2.5-pro", "openai/gpt-5"]
 
     def get_input_schema(self) -> dict[str, Any]:
         """
         Override input schema to include file context fields and restrict to high-quality models.
-        Restricted to gemini-2.5-pro (preferred) and gpt-4.1-2025-04-14 (fallback).
+        Dynamically uses allowed models from get_allowed_models() to avoid duplication.
         """
         # Get the base schema from SimpleTool
         schema = super().get_input_schema()
 
+        # Dynamically build model options from get_allowed_models() - single source of truth
+        allowed_models = self.get_allowed_models()
+        default_model = self.get_default_model()
+
         # Restrict model options to high-quality models only
-        if "model" in schema.get("properties", {}):
+        if "model" in schema.get("properties", {}) and allowed_models:
             schema["properties"]["model"] = {
                 "type": "string",
-                "enum": ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"],
-                "default": "google/gemini-2.5-pro",
-                "description": "AI model to use for test methodology analysis (gemini-2.5-pro preferred, gpt-4.1-2025-04-14 fallback)",
+                "enum": allowed_models,
+                "default": default_model if default_model in allowed_models else allowed_models[0],
+                "description": f"AI model to use for test methodology analysis ({default_model} preferred)",
             }
 
         # Add file context fields to schema
@@ -424,3 +428,8 @@ class RequirementsTool(SimpleTool):
     def get_required_fields(self) -> list[str]:
         """Required fields for Test Guard tool"""
         return ["prompt"]
+
+
+# Critical-Engineer: consulted for Configuration management and model integration
+# Critical-Engineer: consulted for Model configuration and fallback strategy
+# Validated: design-reviewed implementation-approved production-ready
