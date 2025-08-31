@@ -770,7 +770,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
         # Special case: testguard tool only allows high-quality models
         if name == "testguard":
-            allowed_models = ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
+            allowed_models = ["google/gemini-2.5-pro", "openai/gpt-5"]
             if model_name not in allowed_models:
                 # Default to gemini-2.5-pro if an unsupported model is specified
                 forced_model = "google/gemini-2.5-pro"
@@ -782,7 +782,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
         # Special case: critical-engineer tool only allows high-quality models
         if name == "critical-engineer":
-            allowed_models = ["google/gemini-2.5-pro", "gpt-4.1-2025-04-14"]
+            allowed_models = ["google/gemini-2.5-pro", "openai/gpt-5"]
             if model_name not in allowed_models:
                 # Default to gemini-2.5-pro if an unsupported model is specified
                 forced_model = "google/gemini-2.5-pro"
