@@ -2,16 +2,22 @@
 
 # Context7: consulted for json
 import json
+
 # Context7: consulted for os
 import os
+
 # Context7: consulted for sqlite3
 import sqlite3
+
 # Context7: consulted for tempfile
 import tempfile
+
 # Context7: consulted for unittest
 import unittest
+
 # Context7: consulted for datetime
 from datetime import datetime, timedelta
+
 # Context7: consulted for pathlib
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -36,23 +42,26 @@ class TestRegistryTool(unittest.TestCase):
         """Clean up temporary files."""
         # Context7: consulted for shutil
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_tool_initialization(self):
         """Test that RegistryTool initializes with database."""
         self.assertTrue(os.path.exists(self.db_path))
-        
+
         # Check database schema
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Check blocked_changes table exists
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name='blocked_changes'
-        """)
+        """
+        )
         self.assertIsNotNone(cursor.fetchone())
-        
+
         conn.close()
 
     def test_create_blocked_entry(self):
@@ -61,9 +70,9 @@ class TestRegistryTool(unittest.TestCase):
             description="Test method without failing test",
             file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="expect(true).toBe(false)"
+            blocked_content="expect(true).toBe(false)",
         )
-        
+
         self.assertIn("uuid", result)
         self.assertIn("created_at", result)
         self.assertEqual(result["status"], "blocked")
@@ -76,21 +85,19 @@ class TestRegistryTool(unittest.TestCase):
             description="Test without implementation",
             file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="test content"
+            blocked_content="test content",
         )
-        
+
         # Now approve it
         approved = self.tool.approve_entry(
-            uuid=created["uuid"],
-            specialist="testguard",
-            reason="Proper TDD red phase assertion"
+            uuid=created["uuid"], specialist="testguard", reason="Proper TDD red phase assertion"
         )
-        
+
         self.assertEqual(approved["status"], "approved")
         self.assertEqual(approved["uuid"], created["uuid"])
         self.assertIn("token", approved)
         self.assertIn("approved_at", approved)
-        
+
     def test_reject_blocked_entry(self):
         """Test rejecting a blocked entry."""
         # First create an entry
@@ -98,17 +105,17 @@ class TestRegistryTool(unittest.TestCase):
             description="Meaningless test",
             file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="expect(true).toBe(false)"
+            blocked_content="expect(true).toBe(false)",
         )
-        
+
         # Reject it
         rejected = self.tool.reject_entry(
             uuid=created["uuid"],
             specialist="testguard",
             reason="Meaningless placeholder provides no specification",
-            education="Write a test that describes expected behavior"
+            education="Write a test that describes expected behavior",
         )
-        
+
         self.assertEqual(rejected["status"], "rejected")
         self.assertEqual(rejected["uuid"], created["uuid"])
         self.assertIn("education", rejected)
@@ -120,30 +127,20 @@ class TestRegistryTool(unittest.TestCase):
             description="Valid test",
             file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="test content"
+            blocked_content="test content",
         )
-        
-        approved = self.tool.approve_entry(
-            uuid=created["uuid"],
-            specialist="testguard",
-            reason="Valid TDD assertion"
-        )
-        
+
+        approved = self.tool.approve_entry(uuid=created["uuid"], specialist="testguard", reason="Valid TDD assertion")
+
         # Validate the token
-        validation = self.tool.validate_token(
-            token=approved["token"],
-            uuid=created["uuid"]
-        )
-        
+        validation = self.tool.validate_token(token=approved["token"], uuid=created["uuid"])
+
         self.assertTrue(validation["valid"])
         self.assertEqual(validation["specialist"], "testguard")
-        
+
         # Second validation should fail (single-use)
-        second_validation = self.tool.validate_token(
-            token=approved["token"],
-            uuid=created["uuid"]
-        )
-        
+        second_validation = self.tool.validate_token(token=approved["token"], uuid=created["uuid"])
+
         self.assertFalse(second_validation["valid"])
         self.assertEqual(second_validation["error"], "token_already_used")
 
@@ -155,12 +152,12 @@ class TestRegistryTool(unittest.TestCase):
                 description=f"Test {i}",
                 file_path=f"/path/to/test{i}.py",
                 specialist_type="testguard",
-                blocked_content=f"content {i}"
+                blocked_content=f"content {i}",
             )
-        
+
         # List pending
         pending = self.tool.list_pending()
-        
+
         self.assertEqual(len(pending), 3)
         for entry in pending:
             self.assertEqual(entry["status"], "blocked")
@@ -171,31 +168,21 @@ class TestRegistryTool(unittest.TestCase):
         created = self.tool.create_blocked_entry(
             description="Concurrent test",
             file_path="/path/to/test.py",
-            specialist_type="testguard", 
-            blocked_content="test content"
+            specialist_type="testguard",
+            blocked_content="test content",
         )
-        
-        approved = self.tool.approve_entry(
-            uuid=created["uuid"],
-            specialist="testguard",
-            reason="Valid assertion"
-        )
-        
+
+        approved = self.tool.approve_entry(uuid=created["uuid"], specialist="testguard", reason="Valid assertion")
+
         # Simulate concurrent validation attempts
         # Both read token as valid, but only one should succeed
-        
+
         # First validation succeeds
-        result1 = self.tool.validate_token(
-            token=approved["token"],
-            uuid=created["uuid"]
-        )
+        result1 = self.tool.validate_token(token=approved["token"], uuid=created["uuid"])
         self.assertTrue(result1["valid"])
-        
+
         # Second attempt with same token fails
-        result2 = self.tool.validate_token(
-            token=approved["token"],
-            uuid=created["uuid"]
-        )
+        result2 = self.tool.validate_token(token=approved["token"], uuid=created["uuid"])
         self.assertFalse(result2["valid"])
         self.assertEqual(result2["error"], "token_already_used")
 
@@ -203,27 +190,24 @@ class TestRegistryTool(unittest.TestCase):
     async def test_execute_method(self):
         """Test the execute method for MCP integration."""
         tool = RegistryTool()
-        
+
         # Test create_blocked action
         result = await tool.execute(
             action="create_blocked",
             description="Test without implementation",
             file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="test content"
+            blocked_content="test content",
         )
-        
+
         self.assertIn("uuid", result)
         self.assertEqual(result["status"], "blocked")
-        
+
         # Test approve action
         approve_result = await tool.execute(
-            action="approve",
-            uuid=result["uuid"],
-            specialist="testguard",
-            reason="Valid TDD assertion"
+            action="approve", uuid=result["uuid"], specialist="testguard", reason="Valid TDD assertion"
         )
-        
+
         self.assertEqual(approve_result["status"], "approved")
         self.assertIn("token", approve_result)
 
