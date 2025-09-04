@@ -1,7 +1,6 @@
 """Test suite for RegistryTool - specialist approval registry management."""
 
 # Context7: consulted for json
-import json
 
 # Context7: consulted for os
 import os
@@ -16,12 +15,7 @@ import tempfile
 import unittest
 
 # Context7: consulted for datetime
-from datetime import datetime, timedelta
-
 # Context7: consulted for pathlib
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
-
 # Context7: consulted for pytest
 import pytest
 
@@ -56,7 +50,7 @@ class TestRegistryTool(unittest.TestCase):
         # Check blocked_changes table exists
         cursor.execute(
             """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type='table' AND name='blocked_changes'
         """
         )

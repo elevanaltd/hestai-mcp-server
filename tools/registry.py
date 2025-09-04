@@ -7,8 +7,6 @@
 import datetime
 
 # Context7: consulted for json
-import json
-
 # Context7: consulted for logging
 import logging
 
@@ -22,17 +20,15 @@ import sqlite3
 import uuid
 
 # Context7: consulted for pathlib
-from pathlib import Path
-
 # Context7: consulted for typing
-from typing import Any, Dict, Optional
-
-# Context7: consulted for tools - internal module
-from tools.simple import SimpleTool
+from typing import Any, Optional
 
 # Context7: consulted for tools.shared.base_models - internal module
 # TESTGUARD_BYPASS: INFRA-001 - Infrastructure component
 from tools.shared.base_models import ToolRequest
+
+# Context7: consulted for tools - internal module
+from tools.simple import SimpleTool
 
 logger = logging.getLogger(__name__)
 
@@ -129,14 +125,14 @@ class RegistryDB:
             # Create indexes for performance
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_status 
+                CREATE INDEX IF NOT EXISTS idx_status
                 ON blocked_changes(status)
             """
             )
 
             cursor.execute(
                 """
-                CREATE INDEX IF NOT EXISTS idx_token 
+                CREATE INDEX IF NOT EXISTS idx_token
                 ON blocked_changes(token)
             """
             )
@@ -234,7 +230,7 @@ class RegistryTool(SimpleTool):
             "facilitate specialist review, and manage approval tokens."
         )
 
-    def get_tool_fields(self) -> Dict[str, Dict[str, Any]]:
+    def get_tool_fields(self) -> dict[str, dict[str, Any]]:
         """Return tool-specific field definitions."""
         return {
             "action": {
@@ -284,7 +280,7 @@ class RegistryTool(SimpleTool):
 
     def create_blocked_entry(
         self, description: str, file_path: str, specialist_type: str, blocked_content: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new blocked change entry.
 
         Args:
@@ -304,8 +300,8 @@ class RegistryTool(SimpleTool):
 
         cursor.execute(
             """
-            INSERT INTO blocked_changes 
-            (uuid, description, file_path, specialist_type, blocked_content, 
+            INSERT INTO blocked_changes
+            (uuid, description, file_path, specialist_type, blocked_content,
              created_at, last_accessed_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
@@ -317,7 +313,7 @@ class RegistryTool(SimpleTool):
 
         return {"uuid": entry_uuid, "created_at": created_at, "status": "blocked", "specialist_type": specialist_type}
 
-    def approve_entry(self, uuid: str, specialist: str, reason: str) -> Dict[str, Any]:
+    def approve_entry(self, uuid: str, specialist: str, reason: str) -> dict[str, Any]:
         """Approve a blocked entry and generate token.
 
         Args:
@@ -338,7 +334,7 @@ class RegistryTool(SimpleTool):
 
         cursor.execute(
             """
-            UPDATE blocked_changes 
+            UPDATE blocked_changes
             SET status = 'approved',
                 approved_at = ?,
                 approved_by = ?,
@@ -360,7 +356,7 @@ class RegistryTool(SimpleTool):
             "instruction": f"Add '// {specialist.upper()}-APPROVED: {token}' to your code",
         }
 
-    def reject_entry(self, uuid: str, specialist: str, reason: str, education: str) -> Dict[str, Any]:
+    def reject_entry(self, uuid: str, specialist: str, reason: str, education: str) -> dict[str, Any]:
         """Reject a blocked entry with education.
 
         Args:
@@ -379,7 +375,7 @@ class RegistryTool(SimpleTool):
 
         cursor.execute(
             """
-            UPDATE blocked_changes 
+            UPDATE blocked_changes
             SET status = 'rejected',
                 rejection_reason = ?,
                 education = ?,
@@ -395,7 +391,7 @@ class RegistryTool(SimpleTool):
 
         return {"status": "rejected", "uuid": uuid, "reason": reason, "education": education}
 
-    def validate_token(self, token: str, uuid: str) -> Dict[str, Any]:
+    def validate_token(self, token: str, uuid: str) -> dict[str, Any]:
         """Validate a token atomically (single-use).
 
         Args:
@@ -537,6 +533,6 @@ class RegistryTool(SimpleTool):
         else:
             return {"error": f"Unknown action: {action}"}
 
-    def get_model_config(self) -> Dict[str, Any]:
+    def get_model_config(self) -> dict[str, Any]:
         """Get model configuration for this tool."""
         return {"model": "gemini-2.5-flash", "temperature": 0.3}
