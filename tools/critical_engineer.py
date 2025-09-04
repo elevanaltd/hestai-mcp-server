@@ -311,11 +311,24 @@ class CriticalEngineerTool(SimpleTool):
             if blocked_uuid:
                 prompt_parts.append(f"Blocked Change UUID: {blocked_uuid}\n\n")
 
-                # Note: The actual approval/rejection will happen in the model's response
+                # Critical-Engineer: consulted for architectural-decisions
+                # Stateless design validated - AI calls registry directly
                 prompt_parts.append(
-                    "IMPORTANT: After validation, use one of:\n"
-                    f"- registry.approve_entry(uuid='{blocked_uuid}', specialist='critical-engineer', reason='...')\n"
-                    f"- registry.reject_entry(uuid='{blocked_uuid}', specialist='critical-engineer', reason='...', education='...')\n\n"
+                    "IMPORTANT: After your validation, you MUST take action:\n\n"
+                    "If APPROVED (production-ready):\n"
+                    f"  Call the 'registry' tool with:\n"
+                    f"    action: 'approve'\n"
+                    f"    uuid: '{blocked_uuid}'\n"
+                    f"    specialist: 'critical-engineer'\n"
+                    f"    reason: <your validation reason>\n\n"
+                    "If REJECTED (will break in production):\n"
+                    f"  Call the 'registry' tool with:\n"
+                    f"    action: 'reject'\n"
+                    f"    uuid: '{blocked_uuid}'\n"
+                    f"    specialist: 'critical-engineer'\n"
+                    f"    reason: <critical flaw identified>\n"
+                    f"    education: <how to fix for production>\n\n"
+                    "The registry will generate the appropriate token or rejection record.\n"
                 )
         else:
             # Normal critical engineering validation

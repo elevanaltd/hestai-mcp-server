@@ -373,12 +373,24 @@ class RequirementsTool(SimpleTool):
             if blocked_uuid:
                 prompt_parts.append(f"Blocked Change UUID: {blocked_uuid}\n\n")
 
-                # Note: The actual approval/rejection will happen in the model's response
-                # The model should analyze and then instruct to use the registry
+                # Critical-Engineer: consulted for architectural-decisions
+                # Stateless design - AI will call registry tool directly
                 prompt_parts.append(
-                    "IMPORTANT: After analysis, use one of:\n"
-                    f"- registry.approve_entry(uuid='{blocked_uuid}', specialist='testguard', reason='...')\n"
-                    f"- registry.reject_entry(uuid='{blocked_uuid}', specialist='testguard', reason='...', education='...')\n\n"
+                    "IMPORTANT: After your analysis, you MUST take action:\n\n"
+                    "If APPROVED (valid TDD practice):\n"
+                    f"  Call the 'registry' tool with:\n"
+                    f"    action: 'approve'\n"
+                    f"    uuid: '{blocked_uuid}'\n"
+                    f"    specialist: 'testguard'\n"
+                    f"    reason: <your approval reason>\n\n"
+                    "If REJECTED (test anti-pattern):\n"
+                    f"  Call the 'registry' tool with:\n"
+                    f"    action: 'reject'\n"
+                    f"    uuid: '{blocked_uuid}'\n"
+                    f"    specialist: 'testguard'\n"
+                    f"    reason: <your rejection reason>\n"
+                    f"    education: <how to fix the issue>\n\n"
+                    "The registry will generate the appropriate token or rejection record.\n"
                 )
         else:
             # Normal test methodology analysis
