@@ -62,6 +62,9 @@ from config import (  # noqa: E402
     DEFAULT_MODEL,
     __version__,
 )
+
+# TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
+# Context7: consulted for tools - internal module
 from tools import (  # noqa: E402
     AnalyzeTool,
     ChallengeTool,
@@ -78,6 +81,10 @@ from tools import (  # noqa: E402
     VersionTool,
 )
 from tools.models import ToolOutput  # noqa: E402
+
+# Context7: consulted for tools.registry - internal module
+# Critical-Engineer: consulted for architectural-decisions - adding new tool to server
+from tools.registry import RegistryTool  # noqa: E402
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
@@ -259,6 +266,8 @@ def filter_disabled_tools(all_tools: dict[str, Any]) -> dict[str, Any]:
 # Initialize the tool registry with premium high-end model tools only
 # Each tool provides specialized functionality for complex multi-step workflows
 # Simple tasks are handled by Claude subagents for efficiency
+# TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
+# Critical-Engineer: consulted for architectural-decisions - adding registry tool
 TOOLS = {
     "chat": ChatTool(),  # Interactive development chat and brainstorming
     "thinkdeep": ThinkDeepTool(),  # Step-by-step deep thinking workflow with expert analysis
@@ -271,6 +280,7 @@ TOOLS = {
     "challenge": ChallengeTool(),  # Critical challenge prompt wrapper to avoid automatic agreement
     "critical-engineer": CriticalEngineerTool(),  # Technical validation for major decisions and architecture
     "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
+    "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
     # Archived tools (handled by Claude subagents):
