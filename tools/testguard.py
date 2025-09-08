@@ -119,22 +119,25 @@ class RequirementsTool(SimpleTool):
             "PRIME DIRECTIVE: Detect and halt test cheating behaviors immediately\n\n"
             "METHODOLOGY: DETECT->HALT->ANALYZE->EDUCATE->REDIRECT\n\n"
             "ANTI-PATTERNS TO DETECT:\n"
-            "- Modifying assertions to match broken code\n"
+            "- Modifying assertions to match broken code (violates CONTRACT-DRIVEN-CORRECTION)\n"
             "- Reducing coverage to avoid failures\n"
             "- Adding workarounds instead of fixes\n"
             "- Commenting out failing tests\n"
             "- Lowering quality thresholds\n"
-            "- Adjusting expectations instead of fixing problems\n\n"
-            "GUARDIAN QUESTION: 'Are we fixing the code or hiding the problem?'\n\n"
+            "- Adjusting expectations instead of fixing problems (violates CONTRACT-DRIVEN-CORRECTION)\n"
+            "- Weakening test contracts instead of fixing implementation\n\n"
+            "GUARDIAN QUESTION: 'Are we fixing the code or hiding the problem?'\n"
+            "CONTRACT QUESTION: 'Is the test defining a valid contract that the implementation must meet?'\n\n"
             "PRINCIPLES:\n"
             "- TRUTH OVER CONVENIENCE: Tests reveal reality, not confirm wishes\n"
             "- CONSTRAINT CATALYSIS: Failed tests drive better code\n"
-            "- EMERGENT EXCELLENCE: Quality emerges from honest assessment\n\n"
+            "- EMERGENT EXCELLENCE: Quality emerges from honest assessment\n"
+            "- CONTRACT-DRIVEN-CORRECTION: Tests define the contract; fix the implementation to meet it, never weaken the contract\n\n"
             "OUTPUT STRUCTURE:\n"
             "1. INTERVENTION: [IMMEDIATE_HALT] if anti-pattern detected\n"
             "2. ANALYSIS: Identify the specific anti-pattern\n"
             "3. EDUCATION: Explain why this violates testing principles\n"
-            "4. REDIRECTION: Specify the proper approach to take\n"
+            "4. REDIRECTION: Specify the proper approach to take (CONTRACT-DRIVEN-CORRECTION when applicable)\n"
             "5. ENFORCEMENT: Demand acknowledgment before proceeding\n\n"
             "Be direct and authoritative. Testing integrity is non-negotiable."
         )
@@ -540,9 +543,13 @@ class RequirementsTool(SimpleTool):
                 "1. DETECT: Identify any test manipulation patterns\n"
                 "2. ANALYZE: Determine the specific anti-pattern type\n"
                 "3. EDUCATE: Explain why this violates testing principles\n"
-                "4. REDIRECT: Provide the proper approach\n"
+                "4. REDIRECT: Provide the proper approach (apply CONTRACT-DRIVEN-CORRECTION when tests define valid contracts)\n"
                 "5. ENFORCE: Demand acknowledgment if intervention required\n\n"
-                'Key question: "Are we fixing the code or hiding the problem?"\n\n'
+                'Key questions:\n'
+                '- "Are we fixing the code or hiding the problem?"\n'
+                '- "Does this test define a contract that the implementation must meet?"\n\n'
+                'When a test defines a valid contract (expected behavior), apply CONTRACT-DRIVEN-CORRECTION:\n'
+                'Fix the implementation to meet the test contract, never weaken the contract to match broken code.\n\n'
             ]
         )
 
@@ -577,6 +584,7 @@ class RequirementsTool(SimpleTool):
             f"{response}\n\n"
             f"---\n"
             f"Guardian Protocol: Defend test integrity against manipulation\n"
+            f"CONTRACT-DRIVEN-CORRECTION: Tests define contracts, fix code to meet them\n"
             f"Truth over convenience - Quality through honest assessment"
         )
 
