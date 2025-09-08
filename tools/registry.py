@@ -231,13 +231,62 @@ class RegistryTool(SimpleTool):
         )
 
     def get_tool_fields(self) -> dict[str, dict[str, Any]]:
-        """Return tool-specific field definitions."""
+        """Return tool-specific field definitions with all parameters exposed.
+
+        // TECHNICAL-ARCHITECT-APPROVED: TECHNICAL-ARCHITECT-20250904-0dd4d8cd
+        // Critical-Engineer: consulted for Tool Interface Contract and MCP schema design
+        // Architectural Decision: docs/002-DOC-REGISTRY-SCHEMA-DECISION.md
+
+        Phase 1: Expose all parameters for MCP visibility (immediate fix)
+        Phase 2: TODO: Implement oneOf conditional schema for proper validation
+        """
+        # All fields exposed with descriptions indicating requirements
+        # This enables subagents to see and use all parameters through MCP
         return {
             "action": {
                 "type": "string",
                 "enum": ["create_blocked", "approve", "reject", "validate", "list_pending", "cleanup"],
                 "description": "The registry action to perform",
-            }
+            },
+            # Parameters for approve/reject actions
+            "uuid": {
+                "type": "string",
+                "description": "UUID of the blocked entry (required for approve, reject, validate)",
+            },
+            "specialist": {
+                "type": "string",
+                "description": "Name of approving/rejecting specialist (required for approve, reject)",
+            },
+            "reason": {
+                "type": "string",
+                "description": "Reason for approval/rejection (required for approve, reject)",
+            },
+            "education": {
+                "type": "string",
+                "description": "Educational content for rejection (required for reject)",
+            },
+            # Parameters for validate action
+            "token": {
+                "type": "string",
+                "description": "Token to validate (required for validate)",
+            },
+            # Parameters for create_blocked action
+            "description": {
+                "type": "string",
+                "description": "Description of blocked change (required for create_blocked)",
+            },
+            "file_path": {
+                "type": "string",
+                "description": "Path to file being modified (required for create_blocked)",
+            },
+            "specialist_type": {
+                "type": "string",
+                "description": "Type of specialist needed (required for create_blocked)",
+            },
+            "blocked_content": {
+                "type": "string",
+                "description": "The blocked content (required for create_blocked)",
+            },
         }
 
     def get_required_fields(self) -> list[str]:
@@ -493,38 +542,68 @@ class RegistryTool(SimpleTool):
         conn.close()
         return results
 
-    async def execute(self, **kwargs) -> Any:
+    async def execute(self, arguments: dict[str, Any] = None, **kwargs) -> Any:
         """Execute registry action for MCP integration.
 
+        Supports both new `arguments` dict and legacy `**kwargs` for backward compatibility.
+
         Args:
-            action: The action to perform (create_blocked, approve, reject, validate, list_pending)
-            **kwargs: Additional parameters for the action
+            arguments: Dictionary containing action and parameters (new MCP standard)
+            **kwargs: Legacy interface for backward compatibility (deprecated)
 
         Returns:
             Result of the action
         """
-        action = kwargs.get("action", "")
+        # Critical-Engineer: consulted for Architecture pattern selection
+        # Validated: design-reviewed implementation-approved production-ready
 
+        # Handle backward compatibility
+        if arguments is None:
+            # Legacy caller using **kwargs
+            logging.warning(
+                "RegistryTool.execute called with legacy **kwargs. Please update caller to use 'arguments' dictionary."
+            )
+            arguments = kwargs
+
+        # Validate required action field
+        action = arguments.get("action")
+        if not action:
+            return {"error": "Missing required field: action"}
+
+        # Action-specific argument validation and execution
         if action == "create_blocked":
             return self.create_blocked_entry(
-                description=kwargs.get("description", ""),
-                file_path=kwargs.get("file_path", ""),
-                specialist_type=kwargs.get("specialist_type", ""),
-                blocked_content=kwargs.get("blocked_content", ""),
+                description=arguments.get("description", ""),
+                file_path=arguments.get("file_path", ""),
+                specialist_type=arguments.get("specialist_type", ""),
+                blocked_content=arguments.get("blocked_content", ""),
             )
         elif action == "approve":
-            return self.approve_entry(
-                uuid=kwargs.get("uuid", ""), specialist=kwargs.get("specialist", ""), reason=kwargs.get("reason", "")
-            )
+            # Validate required fields
+            uuid = arguments.get("uuid")
+            specialist = arguments.get("specialist")
+            reason = arguments.get("reason")
+            if not all([uuid, specialist, reason]):
+                return {"error": "Missing required fields for 'approve' action. Required: uuid, specialist, reason."}
+            return self.approve_entry(uuid=uuid, specialist=specialist, reason=reason)
         elif action == "reject":
-            return self.reject_entry(
-                uuid=kwargs.get("uuid", ""),
-                specialist=kwargs.get("specialist", ""),
-                reason=kwargs.get("reason", ""),
-                education=kwargs.get("education", ""),
-            )
+            # Validate required fields
+            uuid = arguments.get("uuid")
+            specialist = arguments.get("specialist")
+            reason = arguments.get("reason")
+            education = arguments.get("education")
+            if not all([uuid, specialist, reason, education]):
+                return {
+                    "error": "Missing required fields for 'reject' action. Required: uuid, specialist, reason, education."
+                }
+            return self.reject_entry(uuid=uuid, specialist=specialist, reason=reason, education=education)
         elif action == "validate":
-            return self.validate_token(token=kwargs.get("token", ""), uuid=kwargs.get("uuid", ""))
+            # Validate required fields
+            token = arguments.get("token")
+            uuid = arguments.get("uuid")
+            if not all([token, uuid]):
+                return {"error": "Missing required fields for 'validate' action. Required: token, uuid."}
+            return self.validate_token(token=token, uuid=uuid)
         elif action == "list_pending":
             return self.list_pending()
         elif action == "cleanup":
