@@ -232,11 +232,11 @@ class RegistryTool(SimpleTool):
 
     def get_tool_fields(self) -> dict[str, dict[str, Any]]:
         """Return tool-specific field definitions with all parameters exposed.
-        
+
         // TECHNICAL-ARCHITECT-APPROVED: TECHNICAL-ARCHITECT-20250904-0dd4d8cd
         // Critical-Engineer: consulted for Tool Interface Contract and MCP schema design
         // Architectural Decision: docs/002-DOC-REGISTRY-SCHEMA-DECISION.md
-        
+
         Phase 1: Expose all parameters for MCP visibility (immediate fix)
         Phase 2: TODO: Implement oneOf conditional schema for proper validation
         """
@@ -286,7 +286,7 @@ class RegistryTool(SimpleTool):
             "blocked_content": {
                 "type": "string",
                 "description": "The blocked content (required for create_blocked)",
-            }
+            },
         }
 
     def get_required_fields(self) -> list[str]:
@@ -544,7 +544,7 @@ class RegistryTool(SimpleTool):
 
     async def execute(self, arguments: dict[str, Any] = None, **kwargs) -> Any:
         """Execute registry action for MCP integration.
-        
+
         Supports both new `arguments` dict and legacy `**kwargs` for backward compatibility.
 
         Args:
@@ -560,7 +560,9 @@ class RegistryTool(SimpleTool):
         # Handle backward compatibility
         if arguments is None:
             # Legacy caller using **kwargs
-            logging.warning("RegistryTool.execute called with legacy **kwargs. Please update caller to use 'arguments' dictionary.")
+            logging.warning(
+                "RegistryTool.execute called with legacy **kwargs. Please update caller to use 'arguments' dictionary."
+            )
             arguments = kwargs
 
         # Validate required action field
@@ -591,7 +593,9 @@ class RegistryTool(SimpleTool):
             reason = arguments.get("reason")
             education = arguments.get("education")
             if not all([uuid, specialist, reason, education]):
-                return {"error": "Missing required fields for 'reject' action. Required: uuid, specialist, reason, education."}
+                return {
+                    "error": "Missing required fields for 'reject' action. Required: uuid, specialist, reason, education."
+                }
             return self.reject_entry(uuid=uuid, specialist=specialist, reason=reason, education=education)
         elif action == "validate":
             # Validate required fields

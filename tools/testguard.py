@@ -545,11 +545,11 @@ class RequirementsTool(SimpleTool):
                 "3. EDUCATE: Explain why this violates testing principles\n"
                 "4. REDIRECT: Provide the proper approach (apply CONTRACT-DRIVEN-CORRECTION when tests define valid contracts)\n"
                 "5. ENFORCE: Demand acknowledgment if intervention required\n\n"
-                'Key questions:\n'
+                "Key questions:\n"
                 '- "Are we fixing the code or hiding the problem?"\n'
                 '- "Does this test define a contract that the implementation must meet?"\n\n'
-                'When a test defines a valid contract (expected behavior), apply CONTRACT-DRIVEN-CORRECTION:\n'
-                'Fix the implementation to meet the test contract, never weaken the contract to match broken code.\n\n'
+                "When a test defines a valid contract (expected behavior), apply CONTRACT-DRIVEN-CORRECTION:\n"
+                "Fix the implementation to meet the test contract, never weaken the contract to match broken code.\n\n"
             ]
         )
 

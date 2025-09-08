@@ -17,7 +17,7 @@ class TestRegistryMCPInterface:
     @pytest.fixture
     def mock_registry_tool(self):
         """Create a mock RegistryTool with database mocked."""
-        with patch.object(RegistryTool, '__init__', return_value=None):
+        with patch.object(RegistryTool, "__init__", return_value=None):
             tool = RegistryTool()
             tool.db = Mock()
             tool.db.get_connection.return_value.__enter__ = Mock()
@@ -31,21 +31,14 @@ class TestRegistryMCPInterface:
         mock_registry_tool.approve_entry = Mock(return_value={"status": "approved", "token": "test-token"})
 
         # Test new interface - FAILS until we implement backward compatibility
-        arguments = {
-            "action": "approve",
-            "uuid": "test-uuid",
-            "specialist": "testguard",
-            "reason": "Test approval"
-        }
+        arguments = {"action": "approve", "uuid": "test-uuid", "specialist": "testguard", "reason": "Test approval"}
 
         result = await mock_registry_tool.execute(arguments)
 
         assert result["status"] == "approved"
         assert result["token"] == "test-token"
         mock_registry_tool.approve_entry.assert_called_once_with(
-            uuid="test-uuid",
-            specialist="testguard",
-            reason="Test approval"
+            uuid="test-uuid", specialist="testguard", reason="Test approval"
         )
 
     @pytest.mark.asyncio
@@ -56,18 +49,13 @@ class TestRegistryMCPInterface:
 
         # Test legacy interface (how it's currently called) - FAILS until backward compatibility
         result = await mock_registry_tool.execute(
-            action="approve",
-            uuid="legacy-uuid",
-            specialist="testguard",
-            reason="Legacy approval"
+            action="approve", uuid="legacy-uuid", specialist="testguard", reason="Legacy approval"
         )
 
         assert result["status"] == "approved"
         assert result["token"] == "legacy-token"
         mock_registry_tool.approve_entry.assert_called_once_with(
-            uuid="legacy-uuid",
-            specialist="testguard",
-            reason="Legacy approval"
+            uuid="legacy-uuid", specialist="testguard", reason="Legacy approval"
         )
 
     @pytest.mark.asyncio
@@ -79,21 +67,20 @@ class TestRegistryMCPInterface:
         assert "Missing required field: action" in result["error"]
 
         # Test missing required fields for approve action
-        result = await mock_registry_tool.execute({
-            "action": "approve",
-            "uuid": "test-uuid"
-            # Missing specialist and reason
-        })
+        result = await mock_registry_tool.execute(
+            {
+                "action": "approve",
+                "uuid": "test-uuid",
+                # Missing specialist and reason
+            }
+        )
         assert "error" in result
         assert "Missing required fields for 'approve' action" in result["error"]
 
     @pytest.mark.asyncio
     async def test_execute_unknown_action_handling(self, mock_registry_tool):
         """Test that execute handles unknown actions gracefully."""
-        result = await mock_registry_tool.execute({
-            "action": "unknown_action",
-            "data": "test"
-        })
+        result = await mock_registry_tool.execute({"action": "unknown_action", "data": "test"})
 
         assert "error" in result
         assert "Unknown action: unknown_action" in result["error"]
@@ -110,50 +97,43 @@ class TestRegistryMCPInterface:
         mock_registry_tool.db.cleanup_old_entries = Mock(return_value=5)
 
         # Test create_blocked
-        result = await mock_registry_tool.execute({
-            "action": "create_blocked",
-            "description": "test",
-            "file_path": "/test",
-            "specialist_type": "testguard",
-            "blocked_content": "content"
-        })
+        result = await mock_registry_tool.execute(
+            {
+                "action": "create_blocked",
+                "description": "test",
+                "file_path": "/test",
+                "specialist_type": "testguard",
+                "blocked_content": "content",
+            }
+        )
         assert result["uuid"] == "blocked-123"
 
         # Test approve
-        result = await mock_registry_tool.execute({
-            "action": "approve",
-            "uuid": "test-uuid",
-            "specialist": "testguard",
-            "reason": "test"
-        })
+        result = await mock_registry_tool.execute(
+            {"action": "approve", "uuid": "test-uuid", "specialist": "testguard", "reason": "test"}
+        )
         assert result["token"] == "approve-123"
 
         # Test reject
-        result = await mock_registry_tool.execute({
-            "action": "reject",
-            "uuid": "test-uuid",
-            "specialist": "testguard",
-            "reason": "test",
-            "education": "learn this"
-        })
+        result = await mock_registry_tool.execute(
+            {
+                "action": "reject",
+                "uuid": "test-uuid",
+                "specialist": "testguard",
+                "reason": "test",
+                "education": "learn this",
+            }
+        )
         assert result["status"] == "rejected"
 
         # Test validate
-        result = await mock_registry_tool.execute({
-            "action": "validate",
-            "token": "test-token",
-            "uuid": "test-uuid"
-        })
+        result = await mock_registry_tool.execute({"action": "validate", "token": "test-token", "uuid": "test-uuid"})
         assert result["valid"] is True
 
         # Test list_pending
-        result = await mock_registry_tool.execute({
-            "action": "list_pending"
-        })
+        result = await mock_registry_tool.execute({"action": "list_pending"})
         assert "pending" in result
 
         # Test cleanup
-        result = await mock_registry_tool.execute({
-            "action": "cleanup"
-        })
+        result = await mock_registry_tool.execute({"action": "cleanup"})
         assert result["deleted"] == 5

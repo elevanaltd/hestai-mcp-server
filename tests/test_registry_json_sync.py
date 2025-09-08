@@ -10,16 +10,9 @@ Following Critical Engineer's recommendation for full-rebuild pattern.
 
 import json
 import os
-import sqlite3
 import tempfile
 import threading
-import time
 import unittest
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Context7: consulted for tools - internal module
 from tools.registry import RegistryTool
@@ -38,6 +31,7 @@ class TestRegistryJSONSync(unittest.TestCase):
     def tearDown(self):
         """Clean up temporary files."""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_sync_to_hook_registry_method_not_implemented_yet(self):
@@ -46,7 +40,7 @@ class TestRegistryJSONSync(unittest.TestCase):
             self.tool.sync_to_hook_registry("/path/to/hook/registry.json")
 
     def test_rebuild_hook_registry_method_not_implemented_yet(self):
-        """RED PHASE: Test that rebuild_hook_registry method doesn't exist yet.""" 
+        """RED PHASE: Test that rebuild_hook_registry method doesn't exist yet."""
         with self.assertRaises(AttributeError):
             self.tool.rebuild_hook_registry("/path/to/hook/registry.json")
 
@@ -55,18 +49,18 @@ class TestRegistryJSONSync(unittest.TestCase):
         # Create an entry
         created = self.tool.create_blocked_entry(
             description="Test sync integration",
-            file_path="/path/to/test.py", 
+            file_path="/path/to/test.py",
             specialist_type="testguard",
-            blocked_content="test content"
+            blocked_content="test content",
         )
 
-        # This should trigger JSON sync but will fail since method doesn't exist yet
-        with self.assertRaises(AttributeError):
+        # This should trigger JSON sync but will fail since parameter doesn't exist yet
+        with self.assertRaises(TypeError):
             self.tool.approve_entry(
                 uuid=created["uuid"],
-                specialist="testguard", 
+                specialist="testguard",
                 reason="Valid TDD assertion",
-                hook_json_path=self.json_path
+                hook_json_path=self.json_path,
             )
 
     def test_create_new_json_file_if_not_exists(self):
@@ -84,15 +78,15 @@ class TestRegistryJSONSync(unittest.TestCase):
                     "specialist": "testguard",
                     "timestamp": "2025-01-01T00:00:00Z",
                     "uuid": "old-uuid-123",
-                    "file_path": "/old/path.py"
+                    "file_path": "/old/path.py",
                 }
             ],
-            "history": []
+            "history": [],
         }
-        
-        with open(self.json_path, 'w') as f:
+
+        with open(self.json_path, "w") as f:
             json.dump(initial_data, f)
-        
+
         with self.assertRaises(AttributeError):
             self.tool.rebuild_hook_registry(self.json_path)
 
@@ -103,48 +97,49 @@ class TestRegistryJSONSync(unittest.TestCase):
 
     def test_json_format_compatibility_with_hooks(self):
         """RED PHASE: Test JSON structure matches hook expectations."""
-        # Expected JSON structure:
-        expected_structure = {
-            "approvals": [
-                {
-                    "token": "string",
-                    "specialist": "string", 
-                    "timestamp": "ISO8601",
-                    "uuid": "string",
-                    "file_path": "string"
-                }
-            ],
-            "history": []
-        }
-        
+        # Expected JSON structure (documented for clarity):
+        # {
+        #     "approvals": [
+        #         {
+        #             "token": "string",
+        #             "specialist": "string",
+        #             "timestamp": "ISO8601",
+        #             "uuid": "string",
+        #             "file_path": "string",
+        #         }
+        #     ],
+        #     "history": [],
+        # }
+
         with self.assertRaises(AttributeError):
-            result = self.tool.rebuild_hook_registry(self.json_path)
+            self.tool.rebuild_hook_registry(self.json_path)
 
     def test_error_handling_for_corrupted_json_files(self):
         """RED PHASE: Test handling of corrupted JSON files."""
         # Create corrupted JSON file
-        with open(self.json_path, 'w') as f:
+        with open(self.json_path, "w") as f:
             f.write('{"invalid": json content}')
-        
+
         with self.assertRaises(AttributeError):
             self.tool.rebuild_hook_registry(self.json_path)
 
     def test_concurrent_access_safety(self):
         """RED PHASE: Test concurrent rebuild operations don't corrupt data."""
+
         def concurrent_rebuild():
             try:
                 self.tool.rebuild_hook_registry(self.json_path)
             except AttributeError:
                 pass  # Expected in RED phase
-        
+
         threads = [threading.Thread(target=concurrent_rebuild) for _ in range(3)]
-        
+
         for t in threads:
             t.start()
-        
+
         for t in threads:
             t.join()
-        
+
         # Test will pass in RED phase since method doesn't exist yet
 
     def test_cleanup_old_entries_removes_from_json(self):
@@ -154,21 +149,18 @@ class TestRegistryJSONSync(unittest.TestCase):
             self.tool.cleanup_old_entries(max_age_days=1)
 
     def test_full_rebuild_pattern_correctness(self):
-        """RED PHASE: Test the full rebuild pattern architecture.""" 
+        """RED PHASE: Test the full rebuild pattern architecture."""
         # Create approved entry
         created = self.tool.create_blocked_entry(
             description="Full rebuild test",
             file_path="/path/to/test.py",
-            specialist_type="testguard", 
-            blocked_content="test content"
+            specialist_type="testguard",
+            blocked_content="test content",
         )
-        
-        approved = self.tool.approve_entry(
-            uuid=created["uuid"],
-            specialist="testguard",
-            reason="Valid test"
-        )
-        
+
+        # Approve the entry (will be used when method supports JSON sync)
+        self.tool.approve_entry(uuid=created["uuid"], specialist="testguard", reason="Valid test")
+
         # This should rebuild entire JSON from DB state
         with self.assertRaises(AttributeError):
             self.tool.rebuild_hook_registry(self.json_path)

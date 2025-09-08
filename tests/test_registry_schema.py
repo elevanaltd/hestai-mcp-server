@@ -21,7 +21,12 @@ class TestRegistryMCPSchema:
         assert "action" in fields
         assert fields["action"]["type"] == "string"
         assert set(fields["action"]["enum"]) == {
-            "create_blocked", "approve", "reject", "validate", "list_pending", "cleanup"
+            "create_blocked",
+            "approve",
+            "reject",
+            "validate",
+            "list_pending",
+            "cleanup",
         }
 
         # Approve/reject parameters
