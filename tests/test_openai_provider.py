@@ -144,9 +144,9 @@ class TestOpenAIProvider:
         call_kwargs = mock_client.chat.completions.create.call_args[1]
 
         # CRITICAL ASSERTION: The API should receive "gpt-4.1-2025-04-14", not "gpt4.1"
-        assert (
-            call_kwargs["model"] == "gpt-4.1-2025-04-14"
-        ), f"Expected 'gpt-4.1-2025-04-14' but API received '{call_kwargs['model']}'"
+        assert call_kwargs["model"] == "gpt-4.1-2025-04-14", (
+            f"Expected 'gpt-4.1-2025-04-14' but API received '{call_kwargs['model']}'"
+        )
 
         # Verify other parameters (gpt-4.1 supports temperature unlike O3/O4 models)
         assert call_kwargs["temperature"] == 1.0

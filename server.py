@@ -86,6 +86,14 @@ from tools.models import ToolOutput  # noqa: E402
 # Critical-Engineer: consulted for architectural-decisions - adding new tool to server
 from tools.registry import RegistryTool  # noqa: E402
 
+# Context7: consulted for utils.session_manager - internal module
+# Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
+from utils.session_manager import SessionManager, SessionNotFoundError, SecurityError  # noqa: E402
+
+# Context7: consulted for tools.shared.session_models - internal typed models
+# Critical-Engineer: consulted for typed context model integration
+from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
+
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
 log_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
@@ -171,6 +179,22 @@ logger = logging.getLogger(__name__)
 # Create the MCP server instance with a unique name identifier
 # This name is used by MCP clients to identify and connect to this specific server
 server: Server = Server("hestai-server")
+
+# Initialize global session manager for project-aware context isolation
+# This provides secure session management with workspace validation
+session_manager: SessionManager = SessionManager(
+    allowed_workspaces=[
+        "/Users",  # macOS user directories
+        "/home",  # Linux user directories
+        "/tmp",  # Temporary directories
+        "/var/tmp",  # System temporary directories
+        "/Volumes",  # macOS mounted volumes
+        "/opt",  # Optional software installations
+        "/workspace",  # Docker/container workspaces
+    ],
+    session_timeout=3600,  # 1 hour timeout
+    max_sessions=1000,  # Reasonable limit for server resources
+)
 
 
 # Constants for tool filtering
@@ -516,7 +540,16 @@ def configure_providers():
             # Silently ignore any errors during cleanup
             pass
 
+    def cleanup_session_manager():
+        """Clean up session manager on shutdown."""
+        try:
+            session_manager.shutdown()
+        except Exception:
+            # Silently ignore any errors during cleanup
+            pass
+
     atexit.register(cleanup_providers)
+    atexit.register(cleanup_session_manager)
 
     # Check and log model restrictions
     restriction_service = get_restriction_service()
@@ -629,6 +662,13 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     It supports both AI-powered tools (from TOOLS registry) and utility tools (implemented as
     static functions).
 
+    SESSION MANAGEMENT:
+    This function now provides project-aware context isolation:
+    - Extracts session_id and project_root from MCP request parameters
+    - Creates or retrieves isolated session contexts for each project
+    - Validates project_root against allowed workspaces for security
+    - Provides backward compatibility for clients without session parameters
+
     CONVERSATION LIFECYCLE MANAGEMENT:
     This function serves as the central orchestrator for multi-turn AI-to-AI conversations:
 
@@ -656,6 +696,8 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     Args:
         name: The name of the tool to execute (e.g., "analyze", "chat", "codereview")
         arguments: Dictionary of arguments to pass to the tool, potentially including:
+                  - session_id: Unique session identifier for project isolation (optional)
+                  - project_root: Path to project root directory (optional)
                   - continuation_id: UUID for conversation thread resumption
                   - files: File paths for analysis (subject to deduplication)
                   - prompt: User request or follow-up question
@@ -669,13 +711,14 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
     Raises:
         ValueError: If continuation_id is invalid or conversation thread not found
+        SecurityError: If project_root is outside allowed workspaces
         Exception: For tool-specific errors or execution failures
 
     Example Conversation Flow:
-        1. Claude calls analyze tool with files → creates new thread
+        1. Claude calls analyze tool with files + session_id + project_root → creates isolated session
         2. Thread ID returned in continuation offer
-        3. Claude continues with codereview tool + continuation_id → full context preserved
-        4. Multiple tools can collaborate using same thread ID
+        3. Claude continues with codereview tool + continuation_id → full context preserved within session
+        4. Multiple tools can collaborate using same session context
     """
     logger.info(f"MCP tool call: {name}")
     logger.debug(f"MCP tool arguments: {list(arguments.keys())}")
@@ -686,6 +729,76 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
         mcp_activity_logger.info(f"TOOL_CALL: {name} with {len(arguments)} arguments")
     except Exception:
         pass
+
+    # SESSION MANAGEMENT: Extract session parameters from MCP request
+    session_id = arguments.get("session_id", "default")
+    project_root = arguments.get("project_root")
+
+    # Handle session context creation/retrieval with typed models
+    if project_root:
+        try:
+            # Create or get session with project isolation
+            session_obj = session_manager.get_or_create_session(session_id, project_root)
+            logger.info(f"Using session {session_id} for project {project_root}")
+
+            # SECURITY: Convert to typed, validated Pydantic model
+            session_model = SessionContextModel.from_session_context(session_obj)
+            
+            # Create complete typed execution context
+            execution_context = ToolExecutionContext(
+                session=session_model,
+                remaining_tokens=arguments.get("_remaining_tokens"),
+                model_name=arguments.get("_resolved_model_name")
+            )
+            
+            # Store TYPED context, remove old dictionary-based context
+            arguments.pop("_session_context", None)  # Remove old insecure pattern
+            arguments["_execution_context"] = execution_context
+
+        except SessionNotFoundError as e:
+            # Handle session not found with proper error response
+            error_message = f"Session not found: {str(e)}"
+            logger.warning(f"Session not found for {name}: {error_message}")
+            error_output = ToolOutput(
+                status="error",
+                content=error_message,
+                content_type="text",
+                metadata={"tool_name": name, "session_id": session_id, "error_type": "session_not_found"},
+            )
+            return [TextContent(type="text", text=error_output.model_dump_json())]
+            
+        except SecurityError as e:
+            # Handle security violations with enhanced error information
+            error_message = (
+                f"Project root '{project_root}' is not in an allowed workspace. "
+                f"Allowed workspaces: {', '.join(session_manager.allowed_workspaces)}"
+            )
+            logger.warning(f"Session security error: {error_message}")
+            error_output = ToolOutput(
+                status="error",
+                content=error_message,
+                content_type="text",
+                metadata={"tool_name": name, "session_id": session_id, "project_root": project_root, "error_type": "security_error"},
+            )
+            return [TextContent(type="text", text=error_output.model_dump_json())]
+            
+        except Exception as e:
+            # Generic session error handling
+            error_message = f"Failed to create session: {str(e)}"
+            logger.error(f"Session creation error: {error_message}")
+            error_output = ToolOutput(
+                status="error",
+                content=error_message,
+                content_type="text",
+                metadata={"tool_name": name, "session_id": session_id, "error_type": "session_error"},
+            )
+            return [TextContent(type="text", text=error_output.model_dump_json())]
+    else:
+        # Backward compatibility: no session parameters provided
+        # Use default session without project isolation
+        logger.debug(f"No project_root provided for {name}, using legacy mode")
+        arguments.pop("_session_context", None)  # Remove old pattern
+        arguments["_execution_context"] = None
 
     # Smart Context Injection - inject relevant documentation based on patterns
     # This happens BEFORE thread context reconstruction to ensure injected content
@@ -1344,6 +1457,11 @@ async def main():
     # Log startup message
     logger.info("HestAI MCP Server starting up...")
     logger.info(f"Log level: {log_level}")
+
+    # Log session manager configuration
+    logger.info(f"Session manager initialized with {len(session_manager.allowed_workspaces)} allowed workspaces")
+    logger.info(f"Session timeout: {session_manager.session_timeout} seconds")
+    logger.info(f"Max sessions: {session_manager.max_sessions}")
 
     # Note: MCP client info will be logged during the protocol handshake
     # (when handle_list_tools is called)

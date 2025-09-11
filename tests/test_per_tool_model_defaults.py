@@ -181,9 +181,9 @@ class TestFlexibleModelSelection:
                 if "expected" in case:
                     assert model == case["expected"], f"Failed for case: {case}"
                 elif "expected_contains" in case:
-                    assert (
-                        case["expected_contains"] in model
-                    ), f"Expected '{case['expected_contains']}' in '{model}' for case: {case}"
+                    assert case["expected_contains"] in model, (
+                        f"Expected '{case['expected_contains']}' in '{model}' for case: {case}"
+                    )
 
 
 class TestCustomProviderFallback:

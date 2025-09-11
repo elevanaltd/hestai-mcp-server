@@ -299,7 +299,7 @@ class BaseWorkflowMixin(ABC):
             f"MANDATORY: DO NOT call the {self.get_name()} tool again immediately. "
             f"You MUST first work using appropriate tools. "
             f"REQUIRED ACTIONS before calling {self.get_name()} step {next_step_number}:\n"
-            + "\n".join(f"{i+1}. {action}" for i, action in enumerate(required_actions))
+            + "\n".join(f"{i + 1}. {action}" for i, action in enumerate(required_actions))
             + f"\n\nOnly call {self.get_name()} again with step_number: {next_step_number} "
             f"AFTER completing this work."
         )

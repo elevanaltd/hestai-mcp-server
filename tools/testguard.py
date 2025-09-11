@@ -36,7 +36,7 @@ REQUIREMENTS_FIELD_DESCRIPTIONS = {
         "Helps identify testing framework and existing test patterns."
     ),
     "check_coverage": (
-        "Check coverage configuration to detect threshold manipulation. " "Prevents lowering of quality thresholds."
+        "Check coverage configuration to detect threshold manipulation. Prevents lowering of quality thresholds."
     ),
     "include_related": (
         "Automatically find related test/implementation files for comparison. "
@@ -389,19 +389,33 @@ class RequirementsTool(SimpleTool):
         else:
             # Normal test methodology analysis
             prompt_parts = [
-                f"🚨 TEST METHODOLOGY ANALYSIS REQUIRED 🚨\n\n" f'Current consideration: "{request.prompt}"\n\n'
+                f'🚨 TEST METHODOLOGY ANALYSIS REQUIRED 🚨\n\nCurrent consideration: "{request.prompt}"\n\n'
             ]
 
         # Add file context if provided
         if request.files or request.include_test_context or request.check_coverage:
-            processor = FileContextProcessor()
+            # Get session context and project root
+            session_context = None
+            project_root = "."
+
+            # Extract session context from current arguments if available
+            if hasattr(self, "_current_arguments") and self._current_arguments:
+                session_context = self._current_arguments.get("_session_context")
+                if session_context and hasattr(session_context, "project_root"):
+                    project_root = session_context.project_root
+
+            # Use session's FileContextProcessor if available, otherwise create new one
+            if session_context and hasattr(session_context, "get_file_context_processor"):
+                processor = session_context.get_file_context_processor()
+            else:
+                processor = FileContextProcessor()
 
             # Handle test context gathering
             if request.include_test_context:
-                test_context = processor.get_test_context(".")
+                test_context = processor.get_test_context(project_root)
 
                 # REALITY CHECK - Cross-validate context
-                filesystem_check = self._validate_filesystem_reality(".")
+                filesystem_check = self._validate_filesystem_reality(project_root)
 
                 if test_context:
                     prompt_parts.append(
@@ -444,8 +458,7 @@ class RequirementsTool(SimpleTool):
                             coverage_content = read_file_safely(str(cov_path))
                             if coverage_content:
                                 prompt_parts.append(
-                                    f"📊 COVERAGE CONFIGURATION ({cov_file}):\n"
-                                    f"```\n{coverage_content[:500]}\n```\n\n"
+                                    f"📊 COVERAGE CONFIGURATION ({cov_file}):\n```\n{coverage_content[:500]}\n```\n\n"
                                 )
                                 break
                     except Exception:
@@ -463,7 +476,9 @@ class RequirementsTool(SimpleTool):
 
                 # Get file contents
                 file_context = processor.get_relevant_files(
-                    files_to_process, token_budget=4000, prioritize=True  # Smaller budget for testguard
+                    files_to_process,
+                    token_budget=4000,
+                    prioritize=True,  # Smaller budget for testguard
                 )
 
                 if file_context and file_context["files"]:
@@ -492,8 +507,7 @@ class RequirementsTool(SimpleTool):
                         for file_info in impl_files:
                             truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
                             prompt_parts.append(
-                                f"\nFile: {file_info['path']}{truncated}\n"
-                                f"```\n{file_info.get('content', '')}\n```\n"
+                                f"\nFile: {file_info['path']}{truncated}\n```\n{file_info.get('content', '')}\n```\n"
                             )
 
                     # Then show test files (to check for manipulation)
@@ -502,8 +516,7 @@ class RequirementsTool(SimpleTool):
                         for file_info in test_files:
                             truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
                             prompt_parts.append(
-                                f"\nFile: {file_info['path']}{truncated}\n"
-                                f"```\n{file_info.get('content', '')}\n```\n"
+                                f"\nFile: {file_info['path']}{truncated}\n```\n{file_info.get('content', '')}\n```\n"
                             )
 
                     # Finally show config files
@@ -512,8 +525,7 @@ class RequirementsTool(SimpleTool):
                         for file_info in config_files:
                             truncated = " [TRUNCATED]" if file_info.get("truncated") else ""
                             prompt_parts.append(
-                                f"\nFile: {file_info['path']}{truncated}\n"
-                                f"```\n{file_info.get('content', '')}\n```\n"
+                                f"\nFile: {file_info['path']}{truncated}\n```\n{file_info.get('content', '')}\n```\n"
                             )
 
                     prompt_parts.append("\n")

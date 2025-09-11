@@ -46,7 +46,7 @@ CRITICAL_ENGINEER_FIELD_DESCRIPTIONS = {
         "Helps identify missing test coverage or configuration issues."
     ),
     "max_file_tokens": (
-        "Maximum tokens to use for file content (default: 5000). " "Manages token budget for efficient processing."
+        "Maximum tokens to use for file content (default: 5000). Manages token budget for efficient processing."
     ),
 }
 

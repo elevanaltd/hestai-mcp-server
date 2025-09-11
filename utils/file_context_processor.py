@@ -361,9 +361,7 @@ class FileContextProcessor:
                 if content:
                     context["dependencies"] = [
                         line.strip() for line in content.split("\n") if line.strip() and not line.startswith("#")
-                    ][
-                        :10
-                    ]  # Limit to first 10
+                    ][:10]  # Limit to first 10
 
             elif (root / "package.json").exists():
                 content = read_file_safely(str(root / "package.json"))
