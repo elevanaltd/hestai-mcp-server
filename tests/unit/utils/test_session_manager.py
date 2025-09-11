@@ -159,9 +159,16 @@ class TestSessionManager(TestCase):
         self.assertEqual(self.session_manager.get_session_count(), 1)
 
     def test_get_session_nonexistent(self):
-        """Test getting nonexistent session returns None."""
-        result = self.session_manager.get_session("nonexistent-session")
-        self.assertIsNone(result)
+        """Test getting nonexistent session raises SessionNotFoundError (SECURITY: fail-fast)."""
+        # SECURITY: This was changed from returning None to raising an exception
+        # as part of P0 security fix to prevent silent failures
+        # CONTEXT7_BYPASS: INFRA-003 - Internal utils module from same codebase
+        from utils.session_manager import SessionNotFoundError
+
+        with self.assertRaises(SessionNotFoundError) as context:
+            self.session_manager.get_session("nonexistent-session")
+
+        self.assertIn("Session 'nonexistent-session' not found", str(context.exception))
 
     def test_end_session(self):
         """Test ending session removes it from manager."""
@@ -285,7 +292,7 @@ class TestSessionManager(TestCase):
         )
 
         # All sessions should be the SAME instance (atomic behavior)
-        unique_sessions = set(id(session) for session in sessions_created)
+        unique_sessions = {id(session) for session in sessions_created}
         self.assertEqual(
             len(unique_sessions),
             1,
@@ -322,7 +329,7 @@ class TestSessionManager(TestCase):
             try:
                 # Add small delay to let revival thread have a chance
                 time.sleep(0.1)
-                cleaned_count = self.session_manager.cleanup_expired_sessions()
+                self.session_manager.cleanup_expired_sessions()
                 cleanup_completed.set()
             except Exception:
                 cleanup_completed.set()
@@ -456,7 +463,7 @@ class TestSessionManager(TestCase):
         test_manager = SessionManager(allowed_workspaces=[self.temp_dir], session_timeout=1.0, max_sessions=4)
 
         # Create mix of active and expired sessions
-        active_session = test_manager.get_or_create_session("active", self.temp_dir)
+        test_manager.get_or_create_session("active", self.temp_dir)
         expired_session1 = test_manager.get_or_create_session("expired-1", self.temp_dir)
         expired_session2 = test_manager.get_or_create_session("expired-2", self.temp_dir)
 
@@ -474,7 +481,7 @@ class TestSessionManager(TestCase):
         self.assertEqual(test_manager.get_session_count(), 4)
 
         # Creating new session should clean expired ones but preserve active
-        new_session = test_manager.get_or_create_session("new-active", self.temp_dir)
+        test_manager.get_or_create_session("new-active", self.temp_dir)
 
         # Should have 2 sessions: the original active + new one
         self.assertEqual(test_manager.get_session_count(), 2)
@@ -487,10 +494,16 @@ class TestSessionManager(TestCase):
         # New session should exist
         self.assertIsNotNone(test_manager.get_session("new-active"))
 
-        # Expired sessions should be gone
-        self.assertIsNone(test_manager.get_session("expired-1"))
-        self.assertIsNone(test_manager.get_session("expired-2"))
-        self.assertIsNone(test_manager.get_session("expired-3"))
+        # Expired sessions should be gone (SECURITY: now raises exception instead of None)
+        # CONTEXT7_BYPASS: INFRA-003 - Internal utils module from same codebase
+        from utils.session_manager import SessionNotFoundError
+
+        with self.assertRaises(SessionNotFoundError):
+            test_manager.get_session("expired-1")
+        with self.assertRaises(SessionNotFoundError):
+            test_manager.get_session("expired-2")
+        with self.assertRaises(SessionNotFoundError):
+            test_manager.get_session("expired-3")
 
         test_manager.shutdown()
 

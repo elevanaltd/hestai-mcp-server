@@ -296,9 +296,9 @@ class TestAutoMode:
                 if model not in available_models:
                     print(f"Missing expected model: {model}")
                     print(f"Available models: {available_models}")
-            assert any(model in available_models for model in expected_basic_models), (
-                f"None of {expected_basic_models} found in {available_models}"
-            )
+            assert any(
+                model in available_models for model in expected_basic_models
+            ), f"None of {expected_basic_models} found in {available_models}"
             assert "select the most suitable model" in schema["description"]
 
             # Test normal mode

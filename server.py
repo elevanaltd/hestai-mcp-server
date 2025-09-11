@@ -86,13 +86,13 @@ from tools.models import ToolOutput  # noqa: E402
 # Critical-Engineer: consulted for architectural-decisions - adding new tool to server
 from tools.registry import RegistryTool  # noqa: E402
 
-# Context7: consulted for utils.session_manager - internal module
-# Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
-from utils.session_manager import SessionManager, SessionNotFoundError, SecurityError  # noqa: E402
-
 # Context7: consulted for tools.shared.session_models - internal typed models
 # Critical-Engineer: consulted for typed context model integration
 from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
+
+# Context7: consulted for utils.session_manager - internal module
+# Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
+from utils.session_manager import SecurityError, SessionManager, SessionNotFoundError  # noqa: E402
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
@@ -743,14 +743,14 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
 
             # SECURITY: Convert to typed, validated Pydantic model
             session_model = SessionContextModel.from_session_context(session_obj)
-            
+
             # Create complete typed execution context
             execution_context = ToolExecutionContext(
                 session=session_model,
                 remaining_tokens=arguments.get("_remaining_tokens"),
-                model_name=arguments.get("_resolved_model_name")
+                model_name=arguments.get("_resolved_model_name"),
             )
-            
+
             # Store TYPED context, remove old dictionary-based context
             arguments.pop("_session_context", None)  # Remove old insecure pattern
             arguments["_execution_context"] = execution_context
@@ -766,8 +766,8 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 metadata={"tool_name": name, "session_id": session_id, "error_type": "session_not_found"},
             )
             return [TextContent(type="text", text=error_output.model_dump_json())]
-            
-        except SecurityError as e:
+
+        except SecurityError:
             # Handle security violations with enhanced error information
             error_message = (
                 f"Project root '{project_root}' is not in an allowed workspace. "
@@ -778,10 +778,15 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
                 status="error",
                 content=error_message,
                 content_type="text",
-                metadata={"tool_name": name, "session_id": session_id, "project_root": project_root, "error_type": "security_error"},
+                metadata={
+                    "tool_name": name,
+                    "session_id": session_id,
+                    "project_root": project_root,
+                    "error_type": "security_error",
+                },
             )
             return [TextContent(type="text", text=error_output.model_dump_json())]
-            
+
         except Exception as e:
             # Generic session error handling
             error_message = f"Failed to create session: {str(e)}"

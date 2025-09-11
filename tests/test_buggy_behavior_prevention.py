@@ -156,9 +156,9 @@ class TestBuggyBehaviorPrevention:
 
         # The new interface should be a superset of the old one
         for model in old_style_models:
-            assert model.lower() in [m.lower() for m in new_comprehensive_models], (
-                f"New interface missing model {model} from old interface"
-            )
+            assert model.lower() in [
+                m.lower() for m in new_comprehensive_models
+            ], f"New interface missing model {model} from old interface"
 
         # The new interface should include target models that old one might miss
         targets_that_should_exist = ["o4-mini", "o3-mini"]

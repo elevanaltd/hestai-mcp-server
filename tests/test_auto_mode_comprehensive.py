@@ -332,9 +332,9 @@ class TestAutoModeComprehensive:
                         "gemini-pro",
                     ]
                 ]
-                assert len(non_gemini_models) == 0, (
-                    f"Found non-Gemini models when only Gemini configured: {non_gemini_models}"
-                )
+                assert (
+                    len(non_gemini_models) == 0
+                ), f"Found non-Gemini models when only Gemini configured: {non_gemini_models}"
             else:
                 # Multiple providers or OpenRouter - should include various models
                 # Only check if models are available if their providers might be configured

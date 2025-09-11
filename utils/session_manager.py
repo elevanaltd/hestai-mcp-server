@@ -14,7 +14,7 @@ import time
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .file_context_processor import FileContextProcessor
 
@@ -41,7 +41,7 @@ class SessionContext:
     with proper lifecycle management.
     """
 
-    def __init__(self, session_id: str, project_root: str, allowed_workspaces: List[str]):
+    def __init__(self, session_id: str, project_root: str, allowed_workspaces: list[str]):
         """
         Initialize a new session context.
 
@@ -69,7 +69,7 @@ class SessionContext:
             "project_root": str(self.project_root),
         }
 
-    def _validate_project_root(self, project_root: str, allowed_workspaces: List[str]) -> Path:
+    def _validate_project_root(self, project_root: str, allowed_workspaces: list[str]) -> Path:
         """
         Validate that project root is within allowed workspaces.
 
@@ -172,7 +172,7 @@ class SessionManager:
     """
 
     def __init__(
-        self, allowed_workspaces: Optional[List[str]] = None, session_timeout: int = 3600, max_sessions: int = 1000
+        self, allowed_workspaces: Optional[list[str]] = None, session_timeout: int = 3600, max_sessions: int = 1000
     ):
         """
         Initialize the SessionManager.
@@ -272,25 +272,41 @@ class SessionManager:
                 return session
 
             # Check resource limits BEFORE creating new session
-            lru_session_to_cleanup = None
+            sessions_to_cleanup = []
             if len(self._sessions) >= self.max_sessions:
-                # SECURITY: Implement LRU eviction to prevent DoS
-                # Just pop the item inside the lock to avoid blocking on cleanup
-                lru_session_id, lru_session_to_cleanup = self._sessions.popitem(last=False)
-                logger.warning(
-                    f"Max session limit ({self.max_sessions}) reached. "
-                    f"Evicting LRU session {lru_session_id} to make space for {session_id}"
-                )
+                # SECURITY: Smart eviction prioritizes expired sessions over active ones
+                # Find ALL expired sessions to remove when at limit
+                expired_session_ids = []
+                for sid, sess in self._sessions.items():
+                    if sess.is_expired(self.session_timeout):
+                        expired_session_ids.append(sid)
+
+                if expired_session_ids:
+                    # Remove all expired sessions
+                    for expired_id in expired_session_ids:
+                        sessions_to_cleanup.append(self._sessions.pop(expired_id))
+                    logger.warning(
+                        f"Max session limit ({self.max_sessions}) reached. "
+                        f"Evicting {len(expired_session_ids)} expired sessions to make space for {session_id}"
+                    )
+                else:
+                    # SECURITY: No expired sessions found - refuse to evict active sessions
+                    # This prevents forcible eviction of active user sessions
+                    raise ValueError(
+                        f"Maximum session limit ({self.max_sessions}) reached. "
+                        f"Cleaned up 0 expired sessions. Cannot create new session '{session_id}' "
+                        "without evicting active sessions."
+                    )
 
             # Create inside lock - no race window
             session = SessionContext(session_id, project_root, self.allowed_workspaces)
             self._sessions[session_id] = session
             logger.info(f"Created session {session_id} for project {project_root}")
-        
+
         # Perform potentially slow cleanup OUTSIDE the lock to prevent contention
-        if lru_session_to_cleanup:
-            lru_session_to_cleanup.cleanup()
-        
+        for session_to_cleanup in sessions_to_cleanup:
+            session_to_cleanup.cleanup()
+
         return session
 
     def end_session(self, session_id: str) -> bool:
@@ -331,7 +347,7 @@ class SessionManager:
         with self._lock:
             return len(self._sessions)
 
-    def get_session_info(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_session_info(self, session_id: Optional[str] = None) -> dict[str, Any]:
         """Get information about a specific session or all sessions.
 
         Args:
@@ -375,7 +391,7 @@ class SessionManager:
                 "is_expired": session.is_expired(self.session_timeout),
             }
 
-    def list_sessions(self) -> List[Dict[str, Any]]:
+    def list_sessions(self) -> list[dict[str, Any]]:
         """
         List all active sessions with metadata.
 

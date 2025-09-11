@@ -211,6 +211,6 @@ class TestOldBehaviorSimulation:
                 # If it's an alias (config is a string), target should also be in list
                 if isinstance(config, str):
                     target_model = config
-                    assert target_model.lower() in all_known, (
-                        f"{provider.__class__.__name__}: Missing target {target_model} for alias {model_name}"
-                    )
+                    assert (
+                        target_model.lower() in all_known
+                    ), f"{provider.__class__.__name__}: Missing target {target_model} for alias {model_name}"
