@@ -67,7 +67,8 @@ class TestSessionIntegration:
         assert hasattr(session_manager, "get_or_create_session")
         assert hasattr(session_manager, "allowed_workspaces")
 
-    def test_project_root_validation(self):
+    @pytest.mark.asyncio
+    async def test_project_root_validation(self):
         """Test that project_root is validated against allowed workspaces."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create allowed and project directories
@@ -79,7 +80,7 @@ class TestSessionIntegration:
             manager = SessionManager(allowed_workspaces=[str(allowed_path)])
 
             # Valid path should work
-            valid_session = manager.get_or_create_session("test-session", str(project_path))
+            valid_session = await manager.get_or_create_session("test-session", str(project_path))
             assert valid_session is not None
 
             # Test security boundary enforcement with a different manager
@@ -92,7 +93,7 @@ class TestSessionIntegration:
             from utils.session_manager import SecurityError
 
             with pytest.raises(SecurityError):
-                restricted_manager.get_or_create_session("invalid-session", str(forbidden_path))
+                await restricted_manager.get_or_create_session("invalid-session", str(forbidden_path))
 
     @pytest.mark.asyncio
     async def test_session_aware_tool_execution(self, mock_session_manager, sample_tool_args):
@@ -134,7 +135,8 @@ class TestSessionIntegration:
         assert session_id == "default"  # Should use default
         assert project_root is None  # Should be None for legacy requests
 
-    def test_tool_instance_isolation_per_session(self):
+    @pytest.mark.asyncio
+    async def test_tool_instance_isolation_per_session(self):
         """Test that different sessions get isolated tool instances."""
         with tempfile.TemporaryDirectory() as temp_dir:
             # Create project directories
@@ -147,8 +149,8 @@ class TestSessionIntegration:
 
             manager = SessionManager(allowed_workspaces=[str(test_path)])
 
-            session1 = manager.get_or_create_session("session1", str(project1_path))
-            session2 = manager.get_or_create_session("session2", str(project2_path))
+            session1 = await manager.get_or_create_session("session1", str(project1_path))
+            session2 = await manager.get_or_create_session("session2", str(project2_path))
 
             # Sessions should have different contexts
             assert session1.session_id != session2.session_id
@@ -159,15 +161,18 @@ class TestSessionIntegration:
             processor2 = session2.get_file_context_processor()
             assert processor1 is not processor2
 
-    def test_session_cleanup_on_disconnect(self, mock_session_manager):
+    @pytest.mark.asyncio
+    async def test_session_cleanup_on_disconnect(self):
         """Test that sessions are cleaned up when clients disconnect."""
-        # Create session
-        session = mock_session_manager.get_or_create_session("test-cleanup", "/test")
-
-        # Simulate disconnect/timeout
-        session.is_expired.return_value = True
-        mock_session_manager.cleanup_expired_sessions.return_value = 1
-        cleaned_count = mock_session_manager.cleanup_expired_sessions()
-
-        # Should have cleaned up the session
-        assert cleaned_count == 1  # Mock returns the configured value
+        with tempfile.TemporaryDirectory() as temp_dir:
+            manager = SessionManager(allowed_workspaces=[str(temp_dir)])
+            
+            # Create session
+            session = await manager.get_or_create_session("test-cleanup", str(temp_dir))
+            
+            # Manually expire the session
+            session.last_activity_at = 0  # Set to very old timestamp
+            
+            # Should clean up the expired session
+            cleaned_count = await manager.cleanup_expired_sessions(timeout_seconds=1)
+            assert cleaned_count == 1

@@ -340,7 +340,8 @@ class CriticalEngineerTool(SimpleTool):
         # Add file context if provided
         if request.files or request.include_tree:
             # Get session context for project root (backward compatible)
-            session_context = self._current_arguments.get("_session_context")
+            current_args = getattr(self, "_current_arguments", {})
+            session_context = current_args.get("_session_context")
             project_root = session_context.project_root if session_context else "."
 
             processor = FileContextProcessor()
