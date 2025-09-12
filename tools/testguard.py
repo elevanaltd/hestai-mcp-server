@@ -356,7 +356,52 @@ class RequirementsTool(SimpleTool):
         # If this is a blocked file review, handle it specially
         # Critical-Engineer: consulted for architectural-decisions
         # Direct token generation for immediate workflow completion
-        if blocked_uuid or "/tmp/blocked-" in request.prompt or "blocked_changes" in request.prompt:
+        is_blocked_review = blocked_uuid or "/tmp/blocked-" in request.prompt or "blocked_changes" in request.prompt
+        if is_blocked_review:
+            # If no UUID but we have a blocked file path, create a registry entry
+            if not blocked_uuid and "/tmp/blocked-" in request.prompt:
+                try:
+                    # Extract blocked file path from prompt
+                    # Context7: consulted for re
+                    import re
+
+                    blocked_file_match = re.search(r'/tmp/blocked-[^\\s]+', request.prompt)
+                    if blocked_file_match:
+                        blocked_file = blocked_file_match.group(0)
+
+                        # Read the blocked content
+                        # Context7: consulted for os
+                        import os
+                        if os.path.exists(blocked_file):
+                            with open(blocked_file) as f:
+                                blocked_content = f.read()
+
+                            # Create registry entry
+                            # Context7: consulted for tools.registry - internal module
+                            from tools.registry import RegistryDB
+
+                            # Use the same registry database path as the hook expects
+                            db_path = os.path.expanduser("~/.claude/hooks/registry.db")
+                            registry_db = RegistryDB(db_path)
+
+                            # Create blocked entry
+                            entry_result = registry_db.create_blocked_entry(
+                                description=f"Hook-blocked test manipulation from {blocked_file}",
+                                file_path="test file", # We don't know the original file path
+                                specialist_type="testguard",
+                                blocked_content=blocked_content
+                            )
+
+                            # Store the UUID for later use
+                            self._blocked_uuid = entry_result["uuid"]
+                            blocked_uuid = self._blocked_uuid
+
+                except Exception as e:
+                    # Context7: consulted for logging
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Failed to create registry entry for blocked file: {e}")
+
             # Build special prompt for blocked change analysis
             prompt_parts = [
                 f"🚨 BLOCKED CHANGE REVIEW - DIRECT APPROVAL WORKFLOW 🚨\n\n"
@@ -588,17 +633,7 @@ class RequirementsTool(SimpleTool):
             # Check if the response indicates approval
             response_upper = response.upper()
             if "APPROVED:" in response_upper:
-                # Generate token directly
-                # Context7: consulted for datetime
-                import datetime
-
-                specialist = "TEST-METHODOLOGY-GUARDIAN"
-                timestamp = datetime.datetime.now().strftime("%Y%m%d")
-                # Use first 8 chars of UUID for token uniqueness
-                uuid_short = self._blocked_uuid[:8] if len(self._blocked_uuid) >= 8 else self._blocked_uuid
-                token = f"{specialist}-{timestamp}-{uuid_short}"
-
-                # Create registry entry for tracking
+                # Use registry to approve entry and generate token
                 try:
                     # Context7: consulted for tools.registry - internal module
                     # Context7: consulted for os
@@ -606,8 +641,8 @@ class RequirementsTool(SimpleTool):
 
                     from tools.registry import RegistryDB
 
-                    # Use the registry database to record the approval
-                    db_path = os.path.expanduser("~/.mcp/registry/blocked_changes.db")
+                    # Use the same registry database path as the hook expects
+                    db_path = os.path.expanduser("~/.claude/hooks/registry.db")
                     registry_db = RegistryDB(db_path)
 
                     # Extract reason from response
@@ -617,15 +652,24 @@ class RequirementsTool(SimpleTool):
                     reason_match = re.search(r"APPROVED:\s*(.+?)(?:\n|$)", response, re.IGNORECASE)
                     reason = reason_match.group(1) if reason_match else "Valid TDD practice"
 
-                    # Record the approval in registry
-                    registry_db.approve_entry(uuid=self._blocked_uuid, specialist="testguard", reason=reason)
+                    # Record the approval in registry and get the generated token
+                    approval_result = registry_db.approve_entry(uuid=self._blocked_uuid, specialist="testguard", reason=reason)
+                    token = approval_result["token"]
+
                 except Exception as e:
-                    # Log but don't fail - token generation is primary goal
+                    # Fallback to manual token generation if registry fails
                     # Context7: consulted for logging
                     import logging
-
                     logger = logging.getLogger(__name__)
                     logger.warning(f"Failed to record approval in registry: {e}")
+
+                    # Manual fallback
+                    # Context7: consulted for datetime
+                    import datetime
+                    specialist = "TESTGUARD"
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d")
+                    uuid_short = self._blocked_uuid[:8] if len(self._blocked_uuid) >= 8 else self._blocked_uuid
+                    token = f"{specialist}-{timestamp}-{uuid_short}"
 
                 # Return formatted response with token
                 return (

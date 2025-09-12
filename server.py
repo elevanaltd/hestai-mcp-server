@@ -543,7 +543,15 @@ def configure_providers():
     def cleanup_session_manager():
         """Clean up session manager on shutdown."""
         try:
-            session_manager.shutdown()
+            # For atexit compatibility, create new event loop if needed
+            import asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                # If we have a running loop, schedule the shutdown
+                loop.create_task(session_manager.shutdown())
+            except RuntimeError:
+                # No running loop, create one for cleanup
+                asyncio.run(session_manager.shutdown())
         except Exception:
             # Silently ignore any errors during cleanup
             pass
@@ -737,8 +745,8 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     # Handle session context creation/retrieval with typed models
     if project_root:
         try:
-            # Create or get session with project isolation
-            session_obj = session_manager.get_or_create_session(session_id, project_root)
+            # Create or get session with project isolation (async operation)
+            session_obj = await session_manager.get_or_create_session(session_id, project_root)
             logger.info(f"Using session {session_id} for project {project_root}")
 
             # SECURITY: Convert to typed, validated Pydantic model
@@ -1485,6 +1493,11 @@ async def main():
     logger.info(f"Default thinking mode (ThinkDeep): {DEFAULT_THINKING_MODE_THINKDEEP}")
 
     logger.info(f"Available tools: {list(TOOLS.keys())}")
+
+    # Start session manager background cleanup task
+    session_manager.start_cleanup_task()
+    logger.info("Session manager cleanup task started")
+
     logger.info("Server ready - waiting for tool requests...")
 
     # Run the server using stdio transport (standard input/output)
