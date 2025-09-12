@@ -166,13 +166,13 @@ class TestSessionIntegration:
         """Test that sessions are cleaned up when clients disconnect."""
         with tempfile.TemporaryDirectory() as temp_dir:
             manager = SessionManager(allowed_workspaces=[str(temp_dir)])
-            
+
             # Create session
             session = await manager.get_or_create_session("test-cleanup", str(temp_dir))
-            
+
             # Manually expire the session
             session.last_activity_at = 0  # Set to very old timestamp
-            
+
             # Should clean up the expired session
             cleaned_count = await manager.cleanup_expired_sessions(timeout_seconds=1)
             assert cleaned_count == 1

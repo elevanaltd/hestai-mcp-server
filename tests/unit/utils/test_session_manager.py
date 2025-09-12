@@ -9,7 +9,6 @@ Tests project-aware context isolation functionality including:
 - FileContextProcessor integration
 """
 
-import asyncio
 import tempfile
 import threading
 import time
@@ -19,7 +18,7 @@ from unittest import IsolatedAsyncioTestCase, TestCase
 import pytest
 
 # CONTEXT7_BYPASS: UTILS-001 - Internal utils module from same codebase
-from utils.session_manager import SecurityError, SessionContext, SessionManager
+from utils.session_manager import SessionContext, SessionManager
 
 
 class TestSessionContext(TestCase):
@@ -35,10 +34,7 @@ class TestSessionContext(TestCase):
         """Test SessionContext creation with valid project root."""
         # Test creation with valid project directory - SessionContext expects pre-validated Path
         validated_path = Path(self.temp_dir).resolve()
-        session = SessionContext(
-            session_id=self.session_id, 
-            project_root_validated=validated_path
-        )
+        session = SessionContext(session_id=self.session_id, project_root_validated=validated_path)
 
         self.assertEqual(session.session_id, self.session_id)
         self.assertEqual(str(session.project_root), str(validated_path))
@@ -50,12 +46,9 @@ class TestSessionContext(TestCase):
         # SessionContext accepts pre-validated paths, so we test with Path object
         # Validation of existence should be done by SessionManager._validate_project_root
         nonexistent_path = Path("/nonexistent/path/project")
-        
+
         # SessionContext itself doesn't validate existence - it trusts the pre-validated Path
-        session = SessionContext(
-            session_id=self.session_id, 
-            project_root_validated=nonexistent_path
-        )
+        session = SessionContext(session_id=self.session_id, project_root_validated=nonexistent_path)
         self.assertEqual(str(session.project_root), str(nonexistent_path))
 
     def test_session_context_creation_dangerous_path(self):
@@ -67,10 +60,7 @@ class TestSessionContext(TestCase):
         for dangerous_path in dangerous_paths:
             # SessionContext itself doesn't validate - it trusts the pre-validated Path
             validated_path = Path(dangerous_path)
-            session = SessionContext(
-                session_id=self.session_id, 
-                project_root_validated=validated_path
-            )
+            session = SessionContext(session_id=self.session_id, project_root_validated=validated_path)
             self.assertEqual(str(session.project_root), str(validated_path))
 
     def test_session_context_creation_outside_allowed_workspace(self):
@@ -79,21 +69,15 @@ class TestSessionContext(TestCase):
         # Workspace validation should be done by SessionManager._validate_project_root
         outside_workspace = tempfile.mkdtemp()
         validated_path = Path(outside_workspace).resolve()
-        
+
         # SessionContext itself doesn't validate workspaces - it trusts the pre-validated Path
-        session = SessionContext(
-            session_id=self.session_id,
-            project_root_validated=validated_path
-        )
+        session = SessionContext(session_id=self.session_id, project_root_validated=validated_path)
         self.assertEqual(str(session.project_root), str(validated_path))
 
     def test_file_context_processor_lazy_loading(self):
         """Test FileContextProcessor is lazy-loaded with correct project_root."""
         validated_path = Path(self.temp_dir).resolve()
-        session = SessionContext(
-            session_id=self.session_id, 
-            project_root_validated=validated_path
-        )
+        session = SessionContext(session_id=self.session_id, project_root_validated=validated_path)
 
         # Initially no processor loaded
         self.assertIsNone(session._file_context_processor)
@@ -110,10 +94,7 @@ class TestSessionContext(TestCase):
     def test_touch_updates_activity_timestamp(self):
         """Test touch() method updates last_activity_at timestamp."""
         validated_path = Path(self.temp_dir).resolve()
-        session = SessionContext(
-            session_id=self.session_id, 
-            project_root_validated=validated_path
-        )
+        session = SessionContext(session_id=self.session_id, project_root_validated=validated_path)
 
         original_timestamp = session.last_activity_at
         time.sleep(0.01)  # Small delay to ensure timestamp change
