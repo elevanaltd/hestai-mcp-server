@@ -365,13 +365,14 @@ class RequirementsTool(SimpleTool):
                     # Context7: consulted for re
                     import re
 
-                    blocked_file_match = re.search(r'/tmp/blocked-[^\\s]+', request.prompt)
+                    blocked_file_match = re.search(r"/tmp/blocked-[^\\s]+", request.prompt)
                     if blocked_file_match:
                         blocked_file = blocked_file_match.group(0)
 
                         # Read the blocked content
                         # Context7: consulted for os
                         import os
+
                         if os.path.exists(blocked_file):
                             with open(blocked_file) as f:
                                 blocked_content = f.read()
@@ -387,9 +388,9 @@ class RequirementsTool(SimpleTool):
                             # Create blocked entry
                             entry_result = registry_db.create_blocked_entry(
                                 description=f"Hook-blocked test manipulation from {blocked_file}",
-                                file_path="test file", # We don't know the original file path
+                                file_path="test file",  # We don't know the original file path
                                 specialist_type="testguard",
-                                blocked_content=blocked_content
+                                blocked_content=blocked_content,
                             )
 
                             # Store the UUID for later use
@@ -399,6 +400,7 @@ class RequirementsTool(SimpleTool):
                 except Exception as e:
                     # Context7: consulted for logging
                     import logging
+
                     logger = logging.getLogger(__name__)
                     logger.warning(f"Failed to create registry entry for blocked file: {e}")
 
@@ -653,19 +655,23 @@ class RequirementsTool(SimpleTool):
                     reason = reason_match.group(1) if reason_match else "Valid TDD practice"
 
                     # Record the approval in registry and get the generated token
-                    approval_result = registry_db.approve_entry(uuid=self._blocked_uuid, specialist="testguard", reason=reason)
+                    approval_result = registry_db.approve_entry(
+                        uuid=self._blocked_uuid, specialist="testguard", reason=reason
+                    )
                     token = approval_result["token"]
 
                 except Exception as e:
                     # Fallback to manual token generation if registry fails
                     # Context7: consulted for logging
                     import logging
+
                     logger = logging.getLogger(__name__)
                     logger.warning(f"Failed to record approval in registry: {e}")
 
                     # Manual fallback
                     # Context7: consulted for datetime
                     import datetime
+
                     specialist = "TESTGUARD"
                     timestamp = datetime.datetime.now().strftime("%Y%m%d")
                     uuid_short = self._blocked_uuid[:8] if len(self._blocked_uuid) >= 8 else self._blocked_uuid

@@ -45,7 +45,7 @@ class SessionContext:
     def __init__(self, session_id: str, project_root_validated: Path, created_at: Optional[float] = None):
         """
         Initialize a new session context with pre-validated project root.
-        
+
         Note: project_root validation must be done asynchronously before creating SessionContext.
 
         Args:
@@ -68,11 +68,10 @@ class SessionContext:
             "project_root": str(self.project_root),
         }
 
-
     def get_file_context_processor(self) -> FileContextProcessor:
         """
         Get or create the FileContextProcessor for this session.
-        
+
         Note: FileContextProcessor instances are now managed with LRU caching
         to prevent memory exhaustion.
 
@@ -158,19 +157,21 @@ class SessionManager:
 
         logger.info(f"SessionManager initialized with workspaces: {self.allowed_workspaces}")
 
-    @lru_cache(maxsize=256)
-    def _validate_project_root_sync(self, project_root: str, allowed_workspaces_tuple: tuple[str, ...]) -> str:
+        # Create cached validation function to prevent memory leaks
+        self._validate_project_root_cached = lru_cache(maxsize=256)(self._validate_project_root_uncached)
+
+    def _validate_project_root_uncached(self, project_root: str, allowed_workspaces_tuple: tuple[str, ...]) -> str:
         """
         Synchronous version of project root validation with caching.
         This runs in a thread pool executor to prevent blocking the event loop.
-        
+
         Args:
             project_root: Path to validate
             allowed_workspaces_tuple: Tuple of allowed workspace paths (tuple for hashability)
-            
+
         Returns:
             String representation of validated resolved path
-            
+
         Raises:
             SecurityError: If project root is outside allowed workspaces
             ValueError: If project root doesn't exist or is not a directory
@@ -238,16 +239,16 @@ class SessionManager:
 
         validated_path_str = await loop.run_in_executor(
             None,  # Use default thread pool executor
-            self._validate_project_root_sync,
+            self._validate_project_root_cached,
             project_root,
-            allowed_workspaces_tuple
+            allowed_workspaces_tuple,
         )
         return Path(validated_path_str)
 
     def _get_default_workspaces(self) -> list[str]:
         """
         Get default workspace locations with existence validation.
-        
+
         Returns:
             List of validated default workspace paths
         """
@@ -256,7 +257,7 @@ class SessionManager:
             "/var/mcp/workspaces",
             "/tmp/mcp-workspaces",
             "/Users",  # macOS user directories
-            "/home",   # Linux user directories
+            "/home",  # Linux user directories
         ]
 
         validated_workspaces = []
@@ -279,10 +280,10 @@ class SessionManager:
     def _validate_workspaces(self, workspaces: list[str]) -> list[str]:
         """
         Validate and ensure workspace directories exist.
-        
+
         Args:
             workspaces: List of workspace paths to validate
-            
+
         Returns:
             List of validated workspace paths
         """
@@ -307,10 +308,10 @@ class SessionManager:
     def _ensure_workspace_exists(self, path: Path) -> bool:
         """
         Ensure workspace directory exists and is writable.
-        
+
         Args:
             path: Path to workspace directory
-            
+
         Returns:
             True if workspace is valid and accessible
         """
@@ -603,7 +604,6 @@ class SessionManager:
                         logger.info(f"Cleaned up expired session {session_id}")
 
         return cleaned_count
-
 
     async def shutdown(self):
         """Shutdown the session manager and clean up all sessions."""

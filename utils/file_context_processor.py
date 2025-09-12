@@ -34,7 +34,7 @@ class FileContextProcessor:
 
     Provides structured file content, directory trees, and intelligent
     file discovery for critical-engineer and testguard tools.
-    
+
     Memory Management:
     - LRU caching with bounded size to prevent memory exhaustion
     - Automatic eviction of oldest entries when cache is full
@@ -61,10 +61,10 @@ class FileContextProcessor:
     def _read_file_uncached(self, file_path: str) -> Optional[str]:
         """
         Uncached file reading method for LRU cache.
-        
+
         Args:
             file_path: Absolute path to file to read
-            
+
         Returns:
             File content or None if unreadable
         """
@@ -85,7 +85,7 @@ class FileContextProcessor:
     def cache_info(self) -> dict[str, Any]:
         """
         Get cache statistics for monitoring and debugging.
-        
+
         Returns:
             Dictionary with cache hit/miss statistics
         """
@@ -95,7 +95,7 @@ class FileContextProcessor:
             "misses": info.misses,
             "maxsize": info.maxsize,
             "currsize": info.currsize,
-            "hit_rate": info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0.0
+            "hit_rate": info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0.0,
         }
 
     def get_file_tree(self, root_path: str, max_depth: int = 3) -> dict[str, Any]:

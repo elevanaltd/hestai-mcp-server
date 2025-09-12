@@ -545,6 +545,7 @@ def configure_providers():
         try:
             # For atexit compatibility, create new event loop if needed
             import asyncio
+
             try:
                 loop = asyncio.get_running_loop()
                 # If we have a running loop, schedule the shutdown
