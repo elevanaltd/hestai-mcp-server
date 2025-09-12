@@ -46,7 +46,7 @@ CRITICAL_ENGINEER_FIELD_DESCRIPTIONS = {
         "Helps identify missing test coverage or configuration issues."
     ),
     "max_file_tokens": (
-        "Maximum tokens to use for file content (default: 5000). " "Manages token budget for efficient processing."
+        "Maximum tokens to use for file content (default: 5000). Manages token budget for efficient processing."
     ),
 }
 
@@ -339,11 +339,16 @@ class CriticalEngineerTool(SimpleTool):
 
         # Add file context if provided
         if request.files or request.include_tree:
+            # Get session context for project root (backward compatible)
+            current_args = getattr(self, "_current_arguments", {})
+            session_context = current_args.get("_session_context")
+            project_root = session_context.project_root if session_context else "."
+
             processor = FileContextProcessor()
 
             # Handle directory tree if requested
             if request.include_tree:
-                tree_context = processor.get_file_tree(".", max_depth=request.max_depth)
+                tree_context = processor.get_file_tree(project_root, max_depth=request.max_depth)
                 if tree_context and "structure" in tree_context:
                     prompt_parts.append(
                         f"📁 DIRECTORY STRUCTURE:\n"
@@ -359,7 +364,7 @@ class CriticalEngineerTool(SimpleTool):
                 # Check for auto-discovery
                 if request.files and request.files[0] == "auto":
                     # Auto-discover architectural context
-                    arch_context = processor.get_architectural_context(".")
+                    arch_context = processor.get_architectural_context(project_root)
                     prompt_parts.append(
                         f"🏗️ ARCHITECTURAL CONTEXT:\n"
                         f"Configuration files: {', '.join(arch_context['configs'][:5]) if arch_context['configs'] else 'None found'}\n"

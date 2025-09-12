@@ -311,10 +311,9 @@ class TestOpenRouterAliasRestrictions:
 
             # Check that expected models are present
             missing_models = expected_models - available_model_names
-            assert len(missing_models) == 0, (
-                f"Missing expected models from alias restrictions: {missing_models}. "
-                f"Available: {available_model_names}"
-            )
+            assert (
+                len(missing_models) == 0
+            ), f"Missing expected models from alias restrictions: {missing_models}. Available: {available_model_names}"
 
         finally:
             # Restore original environment

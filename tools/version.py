@@ -210,8 +210,10 @@ class VersionTool(BaseTool):
         except Exception as e:
             logger.debug(f"Could not get client info: {e}")
 
-        # Get the current working directory (MCP server location)
-        current_path = Path.cwd()
+        # Get the current working directory (MCP server location or session project root)
+        current_args = getattr(self, "_current_arguments", {})
+        session_context = current_args.get("_session_context")
+        current_path = session_context.project_root if session_context else Path.cwd()
         output_lines.append(f"**Installation Path**: `{current_path}`")
         output_lines.append("")
 

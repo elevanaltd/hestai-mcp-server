@@ -17,6 +17,7 @@ Security Model:
 
 import json
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -33,17 +34,69 @@ class FileContextProcessor:
 
     Provides structured file content, directory trees, and intelligent
     file discovery for critical-engineer and testguard tools.
+
+    Memory Management:
+    - LRU caching with bounded size to prevent memory exhaustion
+    - Automatic eviction of oldest entries when cache is full
     """
 
-    def __init__(self, project_root: Optional[str] = None):
+    def __init__(self, project_root: Optional[str] = None, cache_size: int = 128):
         """
         Initialize the FileContextProcessor.
 
         Args:
             project_root: Root directory for the project (defaults to current directory)
+            cache_size: Maximum number of file contents to cache (default: 128)
         """
         self.project_root = Path(project_root) if project_root else Path.cwd()
         self.project_root = self.project_root.resolve()
+        self.cache_size = cache_size
+
+        # Create bounded LRU cache for file contents to prevent memory exhaustion
+        self._read_file_cached = lru_cache(maxsize=cache_size)(self._read_file_uncached)
+
+        # Critical-Engineer: consulted for Session management async conversion and concurrency model
+        logger.debug(f"FileContextProcessor initialized with cache_size={cache_size} for {self.project_root}")
+
+    def _read_file_uncached(self, file_path: str) -> Optional[str]:
+        """
+        Uncached file reading method for LRU cache.
+
+        Args:
+            file_path: Absolute path to file to read
+
+        Returns:
+            File content or None if unreadable
+        """
+        try:
+            return read_file_safely(file_path)
+        except Exception as e:
+            logger.error(f"Error reading file {file_path}: {e}")
+            return None
+
+    def clear_cache(self):
+        """
+        Clear the file content cache to free memory.
+        Useful for long-running sessions or memory pressure.
+        """
+        self._read_file_cached.cache_clear()
+        logger.debug(f"FileContextProcessor cache cleared for {self.project_root}")
+
+    def cache_info(self) -> dict[str, Any]:
+        """
+        Get cache statistics for monitoring and debugging.
+
+        Returns:
+            Dictionary with cache hit/miss statistics
+        """
+        info = self._read_file_cached.cache_info()
+        return {
+            "hits": info.hits,
+            "misses": info.misses,
+            "maxsize": info.maxsize,
+            "currsize": info.currsize,
+            "hit_rate": info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0.0,
+        }
 
     def get_file_tree(self, root_path: str, max_depth: int = 3) -> dict[str, Any]:
         """
@@ -150,8 +203,8 @@ class FileContextProcessor:
                     result["files"].append({"path": file_path, "error": "File not found"})
                     continue
 
-                # Read file content
-                content = read_file_safely(str(path))
+                # Read file content using cached method to prevent memory exhaustion
+                content = self._read_file_cached(str(path))
                 if content is None:
                     result["files"].append({"path": file_path, "error": "Could not read file"})
                     continue
@@ -357,7 +410,7 @@ class FileContextProcessor:
 
             # Extract dependencies if possible
             if (root / "requirements.txt").exists():
-                content = read_file_safely(str(root / "requirements.txt"))
+                content = self._read_file_cached(str(root / "requirements.txt"))
                 if content:
                     context["dependencies"] = [
                         line.strip() for line in content.split("\n") if line.strip() and not line.startswith("#")
@@ -366,7 +419,7 @@ class FileContextProcessor:
                     ]  # Limit to first 10
 
             elif (root / "package.json").exists():
-                content = read_file_safely(str(root / "package.json"))
+                content = self._read_file_cached(str(root / "package.json"))
                 if content:
                     try:
                         pkg = json.loads(content)
@@ -449,7 +502,7 @@ class FileContextProcessor:
                                 # Context7: consulted for json (standard library)
                                 import json
 
-                                content = read_file_safely(str(config_file))
+                                content = self._read_file_cached(str(config_file))
                                 if content:
                                     pkg = json.loads(content)
                                     scripts = pkg.get("scripts", {})

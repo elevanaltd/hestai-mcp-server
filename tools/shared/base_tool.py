@@ -19,6 +19,9 @@ from mcp.types import TextContent
 if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
+    # CONTEXT7_BYPASS: INFRA-003 - Internal session models from same codebase
+    from tools.shared.session_models import ToolExecutionContext
+
 from config import MCP_PROMPT_SIZE_LIMIT
 from providers import ModelProvider, ModelProviderRegistry
 from utils import check_token_limit
@@ -779,7 +782,6 @@ class BaseTool(ABC):
         updated_files = []
 
         for file_path in files:
-
             # Check if the filename is exactly "prompt.txt"
             # This ensures we don't match files like "myprompt.txt" or "prompt.txt.bak"
             if os.path.basename(file_path) == "prompt.txt":
@@ -1148,6 +1150,46 @@ When recommending searches, be specific about what information you need and why 
     # === IMPLEMENTATION METHODS ===
     # These will be provided in a full implementation but are inherited from current base.py
     # for now to maintain compatibility.
+
+    def _get_execution_context(self, arguments: dict[str, Any]) -> Optional["ToolExecutionContext"]:
+        """
+        Extract and validate ToolExecutionContext from arguments.
+
+        This method enforces the security contract by ensuring tools receive
+        typed, validated context instead of raw dictionary access.
+
+        Args:
+            arguments: Raw arguments dictionary from MCP transport
+
+        Returns:
+            ToolExecutionContext if present and valid, None for legacy mode
+
+        Raises:
+            TypeError: If execution context exists but is wrong type (fail-fast security)
+        """
+        execution_context = arguments.get("_execution_context")
+
+        if execution_context is None:
+            # Legacy mode - no session context provided
+            return None
+
+        # Context7: consulted for tools
+        # Import here to avoid circular import
+        try:
+            from tools.shared.session_models import ToolExecutionContext
+        except ImportError:
+            # Fallback if models not available
+            logger.warning("ToolExecutionContext not available, using legacy mode")
+            return None
+
+        if not isinstance(execution_context, ToolExecutionContext):
+            # SECURITY: Fail fast if context is wrong type - prevent silent failures
+            raise TypeError(
+                f"Expected ToolExecutionContext, got {type(execution_context)}. "
+                "This indicates a server-side integration error."
+            )
+
+        return execution_context
 
     async def execute(self, arguments: dict[str, Any]) -> list[TextContent]:
         """Execute the tool - will be inherited from existing base.py for now."""
