@@ -568,6 +568,15 @@ DIAL_API_KEY=your-dial-key  # Optional: Access to multiple models via DIAL
 
 For information on running tests, see the [Testing Guide](docs/testing.md).
 
+## Known Limitations
+
+### Schema Optimization (Experimental)
+- **Status**: Disabled by default due to MCP client limitations
+- **Issue**: Claude's MCP client doesn't resolve JSON Schema `$ref` pointers
+- **Impact**: Token usage remains at ~52k instead of potential ~42k with optimization
+- **Enable**: Set `USE_SCHEMA_REFS=true` in `.env` (will cause errors currently)
+- **Tracking**: Feature ready but waiting for MCP client infrastructure updates
+
 ## Contributing
 
 We welcome contributions! Please see our comprehensive guides:

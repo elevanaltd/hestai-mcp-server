@@ -1,8 +1,17 @@
 """
 Shared JSON Schema Definitions for HestAI MCP Tools
 
-This module provides centralized schema definitions that can be referenced
-by all tools to reduce token consumption and maintain consistency.
+STATUS: EXPERIMENTAL - DISABLED BY DEFAULT
+===========================================
+This feature is currently disabled due to MCP client limitations.
+The Claude MCP client does not properly resolve $ref pointers in JSON schemas.
+
+To enable when ready: Set USE_SCHEMA_REFS=true in .env
+Current achievement: 18% token reduction (target: 40%)
+
+BLOCKER: MCP client needs to support JSON Schema $ref resolution
+TODO: Re-enable when Anthropic updates MCP client infrastructure
+TODO: Improve optimization to reach 40% reduction target
 
 GOVERNANCE:
 - Owner: Implementation Lead
