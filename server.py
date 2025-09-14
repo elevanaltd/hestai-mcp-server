@@ -80,6 +80,8 @@ from tools import (  # noqa: E402
     TracerTool,
     VersionTool,
 )
+
+# CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
 from tools.models import ToolOutput  # noqa: E402
 
 # Context7: consulted for tools.registry - internal module

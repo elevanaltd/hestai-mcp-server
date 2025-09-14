@@ -131,10 +131,19 @@ def mock_provider_availability(request, monkeypatch):
 
     def mock_get_provider_for_model(model_name):
         # If it's a test looking for unavailable models, return None
-        if model_name in ["unavailable-model", "gpt-5-turbo", "o3"]:
+        if model_name in ["unavailable-model", "gpt-5-turbo"]:
             return None
         # For common test models, return a mock provider
-        if model_name in ["gemini-2.5-flash", "gemini-2.5-pro", "pro", "flash", "local-llama"]:
+        if model_name in [
+            "gemini-2.5-flash",
+            "gemini-2.5-pro",
+            "pro",
+            "flash",
+            "local-llama",
+            "o3",
+            "o3-mini",
+            "o4-mini",
+        ]:
             # Try to use the real provider first if it exists
             real_provider = original_get_provider(model_name)
             if real_provider:
@@ -149,6 +158,16 @@ def mock_provider_availability(request, monkeypatch):
                 capabilities.supports_extended_thinking = False
                 capabilities.input_cost_per_1k = 0.0  # Free local model
                 capabilities.output_cost_per_1k = 0.0  # Free local model
+            elif model_name in ["o3", "o3-mini"]:
+                capabilities.context_window = 200000  # 200K tokens for o3 models
+                capabilities.supports_extended_thinking = True
+                capabilities.input_cost_per_1k = 5.0
+                capabilities.output_cost_per_1k = 15.0
+            elif model_name == "o4-mini":
+                capabilities.context_window = 128000  # 128K tokens for o4-mini
+                capabilities.supports_extended_thinking = False
+                capabilities.input_cost_per_1k = 0.15
+                capabilities.output_cost_per_1k = 0.6
             else:
                 capabilities.context_window = 1000000  # 1M tokens for Gemini models
                 capabilities.supports_extended_thinking = False
@@ -188,3 +207,32 @@ def mock_provider_availability(request, monkeypatch):
         return False
 
     monkeypatch.setattr(BaseTool, "is_effective_auto_mode", mock_is_effective_auto_mode)
+
+    # Mock get_available_models to return test models even when API keys are empty
+    original_get_available_models = ModelProviderRegistry.get_available_models
+
+    @classmethod
+    def mock_get_available_models(cls, respect_restrictions=True):
+        # Check if this is a test that needs real provider behavior
+        test_file = request.node.fspath.basename if hasattr(request, "node") and hasattr(request.node, "fspath") else ""
+        if "intelligent_fallback" in test_file.lower() or "model_restrictions" in test_file.lower():
+            # Use the real method for these tests
+            return original_get_available_models(respect_restrictions=respect_restrictions)
+
+        # If we have actual API keys, use the real method
+        if os.environ.get("GEMINI_API_KEY") and os.environ.get("GEMINI_API_KEY") != "":
+            return original_get_available_models(respect_restrictions=respect_restrictions)
+
+        # For tests with empty/dummy API keys, return a test set of models
+        # This ensures auto mode tests work even in CI where API keys are empty
+        return {
+            "flash": "gemini-2.5-flash",
+            "gemini-2.5-flash": "gemini-2.5-flash",
+            "pro": "gemini-2.5-pro",
+            "gemini-2.5-pro": "gemini-2.5-pro",
+            "flashlite": "flashlite",
+            "flash-latest": "gemini-2.5-flash-latest",
+            "flash-8b": "gemini-2.5-flash-8b",
+        }
+
+    monkeypatch.setattr(ModelProviderRegistry, "get_available_models", mock_get_available_models)
