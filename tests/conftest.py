@@ -188,3 +188,26 @@ def mock_provider_availability(request, monkeypatch):
         return False
 
     monkeypatch.setattr(BaseTool, "is_effective_auto_mode", mock_is_effective_auto_mode)
+
+    # Mock get_available_models to return test models even when API keys are empty
+    original_get_available_models = ModelProviderRegistry.get_available_models
+
+    @classmethod
+    def mock_get_available_models(cls, respect_restrictions=True):
+        # If we have actual API keys, use the real method
+        if os.environ.get("GEMINI_API_KEY") and os.environ.get("GEMINI_API_KEY") != "":
+            return original_get_available_models(respect_restrictions=respect_restrictions)
+
+        # For tests with empty/dummy API keys, return a test set of models
+        # This ensures auto mode tests work even in CI where API keys are empty
+        return {
+            "flash": "gemini-2.5-flash",
+            "gemini-2.5-flash": "gemini-2.5-flash",
+            "pro": "gemini-2.5-pro",
+            "gemini-2.5-pro": "gemini-2.5-pro",
+            "flashlite": "flashlite",
+            "flash-latest": "gemini-2.5-flash-latest",
+            "flash-8b": "gemini-2.5-flash-8b",
+        }
+
+    monkeypatch.setattr(ModelProviderRegistry, "get_available_models", mock_get_available_models)

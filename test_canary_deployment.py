@@ -5,6 +5,7 @@ Test canary deployment to verify MCP client $ref support.
 import asyncio
 import json
 import logging
+
 from server import TOOLS
 
 logging.basicConfig(level=logging.INFO)

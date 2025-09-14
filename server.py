@@ -80,6 +80,9 @@ from tools import (  # noqa: E402
     TracerTool,
     VersionTool,
 )
+
+# CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
+from tools.canary_ref_test import CanaryRefTestTool  # noqa: E402
 from tools.models import ToolOutput  # noqa: E402
 
 # Context7: consulted for tools.registry - internal module
@@ -89,9 +92,6 @@ from tools.registry import RegistryTool  # noqa: E402
 # Context7: consulted for tools.shared.session_models - internal typed models
 # Critical-Engineer: consulted for typed context model integration
 from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
-
-# CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
-from tools.canary_ref_test import CanaryRefTestTool  # noqa: E402
 
 # Context7: consulted for utils.session_manager - internal module
 # Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
