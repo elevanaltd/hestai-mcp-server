@@ -90,6 +90,9 @@ from tools.registry import RegistryTool  # noqa: E402
 # Critical-Engineer: consulted for typed context model integration
 from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
 
+# CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
+from tools.canary_ref_test import CanaryRefTestTool  # noqa: E402
+
 # Context7: consulted for utils.session_manager - internal module
 # Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
 from utils.session_manager import SecurityError, SessionManager, SessionNotFoundError  # noqa: E402
@@ -307,6 +310,7 @@ TOOLS = {
     "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
+    "canary_ref_test": CanaryRefTestTool(),  # Test tool for MCP $ref support validation
     # Archived tools (handled by Claude subagents):
     # - codereview -> use code-review-specialist subagent
     # - precommit -> use multiple specialized subagents
