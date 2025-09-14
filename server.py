@@ -82,7 +82,6 @@ from tools import (  # noqa: E402
 )
 
 # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
-from tools.canary_ref_test import CanaryRefTestTool  # noqa: E402
 from tools.models import ToolOutput  # noqa: E402
 
 # Context7: consulted for tools.registry - internal module
@@ -310,7 +309,6 @@ TOOLS = {
     "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
-    "canary_ref_test": CanaryRefTestTool(),  # Test tool for MCP $ref support validation
     # Archived tools (handled by Claude subagents):
     # - codereview -> use code-review-specialist subagent
     # - precommit -> use multiple specialized subagents
