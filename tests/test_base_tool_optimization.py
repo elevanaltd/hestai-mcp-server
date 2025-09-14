@@ -3,8 +3,6 @@ Test that base_tool.py uses shared schema definitions for token optimization.
 """
 
 import json
-import pytest
-import importlib
 
 
 class TestBaseToolOptimization:
@@ -15,7 +13,6 @@ class TestBaseToolOptimization:
         # This is a conceptual test to validate the approach
 
         # Simulate old inline model description (truncated)
-        old_model_desc = """IMPORTANT: Use the model specified by the user if provided"""
         # In reality this would be ~1921 chars, using shorter version for test
 
         # New way with $ref

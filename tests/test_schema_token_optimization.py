@@ -7,11 +7,11 @@ consolidation while preserving 100% of the functional contract with model APIs.
 
 import json
 import logging
-from typing import Dict, List, Set
 from unittest import TestCase
 
 # Context7: consulted for server - internal module
 from server import TOOLS as TOOL_REGISTRY
+
 # Context7: consulted for utils
 from utils.token_utils import estimate_tokens
 
@@ -44,7 +44,7 @@ class TestSchemaTokenOptimization(TestCase):
         for tool_name, tool_instance in self.tool_registry.items():
             try:
                 schema = tool_instance.get_input_schema()
-                schema_json = json.dumps(schema, separators=(',', ':'))
+                schema_json = json.dumps(schema, separators=(",", ":"))
                 tokens = estimate_tokens(schema_json)
 
                 tool_token_breakdown[tool_name] = tokens
@@ -60,8 +60,7 @@ class TestSchemaTokenOptimization(TestCase):
 
         # Log detailed breakdown
         logger.info("\n=== BASELINE TOKEN USAGE BREAKDOWN ===")
-        for tool_name, tokens in sorted(tool_token_breakdown.items(),
-                                      key=lambda x: x[1], reverse=True):
+        for tool_name, tokens in sorted(tool_token_breakdown.items(), key=lambda x: x[1], reverse=True):
             logger.info(f"{tool_name:20s}: {tokens:6,} tokens")
         logger.info(f"{'TOTAL':20s}: {total_tokens:6,} tokens")
         logger.info("=" * 45)
@@ -71,7 +70,7 @@ class TestSchemaTokenOptimization(TestCase):
             total_tokens,
             self.BASELINE_TOKEN_TARGET,
             f"Current token usage ({total_tokens:,}) exceeds target "
-            f"({self.BASELINE_TOKEN_TARGET:,}). Optimization required."
+            f"({self.BASELINE_TOKEN_TARGET:,}). Optimization required.",
         )
 
     def test_schema_functional_contract_preservation(self):
@@ -116,8 +115,8 @@ class TestSchemaTokenOptimization(TestCase):
 
         if contract_violations:
             self.fail(
-                f"Schema functional contract violations found:\n" +
-                "\n".join(f"  - {violation}" for violation in contract_violations)
+                "Schema functional contract violations found:\n"
+                + "\n".join(f"  - {violation}" for violation in contract_violations)
             )
 
     def test_duplicate_content_identification(self):
@@ -185,7 +184,7 @@ class TestSchemaTokenOptimization(TestCase):
 
         # Common field duplication
         logger.info("Common field duplications:")
-        for field_json, locations in common_field_patterns.items():
+        for _field_json, locations in common_field_patterns.items():
             if len(locations) > 1:
                 logger.info(f"  {len(locations)} instances of common field pattern")
                 logger.info(f"    Locations: {', '.join(locations[:3])}{'...' if len(locations) > 3 else ''}")
@@ -200,10 +199,7 @@ class TestSchemaTokenOptimization(TestCase):
         logger.info("=" * 45)
 
         # This test passes but provides critical data for optimization
-        self.assertGreater(
-            len(model_field_contents), 0,
-            "Should find model field patterns to optimize"
-        )
+        self.assertGreater(len(model_field_contents), 0, "Should find model field patterns to optimize")
 
     def test_ref_based_optimization_target(self):
         """
@@ -225,17 +221,19 @@ class TestSchemaTokenOptimization(TestCase):
         # Validate significant token reduction
         reduction_percent = ((self.baseline_tokens - optimized_tokens) / self.baseline_tokens) * 100
 
-        logger.info(f"\n=== TOKEN OPTIMIZATION SIMULATION ===")
+        logger.info("\n=== TOKEN OPTIMIZATION SIMULATION ===")
         logger.info(f"Baseline tokens:  {self.baseline_tokens:,}")
         logger.info(f"Simulated optimized tokens: {optimized_tokens:,}")
-        logger.info(f"Projected reduction: {self.baseline_tokens - optimized_tokens:,} tokens ({reduction_percent:.1f}%)")
+        logger.info(
+            f"Projected reduction: {self.baseline_tokens - optimized_tokens:,} tokens ({reduction_percent:.1f}%)"
+        )
         logger.info("=" * 40)
 
         self.assertGreaterEqual(
             reduction_percent,
             self.MIN_TOKEN_REDUCTION_PERCENT,
             f"Projected token reduction ({reduction_percent:.1f}%) below target "
-            f"({self.MIN_TOKEN_REDUCTION_PERCENT}%)"
+            f"({self.MIN_TOKEN_REDUCTION_PERCENT}%)",
         )
 
         # Validate target achieved
@@ -243,7 +241,7 @@ class TestSchemaTokenOptimization(TestCase):
             optimized_tokens,
             self.BASELINE_TOKEN_TARGET,
             f"Simulated optimized token usage ({optimized_tokens:,}) still exceeds target "
-            f"({self.BASELINE_TOKEN_TARGET:,})"
+            f"({self.BASELINE_TOKEN_TARGET:,})",
         )
 
     def _calculate_simulated_optimized_token_usage(self) -> int:
@@ -267,9 +265,6 @@ class TestSchemaTokenOptimization(TestCase):
             # - Total achievable reduction: ~55% for high-token tools, less for simple tools
 
             # Weight the savings by tool complexity
-            high_token_tools = 7  # secaudit, debug, analyze, thinkdeep, consensus, registry, tracer
-            medium_token_tools = 2  # planner, chat
-            low_token_tools = 5  # critical-engineer, testguard, challenge, listmodels, version
 
             # Estimated savings by category
             high_savings = 0.55 * 0.5  # 55% max savings, weight by proportion
@@ -289,4 +284,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     import unittest
+
     unittest.main(verbosity=2)

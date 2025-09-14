@@ -303,7 +303,17 @@ class BaseTool(ABC):
         """
         import os
 
+        # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal imports
         from config import DEFAULT_MODEL
+        from tools.shared.schema_definitions import USE_SCHEMA_REFS, SharedSchemaDefinitions
+
+        # Check if we should use $ref optimization
+        if USE_SCHEMA_REFS:
+            # Try to get optimized $ref
+            ref_schema = SharedSchemaDefinitions.get_model_field_ref(self.is_effective_auto_mode())
+            if ref_schema:
+                return ref_schema
+            # Fall through to inline schema if ref_schema is None
 
         # Check if OpenRouter is configured
         has_openrouter = bool(

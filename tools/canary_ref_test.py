@@ -9,14 +9,18 @@ CRITICAL: This test must pass before deploying schema optimization.
 """
 
 from typing import Any, Optional
+
+from pydantic import Field
+
+from tools.shared.base_models import ToolRequest
+
 # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal imports
 from tools.shared.base_tool import BaseTool
-from tools.shared.base_models import ToolRequest
-from pydantic import Field
 
 
 class CanaryRefRequest(ToolRequest):
     """Request model for canary test tool."""
+
     test_message: str = Field(..., description="A test message to echo back")
     confidence: Optional[str] = Field("medium", description="Confidence level for the test")
 
@@ -43,29 +47,27 @@ class CanaryRefTestTool(BaseTool):
         """
         Return a schema with $ref to test MCP client resolution.
 
-        This uses a simple internal $ref pattern to verify compatibility.
+        This uses versioned internal $ref pattern to verify compatibility.
+        Tests both v1 versioning and nested $refs for comprehensive validation.
         """
         return {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
             "properties": {
-                "test_message": {
-                    "type": "string",
-                    "description": "A test message to echo back"
-                },
-                "confidence": {
-                    "$ref": "#/$defs/confidence_enum"
-                }
+                "test_message": {"type": "string", "description": "A test message to echo back"},
+                "confidence": {"$ref": "#/$defs/v1/confidence_enum"},
             },
             "required": ["test_message"],
             "additionalProperties": False,
             "$defs": {
-                "confidence_enum": {
-                    "type": "string",
-                    "enum": ["low", "medium", "high"],
-                    "description": "Confidence level for the test"
+                "v1": {
+                    "confidence_enum": {
+                        "type": "string",
+                        "enum": ["low", "medium", "high"],
+                        "description": "Confidence level for the test",
+                    }
                 }
-            }
+            },
         }
 
     def get_system_prompt(self) -> str:
@@ -91,5 +93,5 @@ class CanaryRefTestTool(BaseTool):
             "message": f"Canary test successful! Message: {test_message}",
             "confidence": confidence,
             "ref_support": "VERIFIED",
-            "details": "MCP client successfully resolved $ref in schema"
+            "details": "MCP client successfully resolved $ref in schema",
         }

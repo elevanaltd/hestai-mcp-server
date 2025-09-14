@@ -34,18 +34,10 @@ class TestMinimalRefResolution(TestCase):
             "type": "object",
             "properties": {
                 "test_field": {"$ref": "#/$defs/simple_string"},
-                "required_field": {
-                    "type": "string",
-                    "description": "A required field for testing"
-                }
+                "required_field": {"type": "string", "description": "A required field for testing"},
             },
             "required": ["required_field"],
-            "$defs": {
-                "simple_string": {
-                    "type": "string",
-                    "description": "A simple string field defined via $ref"
-                }
-            }
+            "$defs": {"simple_string": {"type": "string", "description": "A simple string field defined via $ref"}},
         }
 
         # Validate schema structure
@@ -57,7 +49,7 @@ class TestMinimalRefResolution(TestCase):
         self.assertEqual(test_field["$ref"], "#/$defs/simple_string")
 
         # Ensure schema is valid JSON
-        schema_json = json.dumps(test_schema, separators=(',', ':'))
+        schema_json = json.dumps(test_schema, separators=(",", ":"))
         parsed_back = json.loads(schema_json)
         self.assertEqual(parsed_back, test_schema)
 
@@ -86,7 +78,7 @@ class TestMinimalRefResolution(TestCase):
         self.assertNotIn("$defs", current_schema)
 
         # Calculate current token size for baseline
-        schema_json = json.dumps(current_schema, separators=(',', ':'))
+        schema_json = json.dumps(current_schema, separators=(",", ":"))
         current_size = len(schema_json)
 
         print(f"✓ Current ChatTool schema: {current_size} characters (baseline)")
@@ -102,38 +94,32 @@ class TestMinimalRefResolution(TestCase):
         optimized_schema = {
             "type": "object",
             "properties": {
-                "prompt": {
-                    "type": "string",
-                    "description": "The main content/request for the chat tool"
-                },
+                "prompt": {"type": "string", "description": "The main content/request for the chat tool"},
                 "model": {"$ref": "#/$defs/model_field_auto_mode"},
-                "temperature": {"$ref": "#/$defs/temperature_field"}
+                "temperature": {"$ref": "#/$defs/temperature_field"},
             },
             "required": ["prompt", "model"],
             "$defs": {
                 "model_field_auto_mode": {
                     "type": "string",
                     "description": "IMPORTANT: Use the model specified by the user if provided...[1921 chars]",
-                    "enum": ["o3", "google/gemini-2.5-flash", "anthropic/claude-3.5-haiku"]
+                    "enum": ["o3", "google/gemini-2.5-flash", "anthropic/claude-3.5-haiku"],
                 },
                 "temperature_field": {
                     "type": "number",
                     "description": "Temperature for response (0.0 to 1.0)",
                     "minimum": 0,
-                    "maximum": 1
-                }
-            }
+                    "maximum": 1,
+                },
+            },
         }
 
         # Validate optimized structure
         self.assertIn("$defs", optimized_schema)
-        self.assertEqual(
-            optimized_schema["properties"]["model"]["$ref"],
-            "#/$defs/model_field_auto_mode"
-        )
+        self.assertEqual(optimized_schema["properties"]["model"]["$ref"], "#/$defs/model_field_auto_mode")
 
         # Calculate optimized size
-        schema_json = json.dumps(optimized_schema, separators=(',', ':'))
+        schema_json = json.dumps(optimized_schema, separators=(",", ":"))
         optimized_size = len(schema_json)
 
         print(f"✓ Proposed optimized schema: {optimized_size} characters")
@@ -149,13 +135,7 @@ class TestMinimalRefResolution(TestCase):
         references can cause DoS vulnerabilities in naive parsers.
         """
         # Test schema with self-reference
-        circular_schema = {
-            "type": "object",
-            "properties": {
-                "circular_field": {"$ref": "#"}
-            },
-            "$defs": {}
-        }
+        circular_schema = {"type": "object", "properties": {"circular_field": {"$ref": "#"}}, "$defs": {}}
 
         # Should be able to serialize without crashing
         try:
@@ -169,10 +149,7 @@ class TestMinimalRefResolution(TestCase):
         # Test more complex circular reference
         complex_circular = {
             "type": "object",
-            "$defs": {
-                "type_a": {"$ref": "#/$defs/type_b"},
-                "type_b": {"$ref": "#/$defs/type_a"}
-            }
+            "$defs": {"type_a": {"$ref": "#/$defs/type_b"}, "type_b": {"$ref": "#/$defs/type_a"}},
         }
 
         try:
@@ -224,7 +201,7 @@ class TestMinimalRefResolution(TestCase):
         try:
             complex_schema = {
                 "properties": {"a": {"$ref": "#/$defs/b"}},
-                "$defs": {"b": {"type": "string", "enum": ["x", "y", "z"]}}
+                "$defs": {"b": {"type": "string", "enum": ["x", "y", "z"]}},
             }
             json.dumps(complex_schema)
             json.loads(json.dumps(complex_schema))
@@ -243,4 +220,5 @@ class TestMinimalRefResolution(TestCase):
 
 if __name__ == "__main__":
     import unittest
+
     unittest.main(verbosity=2)
