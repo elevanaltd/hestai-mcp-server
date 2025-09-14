@@ -92,9 +92,15 @@ class TestAutoMode:
 
             # Model field should have detailed descriptions
             model_schema = schema["properties"]["model"]
-            assert "enum" in model_schema
-            assert "flash" in model_schema["enum"]
-            assert "select the most suitable model" in model_schema["description"]
+            # Handle both direct enum and $ref patterns (after schema optimization)
+            if "$ref" in model_schema:
+                # Schema uses $ref after optimization
+                assert "#/$defs/v1/modelFieldAutoMode" in model_schema["$ref"]
+            else:
+                # Direct enum pattern (legacy)
+                assert "enum" in model_schema
+                assert "flash" in model_schema["enum"]
+                assert "select the most suitable model" in model_schema["description"]
 
         finally:
             # Restore

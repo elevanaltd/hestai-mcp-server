@@ -75,8 +75,7 @@ class TestSchemaTokenOptimization(TestCase):
             f"({self.BASELINE_TOKEN_TARGET:,}). Optimization required.",
         )
 
-    @skipUnless(os.environ.get("USE_SCHEMA_REFS", "false").lower() == "true",
-                "Schema refs optimization not enabled")
+    @skipUnless(os.environ.get("USE_SCHEMA_REFS", "false").lower() == "true", "Schema refs optimization not enabled")
     def test_schema_functional_contract_preservation(self):
         """
         Validate that all schemas preserve required functional elements.
@@ -205,8 +204,7 @@ class TestSchemaTokenOptimization(TestCase):
         # This test passes but provides critical data for optimization
         self.assertGreater(len(model_field_contents), 0, "Should find model field patterns to optimize")
 
-    @skipUnless(os.environ.get("USE_SCHEMA_REFS", "false").lower() == "true",
-                "Schema refs optimization not enabled")
+    @skipUnless(os.environ.get("USE_SCHEMA_REFS", "false").lower() == "true", "Schema refs optimization not enabled")
     def test_ref_based_optimization_target(self):
         """
         TEST TARGET: Validate token reduction through $ref consolidation.
