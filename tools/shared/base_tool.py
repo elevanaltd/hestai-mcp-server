@@ -1110,6 +1110,202 @@ Consider requesting searches for:
 
 When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct agent to use the continuation_id from this response when providing search results."""
 
+    # === HELPER METHODS FOR MODEL FIELD SCHEMA (DORMANT) ===
+    # Ported from upstream Zen base_tool.py for STEP 2.3a
+    # These methods are NOT ACTIVATED yet - existing get_model_field_schema() remains unchanged
+    # Will be activated in STEP 2.3b
+
+    def _format_available_models_list(self) -> str:
+        """Return a human-friendly list of available models or guidance when none found."""
+
+        summaries, total, has_restrictions = self._get_ranked_model_summaries()
+        if not summaries:
+            return (
+                "No models detected. Configure provider credentials or set DEFAULT_MODEL to a valid option. "
+                "If the user requested a specific model, respond with this notice instead of substituting another model."
+            )
+        display = "; ".join(summaries)
+        remainder = total - len(summaries)
+        if remainder > 0:
+            display = f"{display}; +{remainder} more (use the `listmodels` tool for the full roster)"
+        return display
+
+    @staticmethod
+    def _format_context_window(tokens: int) -> Optional[str]:
+        """Convert a raw context window into a short display string."""
+
+        if not tokens or tokens <= 0:
+            return None
+
+        if tokens >= 1_000_000:
+            if tokens % 1_000_000 == 0:
+                return f"{tokens // 1_000_000}M ctx"
+            return f"{tokens / 1_000_000:.1f}M ctx"
+
+        if tokens >= 1_000:
+            if tokens % 1_000 == 0:
+                return f"{tokens // 1_000}K ctx"
+            return f"{tokens / 1_000:.1f}K ctx"
+
+        return f"{tokens} ctx"
+
+    def _collect_ranked_capabilities(self) -> list[tuple[int, str, Any]]:
+        """Gather available model capabilities sorted by capability rank."""
+
+        from providers.registry import ModelProviderRegistry
+
+        ranked: list[tuple[int, str, Any]] = []
+        available = ModelProviderRegistry.get_available_models(respect_restrictions=True)
+
+        for model_name, provider_type in available.items():
+            provider = ModelProviderRegistry.get_provider(provider_type)
+            if not provider:
+                continue
+
+            try:
+                capabilities = provider.get_capabilities(model_name)
+            except ValueError:
+                continue
+
+            rank = capabilities.get_effective_capability_rank()
+            ranked.append((rank, model_name, capabilities))
+
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        return ranked
+
+    @staticmethod
+    def _normalize_model_identifier(name: str) -> str:
+        """Normalize model names for deduplication across providers."""
+
+        normalized = name.lower()
+        if ":" in normalized:
+            normalized = normalized.split(":", 1)[0]
+        if "/" in normalized:
+            normalized = normalized.split("/", 1)[-1]
+        return normalized
+
+    def _get_ranked_model_summaries(self, limit: int = 5) -> tuple[list[str], int, bool]:
+        """Return formatted, ranked model summaries and restriction status."""
+
+        ranked = self._collect_ranked_capabilities()
+
+        # Build allowlist map (provider -> lowercase names) when restrictions are active
+        allowed_map: dict[Any, set[str]] = {}
+        try:
+            from utils.model_restrictions import get_restriction_service
+
+            restriction_service = get_restriction_service()
+            if restriction_service:
+                from providers.shared import ProviderType
+
+                for provider_type in ProviderType:
+                    allowed = restriction_service.get_allowed_models(provider_type)
+                    if allowed:
+                        allowed_map[provider_type] = {name.lower() for name in allowed if name}
+        except Exception:
+            allowed_map = {}
+
+        filtered: list[tuple[int, str, Any]] = []
+        seen_normalized: set[str] = set()
+
+        for rank, model_name, capabilities in ranked:
+            canonical_name = getattr(capabilities, "model_name", model_name)
+            canonical_lower = canonical_name.lower()
+            alias_lower = model_name.lower()
+            provider_type = getattr(capabilities, "provider", None)
+
+            if allowed_map:
+                if provider_type not in allowed_map:
+                    continue
+                allowed_set = allowed_map[provider_type]
+                if canonical_lower not in allowed_set and alias_lower not in allowed_set:
+                    continue
+
+            normalized = self._normalize_model_identifier(canonical_name)
+            if normalized in seen_normalized:
+                continue
+
+            seen_normalized.add(normalized)
+            filtered.append((rank, canonical_name, capabilities))
+
+        summaries: list[str] = []
+        for rank, canonical_name, capabilities in filtered[:limit]:
+            details: list[str] = []
+
+            context_str = self._format_context_window(getattr(capabilities, "context_window", 0))
+            if context_str:
+                details.append(context_str)
+
+            if getattr(capabilities, "supports_extended_thinking", False):
+                details.append("thinking")
+
+            base = f"{canonical_name} (score {rank}"
+            if details:
+                base = f"{base}, {', '.join(details)}"
+            summaries.append(f"{base})")
+
+        return summaries, len(filtered), bool(allowed_map)
+
+    def _get_restriction_note(self) -> Optional[str]:
+        """Return a string describing active per-provider allowlists, if any."""
+
+        from utils.env import get_env
+
+        env_labels = {
+            "OPENAI_ALLOWED_MODELS": "OpenAI",
+            "GOOGLE_ALLOWED_MODELS": "Google",
+            "XAI_ALLOWED_MODELS": "X.AI",
+            "OPENROUTER_ALLOWED_MODELS": "OpenRouter",
+            "DIAL_ALLOWED_MODELS": "DIAL",
+        }
+
+        notes: list[str] = []
+        for env_var, label in env_labels.items():
+            raw = get_env(env_var)
+            if not raw:
+                continue
+
+            models = sorted({token.strip() for token in raw.split(",") if token.strip()})
+            if not models:
+                continue
+
+            notes.append(f"{label}: {', '.join(models)}")
+
+        if not notes:
+            return None
+
+        return "Policy allows only → " + "; ".join(notes)
+
+    def _build_model_unavailable_message(self, model_name: str) -> str:
+        """Compose a consistent error message for unavailable model scenarios."""
+
+        tool_category = self.get_model_category()
+        suggested_model = ModelProviderRegistry.get_preferred_fallback_model(tool_category)
+        available_models_text = self._format_available_models_list()
+
+        return (
+            f"Model '{model_name}' is not available with current API keys. "
+            f"Available models: {available_models_text}. "
+            f"Suggested model for {self.get_name()}: '{suggested_model}' "
+            f"(category: {tool_category.value}). If the user explicitly requested a model, you MUST use that exact name or report this error back—do not substitute another model."
+        )
+
+    def _build_auto_mode_required_message(self) -> str:
+        """Compose the auto-mode prompt when an explicit model selection is required."""
+
+        tool_category = self.get_model_category()
+        suggested_model = ModelProviderRegistry.get_preferred_fallback_model(tool_category)
+        available_models_text = self._format_available_models_list()
+
+        return (
+            "Model parameter is required in auto mode. "
+            f"Available models: {available_models_text}. "
+            f"Suggested model for {self.get_name()}: '{suggested_model}' "
+            f"(category: {tool_category.value}). When the user names a model, relay that exact name—never swap in another option."
+        )
+
+    # === END DORMANT HELPER METHODS ===
+
     def get_language_instruction(self) -> str:
         """
         Generate language instruction based on LOCALE configuration.
