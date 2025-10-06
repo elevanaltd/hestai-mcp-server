@@ -1,6 +1,10 @@
 """
 HestAI MCP Server - Main server implementation
 
+// Critical-Engineer: consulted for Upstream merge and integration strategy
+// Zen-MCP-Server integration proceeding with manual porting approach per critical-engineer recommendation
+// Phase 0 completed: Foundation safety measures in place (backup branch, comprehensive backups)
+
 This module implements the core MCP (Model Context Protocol) server that provides
 AI-powered tools for code analysis, review, and assistance using multiple AI models.
 
