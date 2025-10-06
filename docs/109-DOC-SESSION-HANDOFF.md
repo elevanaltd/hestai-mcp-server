@@ -1,9 +1,10 @@
 # 109-DOC-SESSION-HANDOFF
 
 **Session Type:** Zen-MCP-Server Integration
-**Current Phase:** Phase 0 COMPLETE � Phase 0.5 READY
-**Date:** 2025-10-06
-**Branch:** `upstream-integration-staging` (commit `11c4ee7`)
+**Current Phase:** Phase 0.5 IN PROGRESS - STEP 3 COMPLETE ✅
+**Date:** 2025-10-07
+**Branch:** `sync/02-env-utility` (commit `153c7d8`)
+**Base Branch:** `upstream-integration-staging` (commit `11c4ee7`)
 
 ---
 
@@ -12,24 +13,94 @@
 **Use this prompt to continue:**
 
 ```
-I'm continuing the Zen-MCP-Server integration project. Phase 0 (Preparation) is complete.
+I'm continuing the Zen-MCP-Server integration project. Phase 0.5 STEP 3 is complete.
 
 Context documents:
-- Integration Plan: docs/107-DOC-ZEN-INTEGRATION-PLAN.md
+- Integration Plan: docs/107-DOC-ZEN-INTEGRATION-PLAN.md (UPDATED with STEP 3 completion)
 - Phase 0 Report: docs/108-DOC-PHASE-0-COMPLETION-REPORT.md
+- STEP 3 Report: .integration-workspace/STEP_3_COMPLETION_REPORT.md
+- Evidence Findings: .integration-workspace/evidence-diffs/EVIDENCE_BASED_FINDINGS.md
 - Session Handoff: docs/109-DOC-SESSION-HANDOFF.md
 
-Current branch: upstream-integration-staging (commit 11c4ee7)
-Current phase: Phase 0.5 - Foundation Sync (MANDATORY before features)
+Current branch: sync/02-env-utility (commit 153c7d8)
+Base branch: upstream-integration-staging (commit 11c4ee7)
+Current phase: Phase 0.5 - Foundation Sync (STEP 3 COMPLETE, STEP 4-5 PENDING)
 
-Execute Phase 0.5 using TRACED-SELF protocol:
-1. Compare 5 critical infrastructure components with upstream
-2. Manual merge of architectural changes
-3. Validate with HestAI regression suite
-4. Ensure all 18 tools still work
+STEP 3 Accomplishments:
+- ✅ STEP 3a: Ported utils/env.py (null-safe environment handling)
+- ✅ STEP 3b: Replaced conversation_memory.py (Zen version: 50 turns vs 20)
+- ✅ STEP 3c: Enhanced config.py (get_env() integration)
+- ✅ Tests: 938 passing (99.7%)
+
+Next Steps (STEP 4-5):
+1. STEP 4: Utils validation (check for other utils needing updates)
+2. STEP 5: Server strategic hybrid (port clink/apilookup, preserve SessionManager)
 
 Start by reading docs/109-DOC-SESSION-HANDOFF.md for full context.
 ```
+
+---
+
+## Phase 0.5 STEP 3 Summary (COMPLETE ✅)
+
+**Evidence-Based Discovery & Selective Adoption**
+
+### What Changed
+
+**Phase 0.0: Evidence Discovery (NEW)**
+- Located Zen repository at `/tmp/zen-upstream-analysis/`
+- Generated comprehensive diffs for infrastructure files
+- Created evidence workspace at `.integration-workspace/evidence-diffs/`
+- **Key Finding:** "HestAI canonical" assumption was data-free - Zen version superior in key areas
+
+**STEP 3a: utils/env.py (NEW FILE)**
+- Ported Zen's environment utility helper
+- Renamed: `ZEN_MCP_FORCE_ENV_OVERRIDE` → `HESTAI_MCP_FORCE_ENV_OVERRIDE`
+- Provides null-safe `get_env()` function
+- **Benefit:** More robust environment variable handling
+
+**STEP 3b: conversation_memory.py (REPLACED)**
+- Replaced HestAI version with Zen version
+- **Evidence-Based Decision:** Zen objectively superior
+  - MAX_CONVERSATION_TURNS: 20 → 50 (+150% capacity)
+  - Environment handling: `os.getenv()` → `get_env()` (null-safe)
+  - Role labels: Hardcoded → Model-agnostic (supports O3/GPT-5)
+  - Provider tracking: Simplified → Full metadata
+- **Lines:** 1095 → 1108 (+13 lines, ~1% increase)
+
+**STEP 3c: config.py (ENHANCED)**
+- Updated all `os.getenv()` → `get_env()` calls (4 locations)
+- Added `from utils.env import get_env` import
+- **Preserved:** HestAI branding, version, variant
+- **Impact:** Cosmetic only (4 function calls)
+
+### Test Results
+
+- **938 passed** (99.7%)
+- 3 failed (pre-existing, not regressions)
+- 11 skipped, 12 deselected, 1 xfailed
+- **Status:** ✅ ALL CRITICAL TESTS PASSING
+
+### Evidence Files
+
+- `.integration-workspace/evidence-diffs/conversation_memory.diff` (132 lines)
+- `.integration-workspace/evidence-diffs/config.diff` (88 lines)
+- `.integration-workspace/evidence-diffs/server.diff` (975 lines)
+- `.integration-workspace/evidence-diffs/EVIDENCE_BASED_FINDINGS.md`
+- `.integration-workspace/STEP_3_COMPLETION_REPORT.md`
+
+### Constitutional Compliance
+
+✅ **Line 166 EVIDENCE_BASED:** Generated actual diffs from codebase
+✅ **Line 73 VERIFY::ARTIFACTS:** Created comprehensive evidence trail
+✅ **Line 171 ERROR_RESOLUTION_PROTOCOL:** Consulted critical-engineer
+✅ **Challenge Tool:** Correctly identified data-free "canonical" assumption
+
+### Key Learning
+
+**Original Plan:** "Assert HestAI dominance" - **WRONG**
+**Evidence Showed:** Zen has superior infrastructure in key areas
+**Correct Strategy:** **Best-of-both** - adopt Zen improvements, preserve HestAI innovations
 
 ---
 
@@ -48,7 +119,7 @@ Start by reading docs/109-DOC-SESSION-HANDOFF.md for full context.
 
  **Critical-Engineer Review:**
 - Assessment: RISKY architectural drift
-- **Strategy change:** Cherry-pick � Manual porting
+- **Strategy change:** Cherry-pick � Manual porting
 - **New phase required:** Foundation Sync (Phase 0.5)
 
 ---
