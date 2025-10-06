@@ -213,7 +213,98 @@ python server.py --validate-config
 
 **Validation:** Run `python communication_simulator_test.py --quick` (6/6 must pass)
 
-**Only after Foundation Sync passes** can feature porting begin.
+**Only after Foundation Sync passes** can Gemini SDK migration proceed.
+
+---
+
+### Phase 0.75: Gemini SDK Migration (NEW - MANDATORY)
+
+**Timeline:** Week 1, Days 4-5
+**Purpose:** Migrate Gemini provider from deprecated SDK to modern google-genai SDK
+**Priority:** HIGH - Required before feature porting (new tools may depend on it)
+
+⚠️ **CRITICAL-ENGINEER MANDATE:** Baseline stabilization revealed that HestAI's `pyproject.toml` incorrectly declared `google-genai>=1.19.0` while actual code uses deprecated `google.generativeai>=0.8.0`. Upstream Zen has migrated to modern SDK. This phase isolates the high-risk provider migration into a single, testable, rollback-safe step.
+
+#### Provider Migration Tasks
+
+**1. Update Dependencies**
+```bash
+# Create dedicated branch
+git checkout -b sync/02-gemini-sdk-migration upstream-integration-staging
+
+# Update dependency files to use NEW SDK
+# pyproject.toml: google-generativeai>=0.8.0 → google-genai>=1.19.0
+# requirements.txt: google-generativeai>=0.8.0 → google-genai>=1.19.0
+```
+
+**2. Port Gemini Provider**
+```bash
+# Manually port provider from Zen upstream
+cp /tmp/zen-upstream-analysis/providers/gemini.py providers/gemini.py
+
+# Key API changes:
+# OLD: import google.generativeai as genai
+# NEW: from google import genai
+#      from google.genai import types
+
+# Provider file size: 467→558 lines (substantial rewrite)
+```
+
+**3. Create Targeted Integration Test**
+```bash
+# Create test_gemini_v2_provider.py to validate:
+# - Text generation with new SDK
+# - Streaming support
+# - Error handling
+# - Image processing (vision capabilities)
+# - Thinking mode support
+```
+
+#### Testing Protocol
+
+```bash
+# After provider migration:
+
+# 1. Linting
+ruff check . --fix --exclude .integration-backup
+black . --exclude .integration-backup
+isort .
+
+# 2. New targeted test
+python -m pytest tests/test_gemini_v2_provider.py -v
+
+# 3. Full regression suite
+python -m pytest tests/ -v -m "not integration"
+
+# 4. HestAI Regression Suite (MANDATORY)
+python -m pytest tests/test_critical_engineer.py -v
+python -m pytest tests/test_testguard.py -v
+python -m pytest tests/test_registry.py -v
+
+# 5. Quick simulator test
+python communication_simulator_test.py --quick
+```
+
+#### Success Criteria
+
+- [ ] Dependencies updated to google-genai>=1.19.0
+- [ ] Provider file ported from upstream (558 lines)
+- [ ] New targeted test created and passing
+- [ ] All unit tests passing (926+)
+- [ ] HestAI regression suite passing
+- [ ] Quick simulator: 6/6 passing
+- [ ] No regression in Gemini model functionality
+
+#### Rollback if Needed
+
+```bash
+git checkout upstream-integration-staging
+git branch -D sync/02-gemini-sdk-migration
+```
+
+**Validation:** Provider abstraction interface in `providers/base.py` must remain stable - rest of codebase should not be affected by this internal implementation change.
+
+**Only after Gemini SDK Migration passes** can feature porting begin.
 
 ---
 
