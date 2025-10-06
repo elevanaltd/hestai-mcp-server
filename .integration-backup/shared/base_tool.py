@@ -41,8 +41,6 @@ except ImportError:
     ContinuationOffer = None
     ToolOutput = None
 
-# // Critical-Engineer: consulted for Base tool abstraction merge strategy
-
 logger = logging.getLogger(__name__)
 
 
@@ -1048,41 +1046,25 @@ class BaseTool(ABC):
         )
         return result, actually_processed_files
 
-    # DEPRECATED: This method is maintained for backward compatibility with existing tools.
-    # TODO: Refactor all 15+ tool calls to use the new internal method and remove this wrapper post-integration.
-    def get_websearch_instruction(
-        self, use_websearch: Optional[bool] = True, tool_specific: Optional[str] = None
-    ) -> str:
+    def get_websearch_instruction(self, use_websearch: bool, tool_specific: Optional[str] = None) -> str:
         """
-        Shim for backward compatibility. Faithfully reproduces the original contract.
+        Generate standardized web search instruction based on the use_websearch parameter.
 
         Args:
-            use_websearch: Whether to include web search instructions. Defaults to True.
-                          None is treated as True for backward compatibility.
-            tool_specific: Optional tool-specific web search guidance.
+            use_websearch: Whether web search is enabled
+            tool_specific: Optional tool-specific search guidance
 
         Returns:
-            Web search instruction string, or empty string if use_websearch is False.
+            str: Web search instruction to append to prompt, or empty string
         """
-        # Handle None as True (default behavior)
-        if use_websearch is None:
-            use_websearch = True
-
-        # CRITICAL: This check preserves the original contract.
-        # If web search is not requested, we MUST return an empty string.
         if not use_websearch:
             return ""
 
-        # If web search IS requested, delegate to the new internal implementation.
-        return self._internal_get_websearch_instruction(tool_specific)
-
-    def _internal_get_websearch_instruction(self, tool_specific: Optional[str] = None) -> str:
-        """Generate standardized web search instruction. New code should call this directly."""
         base_instruction = """
 
-WEB SEARCH CAPABILITY: You can request the calling agent to perform web searches to enhance your analysis with current information!
+WEB SEARCH CAPABILITY: You can request Claude to perform web searches to enhance your analysis with current information!
 
-IMPORTANT: When you identify areas where web searches would significantly improve your response (such as checking current documentation, finding recent solutions, verifying best practices, or gathering community insights), you MUST explicitly instruct the agent to perform specific web searches and then respond back using the continuation_id from this response to continue the analysis.
+IMPORTANT: When you identify areas where web searches would significantly improve your response (such as checking current documentation, finding recent solutions, verifying best practices, or gathering community insights), you MUST explicitly instruct Claude to perform specific web searches and then respond back using the continuation_id from this response to continue the analysis.
 
 Use clear, direct language based on the value of the search:
 
@@ -1095,7 +1077,11 @@ For critical/essential information: "SEARCH REQUIRED: Please immediately perform
 This ensures you get the most current and comprehensive information while maintaining conversation context through the continuation_id."""
 
         if tool_specific:
-            return f"{base_instruction}\n\n{tool_specific}\n\nWhen recommending searches, be specific about what information you need and why it would improve your analysis."
+            return f"""{base_instruction}
+
+{tool_specific}
+
+When recommending searches, be specific about what information you need and why it would improve your analysis."""
 
         # Default instruction for all tools
         return f"""{base_instruction}
@@ -1108,7 +1094,7 @@ Consider requesting searches for:
 - Security advisories and patches
 - Performance benchmarks and optimizations
 
-When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct agent to use the continuation_id from this response when providing search results."""
+When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct Claude to use the continuation_id from this response when providing search results."""
 
     def get_language_instruction(self) -> str:
         """
