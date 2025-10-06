@@ -303,6 +303,10 @@ class BaseTool(ABC):
         Returns:
             Dict containing the model field JSON schema
         """
+        # Critical-Engineer: consulted for Base tool abstraction merge strategy
+        # Conservative refactoring: Extract context window formatting to helper method
+        # Preserve HestAI's $ref optimization, enum field, and detailed descriptions
+        # Upstream's enum removal would break auto-mode LLM model selection
         import os
 
         # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal imports
@@ -380,16 +384,12 @@ class BaseTool(ABC):
                         config = registry.resolve(alias)
                         # Check if this is a custom model that requires custom endpoints
                         if config and config.is_custom:
-                            # Format context window
-                            context_tokens = config.context_window
-                            if context_tokens >= 1_000_000:
-                                context_str = f"{context_tokens // 1_000_000}M"
-                            elif context_tokens >= 1_000:
-                                context_str = f"{context_tokens // 1_000}K"
-                            else:
-                                context_str = str(context_tokens)
+                            # Format context window using helper
+                            context_str = self._format_context_window(config.context_window)
+                            if context_str is None:
+                                context_str = str(config.context_window)
 
-                            desc_line = f"- '{alias}' ({context_str} context): {config.description}"
+                            desc_line = f"- '{alias}' ({context_str}): {config.description}"
                             if desc_line not in model_desc_parts:  # Avoid duplicates
                                 model_desc_parts.append(desc_line)
                 except Exception as e:
@@ -421,21 +421,17 @@ class BaseTool(ABC):
                     if model_configs:
                         model_desc_parts.append("\nOpenRouter models (use these aliases):")
                         for alias, config in model_configs:  # Show ALL models so Claude can choose
-                            # Format context window in human-readable form
-                            context_tokens = config.context_window
-                            if context_tokens >= 1_000_000:
-                                context_str = f"{context_tokens // 1_000_000}M"
-                            elif context_tokens >= 1_000:
-                                context_str = f"{context_tokens // 1_000}K"
-                            else:
-                                context_str = str(context_tokens)
+                            # Format context window using helper
+                            context_str = self._format_context_window(config.context_window)
+                            if context_str is None:
+                                context_str = str(config.context_window)
 
                             # Build description line
                             if config.description:
-                                desc = f"- '{alias}' ({context_str} context): {config.description}"
+                                desc = f"- '{alias}' ({context_str}): {config.description}"
                             else:
                                 # Fallback to showing the model name if no description
-                                desc = f"- '{alias}' ({context_str} context): {config.model_name}"
+                                desc = f"- '{alias}' ({context_str}): {config.model_name}"
                             model_desc_parts.append(desc)
 
                         # Show all models - no truncation needed
@@ -1110,10 +1106,13 @@ Consider requesting searches for:
 
 When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct agent to use the continuation_id from this response when providing search results."""
 
-    # === HELPER METHODS FOR MODEL FIELD SCHEMA (DORMANT) ===
+    # === HELPER METHODS FOR MODEL FIELD SCHEMA (PARTIALLY ACTIVATED) ===
     # Ported from upstream Zen base_tool.py for STEP 2.3a
-    # These methods are NOT ACTIVATED yet - existing get_model_field_schema() remains unchanged
-    # Will be activated in STEP 2.3b
+    # Conservative activation in STEP 2.3b: Only _format_context_window() used
+    # Full orchestration helpers remain dormant due to upstream incompatibilities:
+    # - Upstream removes "enum" field (breaks auto-mode model selection)
+    # - Upstream uses ranked summaries (loses HestAI's detailed descriptions)
+    # These helpers available for future refactoring when upstream aligns with HestAI features
 
     def _format_available_models_list(self) -> str:
         """Return a human-friendly list of available models or guidance when none found."""
