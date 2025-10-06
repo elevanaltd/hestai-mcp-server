@@ -2,10 +2,11 @@
 
 Comprehensive Integration Plan: Zen-MCP-Server → HestAI-MCP-Server
 
-**Document Status:** Active Integration Plan
-**Version:** 1.0
+**Document Status:** Active Integration Plan - PHASE 0 COMPLETE
+**Version:** 1.1 (Updated with Foundation Sync Phase)
 **Last Updated:** 2025-10-06
 **Owner:** Technical Architecture Team
+**Phase 0 Status:** ✅ COMPLETE - See docs/108-DOC-PHASE-0-COMPLETION-REPORT.md
 
 ---
 
@@ -90,14 +91,133 @@ python -c "from tools import get_all_tools; print('\n'.join(sorted([t.get_name()
 
 #### Success Criteria
 
-- [ ] Integration branch created
-- [ ] Rollback tag created and pushed
-- [ ] Critical files backed up
-- [ ] Baseline test results documented
+- [x] Integration branch created ✅
+- [x] Rollback tag created and pushed ✅
+- [x] Backup branch created ✅ (per critical-engineer)
+- [x] Critical files backed up ✅ (comprehensive)
+- [x] Baseline test results documented ✅ (926 tests passing)
+- [x] Critical-engineer review completed ✅
+- [x] Strategy revised to manual porting ✅
+
+**Phase 0 Status:** ✅ COMPLETE - Commit `11c4ee7`
 
 ---
 
-### Phase 1: Foundation - Role Deduplication
+### Phase 0.5: Foundation Sync (NEW - MANDATORY)
+
+**Timeline:** Week 1, Days 1-3
+**Purpose:** Align core architecture before feature integration
+**Priority:** CRITICAL - MUST complete before any feature porting
+
+⚠️ **CRITICAL-ENGINEER MANDATE:** This phase was added based on architectural drift analysis. With 349 upstream commits vs 105 HestAI commits from common ancestor, attempting feature integration without foundation sync will create unmaintainable "Frankenstein code."
+
+#### Core Architecture Alignment Tasks
+
+**1. Dependency Analysis**
+```bash
+# Compare dependency files
+diff .integration-backup/pyproject.toml /tmp/zen-upstream-analysis/pyproject.toml
+diff .integration-backup/requirements.txt /tmp/zen-upstream-analysis/requirements.txt
+
+# Identify version conflicts
+# Manual merge of compatible versions
+# Test compatibility before proceeding
+```
+
+**2. Base Tool Abstraction Review**
+```bash
+# CRITICAL: Compare base tool implementations
+diff .integration-backup/shared/base_tool.py /tmp/zen-upstream-analysis/tools/shared/base_tool.py
+
+# Identify breaking changes:
+# - Method signature changes
+# - New required methods
+# - Removed/deprecated methods
+# - Constructor changes
+
+# Impact: ALL tools depend on this base class
+```
+
+**3. Server Infrastructure Review**
+```bash
+# Compare server initialization
+diff .integration-backup/server.py /tmp/zen-upstream-analysis/server.py
+
+# Focus areas:
+# - Middleware changes
+# - Tool registration patterns
+# - Session management
+# - Error handling
+```
+
+**4. Utility Module Sync**
+```bash
+# Compare shared utilities
+diff -r .integration-backup/utils /tmp/zen-upstream-analysis/utils
+
+# Common conflict sources:
+# - Logging configuration
+# - Session management
+# - File processing
+# - Provider routing
+```
+
+**5. Configuration Schema Merge**
+```bash
+# CRITICAL: Schema merge, not file replacement
+diff .integration-backup/config.py /tmp/zen-upstream-analysis/config.py
+
+# Merge strategy:
+# - Keep HestAI schema optimization settings
+# - Add new Zen configuration variables
+# - Validate no key conflicts
+# - Update config validation
+```
+
+#### Testing Protocol
+
+```bash
+# After each infrastructure change:
+
+# 1. Linting
+ruff check . --fix
+black .
+isort .
+
+# 2. Unit tests
+python -m pytest tests/unit/ -v
+
+# 3. HestAI Regression Suite (MANDATORY)
+python -m pytest tests/test_critical_engineer.py -v
+python -m pytest tests/test_testguard.py -v
+python -m pytest tests/test_registry.py -v
+
+# 4. Server startup validation
+python server.py --validate-config
+
+# 5. All 18 tools must load
+# Verify tool registration
+```
+
+#### Success Criteria
+
+- [ ] Dependency compatibility verified (no version conflicts)
+- [ ] Base tool abstraction changes analyzed and merged
+- [ ] Server infrastructure changes analyzed and merged
+- [ ] Utility modules synchronized
+- [ ] Configuration schema merged (not replaced)
+- [ ] All unit tests passing (926+)
+- [ ] HestAI regression suite passing (critical-engineer, testguard, registry)
+- [ ] Server starts without config errors
+- [ ] All 18 tools load successfully
+
+**Validation:** Run `python communication_simulator_test.py --quick` (6/6 must pass)
+
+**Only after Foundation Sync passes** can feature porting begin.
+
+---
+
+### Phase 1: Manual Port - Role Deduplication
 
 **Timeline:** Week 1, Days 1-2
 **Purpose:** Clean up role handling before adding new CLI integrations
