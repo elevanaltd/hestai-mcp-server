@@ -57,6 +57,32 @@ Because these AI models [clearly aren't when they get chatty →](docs/ai_banter
   - [Troubleshooting Guide](docs/troubleshooting.md) - Common issues and debugging steps
   - [License](#license) - Apache 2.0
 
+## Recent Integration (Phase 0.5 Complete)
+
+**Zen-MCP-Server Integration** - Completed 2025-10-07
+
+Added two new tools from upstream Zen-MCP-Server:
+
+### 🔗 CLI Integration (clink)
+- Delegate tasks to external AI CLIs (Gemini, Codex, Qwen)
+- Preserve Claude Code quota by using free alternatives
+- Leverage existing subscriptions efficiently
+- 1000+ free requests/day via Gemini CLI
+
+### 📚 API Lookup (apilookup)
+- Token-efficient API documentation research
+- Current framework/SDK documentation lookup
+- No MCP context pollution
+- Subprocess-based isolation
+
+**Integration Highlights:**
+- 18 tools operational (16 HestAI + 2 Zen)
+- SessionManager preserved (P0 security maintained)
+- 944/944 tests passing (100%)
+- Strategic hybrid merge (minimal disruption)
+
+See `docs/107-DOC-ZEN-INTEGRATION-PLAN.md` for full integration details.
+
 ## Why This Server?
 
 Claude is brilliant, but sometimes you need:

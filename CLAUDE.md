@@ -337,4 +337,116 @@ The critical-engineer and testguard tools now support optional file context para
 
 These enhancements enable the validation tools to make more informed decisions based on actual code context rather than just descriptions.
 
+### New Tools Added from Zen-MCP-Server Integration
+
+#### API Lookup Tool (apilookup)
+
+The `apilookup` tool provides token-efficient API documentation lookup by delegating to web search without polluting MCP context.
+
+**Purpose:** Research latest API/SDK versions, breaking changes, and current documentation
+
+**Usage via MCP:**
+```json
+{
+  "tool": "mcp__hestai__chat",
+  "prompt": "What are the latest React 19 features and breaking changes?",
+  "model": "google/gemini-2.5-flash"
+}
+```
+
+**Benefits:**
+- Fetches current documentation (not limited by knowledge cutoff)
+- No MCP context pollution (subprocess pattern)
+- Token-efficient for API/SDK research
+
+**Use Cases:**
+- Checking latest framework versions
+- Understanding breaking changes
+- Researching best practices
+- Validating API signatures
+
+---
+
+#### CLI Integration Tool (clink)
+
+The `clink` tool enables delegation to external AI CLIs to preserve Claude Code quota and leverage free/existing subscriptions.
+
+**Supported CLIs:**
+- **Gemini CLI** - 1000 free requests/day
+- **Codex CLI** - Use existing Codex subscription
+- **Qwen CLI** - Alternative AI provider
+
+**Purpose:** Delegate non-critical tasks to free/alternative CLIs while preserving Claude Code quota for complex work
+
+**Configuration:**
+
+1. **Install CLI client** (example for Gemini CLI):
+```bash
+# Install Gemini CLI (if available)
+pip install gemini-cli  # or appropriate installation method
+
+# Configure API key
+export GEMINI_API_KEY="your-key-here"
+```
+
+2. **Configure in MCP server:**
+CLI clients are configured via JSON files in `conf/cli_clients/`:
+- `conf/cli_clients/gemini.json`
+- `conf/cli_clients/codex.json`
+
+**Usage via MCP:**
+```json
+{
+  "tool": "mcp__hestai__clink",
+  "prompt": "Review this code for basic style issues: [code snippet]",
+  "cli_name": "gemini",
+  "role": "code-reviewer",
+  "model": "gemini-2.5-flash"
+}
+```
+
+**Benefits:**
+- **Quota preservation:** Delegate routine tasks to free CLIs
+- **Cost optimization:** Use Gemini's 1000 free requests/day for non-critical work
+- **Subscription leverage:** Utilize existing Codex subscriptions efficiently
+- **Shared context:** Maintains conversation continuity across CLI delegations
+
+**Use Cases:**
+- Code reviews for style/formatting (delegate to Gemini)
+- Documentation generation (use free quota)
+- Simple refactoring tasks (preserve Claude quota)
+- Batch processing (leverage free tier limits)
+
+**Environment Variables:**
+```bash
+# Optional: Override CLI client configuration directory
+CLI_CLIENTS_CONFIG_PATH=conf/cli_clients/
+
+# CLI-specific configuration (see individual CLI docs)
+GEMINI_API_KEY="..."
+CODEX_API_KEY="..."
+```
+
+---
+
+#### Tool Selection Strategy
+
+**When to use Claude Code:**
+- Complex architectural decisions
+- Security-critical analysis
+- Multi-step reasoning tasks
+- Integration of multiple contexts
+
+**When to use clink (Gemini CLI):**
+- Code style reviews
+- Documentation generation
+- Simple refactoring
+- Routine analysis tasks
+
+**When to use apilookup:**
+- Latest API documentation
+- Framework version checks
+- Breaking change research
+- SDK signature validation
+
 This guide provides everything needed to efficiently work with the HestAI MCP Server codebase using Claude. Always run quality checks before and after making changes to ensure code integrity.
