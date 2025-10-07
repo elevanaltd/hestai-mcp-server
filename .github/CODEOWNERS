@@ -1,0 +1,7 @@
+# CODEOWNERS - Automatic reviewer assignment
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Snapshot Contract Review
+# Any changes to test contracts require review to ensure contract correctness
+# Per testguard protocol: Contracts must be validated before becoming baselines
+tests/snapshots/ @shaunbuswell
