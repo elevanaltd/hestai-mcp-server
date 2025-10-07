@@ -21,7 +21,6 @@ Example:
 """
 
 import logging
-from collections import defaultdict
 from typing import Optional
 
 from providers.shared import ProviderType
@@ -52,7 +51,6 @@ class ModelRestrictionService:
     def __init__(self):
         """Initialize the restriction service by loading from environment."""
         self.restrictions: dict[ProviderType, set[str]] = {}
-        self._alias_resolution_cache: dict[ProviderType, dict[str, str]] = defaultdict(dict)
         self._load_from_env()
 
     def _load_from_env(self) -> None:
@@ -74,7 +72,6 @@ class ModelRestrictionService:
 
             if models:
                 self.restrictions[provider_type] = models
-                self._alias_resolution_cache[provider_type] = {}
                 logger.info(f"{provider_type.value} allowed models: {sorted(models)}")
             else:
                 # All entries were empty after cleaning - treat as no restrictions
@@ -117,6 +114,9 @@ class ModelRestrictionService:
         """
         Check if a model is allowed for a specific provider.
 
+        Strict alias policy: Only names explicitly listed in the restriction policy are allowed.
+        This means if you specify "flash", only "flash" is allowed, not "gemini-2.5-flash".
+
         Args:
             provider_type: The provider type (OPENAI, GOOGLE, etc.)
             model_name: The canonical model name (after alias resolution)
@@ -136,46 +136,14 @@ class ModelRestrictionService:
             return True
 
         # Check both the resolved name and original name (if different)
+        # This handles the case where the user passes the original alias
         names_to_check = {model_name.lower()}
         if original_name and original_name.lower() != model_name.lower():
             names_to_check.add(original_name.lower())
 
-        # If any of the names is in the allowed set, it's allowed
-        if any(name in allowed_set for name in names_to_check):
-            return True
-
-        # Attempt to resolve canonical names for allowed aliases using provider metadata.
-        try:
-            from providers.registry import ModelProviderRegistry
-
-            provider = ModelProviderRegistry.get_provider(provider_type)
-        except Exception:  # pragma: no cover - registry lookup failure shouldn't break validation
-            provider = None
-
-        if provider:
-            cache = self._alias_resolution_cache.setdefault(provider_type, {})
-
-            for allowed_entry in list(allowed_set):
-                normalized_resolved = cache.get(allowed_entry)
-
-                if not normalized_resolved:
-                    try:
-                        resolved = provider._resolve_model_name(allowed_entry)
-                    except Exception:  # pragma: no cover - resolution failures are treated as non-matches
-                        continue
-
-                    if not resolved:
-                        continue
-
-                    normalized_resolved = resolved.lower()
-                    cache[allowed_entry] = normalized_resolved
-
-                if normalized_resolved in names_to_check:
-                    allowed_set.add(normalized_resolved)
-                    cache[normalized_resolved] = normalized_resolved
-                    return True
-
-        return False
+        # Strict policy: Only allow if the name (resolved or original) is explicitly in the allowed set
+        # We do NOT do reverse resolution of allowed entries
+        return any(name in allowed_set for name in names_to_check)
 
     def get_allowed_models(self, provider_type: ProviderType) -> Optional[set[str]]:
         """
