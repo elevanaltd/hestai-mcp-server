@@ -18,10 +18,10 @@ def test_gemini_provider_imports():
 
     Expected: FAIL until providers/gemini.py migrates to new SDK
     """
-    from providers.gemini import GeminiModelProvider
+    import providers.gemini
 
-    # Get source code of provider
-    source = inspect.getsource(GeminiModelProvider)
+    # Get source code of module (not just class)
+    source = inspect.getsource(providers.gemini)
 
     # Verify NEW SDK import
     assert 'from google import genai' in source, \
