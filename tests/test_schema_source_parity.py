@@ -40,7 +40,15 @@ def test_snapshot_contract_matches_pydantic_source(snapshot_filename, pydantic_m
     model_schema = pydantic_model.model_json_schema()
 
     # 2. Load snapshot file (The Contract)
-    snapshot_path = Path("tests/snapshots") / snapshot_filename
+    # Use absolute path relative to this test file for cross-platform compatibility
+    snapshot_path = Path(__file__).parent / "snapshots" / snapshot_filename
+
+    # Ensure snapshot exists with helpful error message
+    if not snapshot_path.exists():
+        pytest.fail(f"Snapshot file not found: {snapshot_path}\n"
+                   f"Working directory: {Path.cwd()}\n"
+                   f"Test file location: {__file__}")
+
     with open(snapshot_path) as f:
         snapshot_schema = json.load(f)
 
