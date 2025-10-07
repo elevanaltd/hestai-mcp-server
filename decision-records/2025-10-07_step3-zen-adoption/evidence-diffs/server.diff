@@ -1,0 +1,975 @@
+--- /tmp/zen-upstream-analysis/server.py	2025-10-06 13:16:45
++++ server.py	2025-10-06 23:18:20
+@@ -1,6 +1,10 @@
+ """
+-Zen MCP Server - Main server implementation
++HestAI MCP Server - Main server implementation
+ 
++// Critical-Engineer: consulted for Upstream merge and integration strategy
++// Zen-MCP-Server integration proceeding with manual porting approach per critical-engineer recommendation
++// Phase 0 completed: Foundation safety measures in place (backup branch, comprehensive backups)
++
+ This module implements the core MCP (Model Context Protocol) server that provides
+ AI-powered tools for code analysis, review, and assistance using multiple AI models.
+ 
+@@ -28,6 +32,21 @@
+ from pathlib import Path
+ from typing import Any, Optional
+ 
++# Try to load environment variables from .env file if dotenv is available
++# This is optional - environment variables can still be passed directly
++try:
++    from dotenv import load_dotenv
++
++    # Load environment variables from .env file in the script's directory
++    # This ensures .env is loaded regardless of the current working directory
++    script_dir = Path(__file__).parent
++    env_file = script_dir / ".env"
++    load_dotenv(dotenv_path=env_file)
++except ImportError:
++    # dotenv not available - this is fine, environment variables can still be passed directly
++    # This commonly happens when running via uvx or in minimal environments
++    pass
++
+ from mcp.server import Server  # noqa: E402
+ from mcp.server.models import InitializationOptions  # noqa: E402
+ from mcp.server.stdio import stdio_server  # noqa: E402
+@@ -47,32 +66,43 @@
+     DEFAULT_MODEL,
+     __version__,
+ )
++
++# TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
++# Context7: consulted for tools - internal module
+ from tools import (  # noqa: E402
+     AnalyzeTool,
+-    LookupTool,
+     ChallengeTool,
+     ChatTool,
+-    CLinkTool,
+-    CodeReviewTool,
+     ConsensusTool,
++    CriticalEngineerTool,
+     DebugIssueTool,
+-    DocgenTool,
+     ListModelsTool,
+     PlannerTool,
+-    PrecommitTool,
+-    RefactorTool,
++    RequirementsTool,
+     SecauditTool,
+-    TestGenTool,
+     ThinkDeepTool,
+     TracerTool,
+     VersionTool,
+ )
++
++# CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
+ from tools.models import ToolOutput  # noqa: E402
+-from utils.env import env_override_enabled, get_env  # noqa: E402
+ 
++# Context7: consulted for tools.registry - internal module
++# Critical-Engineer: consulted for architectural-decisions - adding new tool to server
++from tools.registry import RegistryTool  # noqa: E402
++
++# Context7: consulted for tools.shared.session_models - internal typed models
++# Critical-Engineer: consulted for typed context model integration
++from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
++
++# Context7: consulted for utils.session_manager - internal module
++# Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
++from utils.session_manager import SecurityError, SessionManager, SessionNotFoundError  # noqa: E402
++
+ # Configure logging for server operations
+ # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)
+-log_level = (get_env("LOG_LEVEL", "DEBUG") or "DEBUG").upper()
++log_level = os.getenv("LOG_LEVEL", "DEBUG").upper()
+ 
+ # Create timezone-aware formatter
+ 
+@@ -151,17 +181,26 @@
+ 
+ logger = logging.getLogger(__name__)
+ 
+-# Log ZEN_MCP_FORCE_ENV_OVERRIDE configuration for transparency
+-if env_override_enabled():
+-    logger.info("ZEN_MCP_FORCE_ENV_OVERRIDE enabled - .env file values will override system environment variables")
+-    logger.debug("Environment override prevents conflicts between different AI tools passing cached API keys")
+-else:
+-    logger.debug("ZEN_MCP_FORCE_ENV_OVERRIDE disabled - system environment variables take precedence")
+ 
+-
+ # Create the MCP server instance with a unique name identifier
+ # This name is used by MCP clients to identify and connect to this specific server
+-server: Server = Server("zen-server")
++server: Server = Server("hestai-server")
++
++# Initialize global session manager for project-aware context isolation
++# This provides secure session management with workspace validation
++session_manager: SessionManager = SessionManager(
++    allowed_workspaces=[
++        "/Users",  # macOS user directories
++        "/home",  # Linux user directories
++        "/tmp",  # Temporary directories
++        "/var/tmp",  # System temporary directories
++        "/Volumes",  # macOS mounted volumes
++        "/opt",  # Optional software installations
++        "/workspace",  # Docker/container workspaces
++    ],
++    session_timeout=3600,  # 1 hour timeout
++    max_sessions=1000,  # Reasonable limit for server resources
++)
+ 
+ 
+ # Constants for tool filtering
+@@ -175,7 +214,7 @@
+     Returns:
+         Set of lowercase tool names to disable, empty set if none specified
+     """
+-    disabled_tools_env = (get_env("DISABLED_TOOLS", "") or "").strip()
++    disabled_tools_env = os.getenv("DISABLED_TOOLS", "").strip()
+     if not disabled_tools_env:
+         return set()
+     return {t.strip().lower() for t in disabled_tools_env.split(",") if t.strip()}
+@@ -254,28 +293,32 @@
+     return enabled_tools
+ 
+ 
+-# Initialize the tool registry with all available AI-powered tools
+-# Each tool provides specialized functionality for different development tasks
+-# Tools are instantiated once and reused across requests (stateless design)
++# Initialize the tool registry with premium high-end model tools only
++# Each tool provides specialized functionality for complex multi-step workflows
++# Simple tasks are handled by Claude subagents for efficiency
++# TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
++# Critical-Engineer: consulted for architectural-decisions - adding registry tool
+ TOOLS = {
+     "chat": ChatTool(),  # Interactive development chat and brainstorming
+-    "clink": CLinkTool(),  # Bridge requests to configured AI CLIs
+     "thinkdeep": ThinkDeepTool(),  # Step-by-step deep thinking workflow with expert analysis
+     "planner": PlannerTool(),  # Interactive sequential planner using workflow architecture
+     "consensus": ConsensusTool(),  # Step-by-step consensus workflow with multi-model analysis
+-    "codereview": CodeReviewTool(),  # Comprehensive step-by-step code review workflow with expert analysis
+-    "precommit": PrecommitTool(),  # Step-by-step pre-commit validation workflow
+     "debug": DebugIssueTool(),  # Root cause analysis and debugging assistance
+     "secaudit": SecauditTool(),  # Comprehensive security audit with OWASP Top 10 and compliance coverage
+-    "docgen": DocgenTool(),  # Step-by-step documentation generation with complexity analysis
+     "analyze": AnalyzeTool(),  # General-purpose file and code analysis
+-    "refactor": RefactorTool(),  # Step-by-step refactoring analysis workflow with expert validation
+     "tracer": TracerTool(),  # Static call path prediction and control flow analysis
+-    "testgen": TestGenTool(),  # Step-by-step test generation workflow with expert validation
+     "challenge": ChallengeTool(),  # Critical challenge prompt wrapper to avoid automatic agreement
+-    "apilookup": LookupTool(),  # Quick web/API lookup instructions
++    "critical-engineer": CriticalEngineerTool(),  # Technical validation for major decisions and architecture
++    "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
++    "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
+     "listmodels": ListModelsTool(),  # List all available AI models by provider
+     "version": VersionTool(),  # Display server version and system information
++    # Archived tools (handled by Claude subagents):
++    # - codereview -> use code-review-specialist subagent
++    # - precommit -> use multiple specialized subagents
++    # - refactor -> use complexity-guard subagent
++    # - testgen -> use universal-test-engineer subagent
++    # - docgen -> use documentation subagents
+ }
+ TOOLS = filter_disabled_tools(TOOLS)
+ 
+@@ -286,11 +329,6 @@
+         "description": "Chat and brainstorm ideas",
+         "template": "Chat with {model} about this",
+     },
+-    "clink": {
+-        "name": "clink",
+-        "description": "Forward a request to a configured AI CLI (e.g., Gemini)",
+-        "template": "Use clink with cli_name=<cli> to run this prompt",
+-    },
+     "thinkdeep": {
+         "name": "thinkdeeper",
+         "description": "Step-by-step deep thinking workflow with expert analysis",
+@@ -306,16 +344,6 @@
+         "description": "Step-by-step consensus workflow with multi-model analysis",
+         "template": "Start comprehensive consensus workflow with {model}",
+     },
+-    "codereview": {
+-        "name": "review",
+-        "description": "Perform a comprehensive code review",
+-        "template": "Perform a comprehensive code review with {model}",
+-    },
+-    "precommit": {
+-        "name": "precommit",
+-        "description": "Step-by-step pre-commit validation workflow",
+-        "template": "Start comprehensive pre-commit validation workflow with {model}",
+-    },
+     "debug": {
+         "name": "debug",
+         "description": "Debug an issue or error",
+@@ -326,41 +354,21 @@
+         "description": "Comprehensive security audit with OWASP Top 10 coverage",
+         "template": "Perform comprehensive security audit with {model}",
+     },
+-    "docgen": {
+-        "name": "docgen",
+-        "description": "Generate comprehensive code documentation with complexity analysis",
+-        "template": "Generate comprehensive documentation with {model}",
+-    },
+     "analyze": {
+         "name": "analyze",
+         "description": "Analyze files and code structure",
+         "template": "Analyze these files with {model}",
+     },
+-    "refactor": {
+-        "name": "refactor",
+-        "description": "Refactor and improve code structure",
+-        "template": "Refactor this code with {model}",
+-    },
+     "tracer": {
+         "name": "tracer",
+         "description": "Trace code execution paths",
+         "template": "Generate tracer analysis with {model}",
+     },
+-    "testgen": {
+-        "name": "testgen",
+-        "description": "Generate comprehensive tests",
+-        "template": "Generate comprehensive tests with {model}",
+-    },
+     "challenge": {
+         "name": "challenge",
+         "description": "Challenge a statement critically without automatic agreement",
+         "template": "Challenge this statement critically",
+     },
+-    "apilookup": {
+-        "name": "apilookup",
+-        "description": "Look up the latest API or SDK information",
+-        "template": "Lookup latest API docs for {model}",
+-    },
+     "listmodels": {
+         "name": "listmodels",
+         "description": "List available AI models",
+@@ -369,7 +377,7 @@
+     "version": {
+         "name": "version",
+         "description": "Show server version and system information",
+-        "template": "Show Zen MCP Server version",
++        "template": "Show HestAI MCP Server version",
+     },
+ }
+ 
+@@ -388,16 +396,15 @@
+     logger.debug("Checking environment variables for API keys...")
+     api_keys_to_check = ["OPENAI_API_KEY", "OPENROUTER_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "CUSTOM_API_URL"]
+     for key in api_keys_to_check:
+-        value = get_env(key)
++        value = os.getenv(key)
+         logger.debug(f"  {key}: {'[PRESENT]' if value else '[MISSING]'}")
+     from providers import ModelProviderRegistry
+-    from providers.azure_openai import AzureOpenAIProvider
++    from providers.base import ProviderType
+     from providers.custom import CustomProvider
+     from providers.dial import DIALModelProvider
+     from providers.gemini import GeminiModelProvider
+     from providers.openai_provider import OpenAIModelProvider
+     from providers.openrouter import OpenRouterProvider
+-    from providers.shared import ProviderType
+     from providers.xai import XAIModelProvider
+     from utils.model_restrictions import get_restriction_service
+ 
+@@ -407,62 +414,41 @@
+     has_custom = False
+ 
+     # Check for Gemini API key
+-    gemini_key = get_env("GEMINI_API_KEY")
++    gemini_key = os.getenv("GEMINI_API_KEY")
+     if gemini_key and gemini_key != "your_gemini_api_key_here":
+         valid_providers.append("Gemini")
+         has_native_apis = True
+         logger.info("Gemini API key found - Gemini models available")
+ 
+     # Check for OpenAI API key
+-    openai_key = get_env("OPENAI_API_KEY")
++    openai_key = os.getenv("OPENAI_API_KEY")
+     logger.debug(f"OpenAI key check: key={'[PRESENT]' if openai_key else '[MISSING]'}")
+     if openai_key and openai_key != "your_openai_api_key_here":
+-        valid_providers.append("OpenAI")
++        valid_providers.append("OpenAI (o3)")
+         has_native_apis = True
+-        logger.info("OpenAI API key found")
++        logger.info("OpenAI API key found - o3 model available")
+     else:
+         if not openai_key:
+             logger.debug("OpenAI API key not found in environment")
+         else:
+             logger.debug("OpenAI API key is placeholder value")
+ 
+-    # Check for Azure OpenAI configuration
+-    azure_key = get_env("AZURE_OPENAI_API_KEY")
+-    azure_endpoint = get_env("AZURE_OPENAI_ENDPOINT")
+-    azure_models_available = False
+-    if azure_key and azure_key != "your_azure_openai_key_here" and azure_endpoint:
+-        try:
+-            from providers.azure_registry import AzureModelRegistry
+-
+-            azure_registry = AzureModelRegistry()
+-            if azure_registry.list_models():
+-                valid_providers.append("Azure OpenAI")
+-                has_native_apis = True
+-                azure_models_available = True
+-                logger.info("Azure OpenAI configuration detected")
+-            else:
+-                logger.warning(
+-                    "Azure OpenAI models configuration is empty. Populate conf/azure_models.json or set AZURE_MODELS_CONFIG_PATH."
+-                )
+-        except Exception as exc:
+-            logger.warning(f"Failed to load Azure OpenAI models: {exc}")
+-
+     # Check for X.AI API key
+-    xai_key = get_env("XAI_API_KEY")
++    xai_key = os.getenv("XAI_API_KEY")
+     if xai_key and xai_key != "your_xai_api_key_here":
+         valid_providers.append("X.AI (GROK)")
+         has_native_apis = True
+         logger.info("X.AI API key found - GROK models available")
+ 
+     # Check for DIAL API key
+-    dial_key = get_env("DIAL_API_KEY")
++    dial_key = os.getenv("DIAL_API_KEY")
+     if dial_key and dial_key != "your_dial_api_key_here":
+         valid_providers.append("DIAL")
+         has_native_apis = True
+         logger.info("DIAL API key found - DIAL models available")
+ 
+     # Check for OpenRouter API key
+-    openrouter_key = get_env("OPENROUTER_API_KEY")
++    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+     logger.debug(f"OpenRouter key check: key={'[PRESENT]' if openrouter_key else '[MISSING]'}")
+     if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
+         valid_providers.append("OpenRouter")
+@@ -475,14 +461,14 @@
+             logger.debug("OpenRouter API key is placeholder value")
+ 
+     # Check for custom API endpoint (Ollama, vLLM, etc.)
+-    custom_url = get_env("CUSTOM_API_URL")
++    custom_url = os.getenv("CUSTOM_API_URL")
+     if custom_url:
+         # IMPORTANT: Always read CUSTOM_API_KEY even if empty
+         # - Some providers (vLLM, LM Studio, enterprise APIs) require authentication
+         # - Others (Ollama) work without authentication (empty key)
+         # - DO NOT remove this variable - it's needed for provider factory function
+-        custom_key = get_env("CUSTOM_API_KEY", "") or ""  # Default to empty (Ollama doesn't need auth)
+-        custom_model = get_env("CUSTOM_MODEL_NAME", "llama3.2") or "llama3.2"
++        custom_key = os.getenv("CUSTOM_API_KEY", "")  # Default to empty (Ollama doesn't need auth)
++        custom_model = os.getenv("CUSTOM_MODEL_NAME", "llama3.2")
+         valid_providers.append(f"Custom API ({custom_url})")
+         has_custom = True
+         logger.info(f"Custom API endpoint found: {custom_url} with model {custom_model}")
+@@ -493,58 +479,36 @@
+ 
+     # Register providers in priority order:
+     # 1. Native APIs first (most direct and efficient)
+-    registered_providers = []
+-
+     if has_native_apis:
+         if gemini_key and gemini_key != "your_gemini_api_key_here":
+             ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
+-            registered_providers.append(ProviderType.GOOGLE.value)
+-            logger.debug(f"Registered provider: {ProviderType.GOOGLE.value}")
+         if openai_key and openai_key != "your_openai_api_key_here":
+             ModelProviderRegistry.register_provider(ProviderType.OPENAI, OpenAIModelProvider)
+-            registered_providers.append(ProviderType.OPENAI.value)
+-            logger.debug(f"Registered provider: {ProviderType.OPENAI.value}")
+-        if azure_models_available:
+-            ModelProviderRegistry.register_provider(ProviderType.AZURE, AzureOpenAIProvider)
+-            registered_providers.append(ProviderType.AZURE.value)
+-            logger.debug(f"Registered provider: {ProviderType.AZURE.value}")
+         if xai_key and xai_key != "your_xai_api_key_here":
+             ModelProviderRegistry.register_provider(ProviderType.XAI, XAIModelProvider)
+-            registered_providers.append(ProviderType.XAI.value)
+-            logger.debug(f"Registered provider: {ProviderType.XAI.value}")
+         if dial_key and dial_key != "your_dial_api_key_here":
+             ModelProviderRegistry.register_provider(ProviderType.DIAL, DIALModelProvider)
+-            registered_providers.append(ProviderType.DIAL.value)
+-            logger.debug(f"Registered provider: {ProviderType.DIAL.value}")
+ 
+     # 2. Custom provider second (for local/private models)
+     if has_custom:
+         # Factory function that creates CustomProvider with proper parameters
+         def custom_provider_factory(api_key=None):
+             # api_key is CUSTOM_API_KEY (can be empty for Ollama), base_url from CUSTOM_API_URL
+-            base_url = get_env("CUSTOM_API_URL", "") or ""
++            base_url = os.getenv("CUSTOM_API_URL", "")
+             return CustomProvider(api_key=api_key or "", base_url=base_url)  # Use provided API key or empty string
+ 
+         ModelProviderRegistry.register_provider(ProviderType.CUSTOM, custom_provider_factory)
+-        registered_providers.append(ProviderType.CUSTOM.value)
+-        logger.debug(f"Registered provider: {ProviderType.CUSTOM.value}")
+ 
+     # 3. OpenRouter last (catch-all for everything else)
+     if has_openrouter:
+         ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+-        registered_providers.append(ProviderType.OPENROUTER.value)
+-        logger.debug(f"Registered provider: {ProviderType.OPENROUTER.value}")
+ 
+-    # Log all registered providers
+-    if registered_providers:
+-        logger.info(f"Registered providers: {', '.join(registered_providers)}")
+-
+     # Require at least one valid provider
+     if not valid_providers:
+         raise ValueError(
+             "At least one API configuration is required. Please set either:\n"
+             "- GEMINI_API_KEY for Gemini models\n"
+-            "- OPENAI_API_KEY for OpenAI models\n"
++            "- OPENAI_API_KEY for OpenAI o3 model\n"
+             "- XAI_API_KEY for X.AI GROK models\n"
+             "- DIAL_API_KEY for DIAL models\n"
+             "- OPENROUTER_API_KEY for OpenRouter (multiple models)\n"
+@@ -582,7 +546,25 @@
+             # Silently ignore any errors during cleanup
+             pass
+ 
++    def cleanup_session_manager():
++        """Clean up session manager on shutdown."""
++        try:
++            # For atexit compatibility, create new event loop if needed
++            import asyncio
++
++            try:
++                loop = asyncio.get_running_loop()
++                # If we have a running loop, schedule the shutdown
++                loop.create_task(session_manager.shutdown())
++            except RuntimeError:
++                # No running loop, create one for cleanup
++                asyncio.run(session_manager.shutdown())
++        except Exception:
++            # Silently ignore any errors during cleanup
++            pass
++
+     atexit.register(cleanup_providers)
++    atexit.register(cleanup_session_manager)
+ 
+     # Check and log model restrictions
+     restriction_service = get_restriction_service()
+@@ -653,7 +635,7 @@
+             # Log to activity file as well
+             try:
+                 mcp_activity_logger = logging.getLogger("mcp_activity")
+-                friendly_name = client_info.get("friendly_name", "CLI Agent")
++                friendly_name = client_info.get("friendly_name", "Claude")
+                 raw_name = client_info.get("name", "Unknown")
+                 version = client_info.get("version", "Unknown")
+                 mcp_activity_logger.info(f"MCP_CLIENT_INFO: {friendly_name} (raw={raw_name} v{version})")
+@@ -679,8 +661,7 @@
+         )
+ 
+     # Log cache efficiency info
+-    openrouter_key_for_cache = get_env("OPENROUTER_API_KEY")
+-    if openrouter_key_for_cache and openrouter_key_for_cache != "your_openrouter_api_key_here":
++    if os.getenv("OPENROUTER_API_KEY") and os.getenv("OPENROUTER_API_KEY") != "your_openrouter_api_key_here":
+         logger.debug("OpenRouter registry cache used efficiently across all tool schemas")
+ 
+     logger.debug(f"Returning {len(tools)} tools to MCP client")
+@@ -696,6 +677,13 @@
+     It supports both AI-powered tools (from TOOLS registry) and utility tools (implemented as
+     static functions).
+ 
++    SESSION MANAGEMENT:
++    This function now provides project-aware context isolation:
++    - Extracts session_id and project_root from MCP request parameters
++    - Creates or retrieves isolated session contexts for each project
++    - Validates project_root against allowed workspaces for security
++    - Provides backward compatibility for clients without session parameters
++
+     CONVERSATION LIFECYCLE MANAGEMENT:
+     This function serves as the central orchestrator for multi-turn AI-to-AI conversations:
+ 
+@@ -723,6 +711,8 @@
+     Args:
+         name: The name of the tool to execute (e.g., "analyze", "chat", "codereview")
+         arguments: Dictionary of arguments to pass to the tool, potentially including:
++                  - session_id: Unique session identifier for project isolation (optional)
++                  - project_root: Path to project root directory (optional)
+                   - continuation_id: UUID for conversation thread resumption
+                   - files: File paths for analysis (subject to deduplication)
+                   - prompt: User request or follow-up question
+@@ -736,13 +726,14 @@
+ 
+     Raises:
+         ValueError: If continuation_id is invalid or conversation thread not found
++        SecurityError: If project_root is outside allowed workspaces
+         Exception: For tool-specific errors or execution failures
+ 
+     Example Conversation Flow:
+-        1. The CLI calls analyze tool with files → creates new thread
++        1. Claude calls analyze tool with files + session_id + project_root → creates isolated session
+         2. Thread ID returned in continuation offer
+-        3. The CLI continues with codereview tool + continuation_id → full context preserved
+-        4. Multiple tools can collaborate using same thread ID
++        3. Claude continues with codereview tool + continuation_id → full context preserved within session
++        4. Multiple tools can collaborate using same session context
+     """
+     logger.info(f"MCP tool call: {name}")
+     logger.debug(f"MCP tool arguments: {list(arguments.keys())}")
+@@ -754,6 +745,108 @@
+     except Exception:
+         pass
+ 
++    # SESSION MANAGEMENT: Extract session parameters from MCP request
++    session_id = arguments.get("session_id", "default")
++    project_root = arguments.get("project_root")
++
++    # Handle session context creation/retrieval with typed models
++    if project_root:
++        try:
++            # Create or get session with project isolation (async operation)
++            session_obj = await session_manager.get_or_create_session(session_id, project_root)
++            logger.info(f"Using session {session_id} for project {project_root}")
++
++            # SECURITY: Convert to typed, validated Pydantic model
++            session_model = SessionContextModel.from_session_context(session_obj)
++
++            # Create complete typed execution context
++            execution_context = ToolExecutionContext(
++                session=session_model,
++                remaining_tokens=arguments.get("_remaining_tokens"),
++                model_name=arguments.get("_resolved_model_name"),
++            )
++
++            # Store TYPED context, remove old dictionary-based context
++            arguments.pop("_session_context", None)  # Remove old insecure pattern
++            arguments["_execution_context"] = execution_context
++
++        except SessionNotFoundError as e:
++            # Handle session not found with proper error response
++            error_message = f"Session not found: {str(e)}"
++            logger.warning(f"Session not found for {name}: {error_message}")
++            error_output = ToolOutput(
++                status="error",
++                content=error_message,
++                content_type="text",
++                metadata={"tool_name": name, "session_id": session_id, "error_type": "session_not_found"},
++            )
++            return [TextContent(type="text", text=error_output.model_dump_json())]
++
++        except SecurityError:
++            # Handle security violations with enhanced error information
++            error_message = (
++                f"Project root '{project_root}' is not in an allowed workspace. "
++                f"Allowed workspaces: {', '.join(session_manager.allowed_workspaces)}"
++            )
++            logger.warning(f"Session security error: {error_message}")
++            error_output = ToolOutput(
++                status="error",
++                content=error_message,
++                content_type="text",
++                metadata={
++                    "tool_name": name,
++                    "session_id": session_id,
++                    "project_root": project_root,
++                    "error_type": "security_error",
++                },
++            )
++            return [TextContent(type="text", text=error_output.model_dump_json())]
++
++        except Exception as e:
++            # Generic session error handling
++            error_message = f"Failed to create session: {str(e)}"
++            logger.error(f"Session creation error: {error_message}")
++            error_output = ToolOutput(
++                status="error",
++                content=error_message,
++                content_type="text",
++                metadata={"tool_name": name, "session_id": session_id, "error_type": "session_error"},
++            )
++            return [TextContent(type="text", text=error_output.model_dump_json())]
++    else:
++        # Backward compatibility: no session parameters provided
++        # Use default session without project isolation
++        logger.debug(f"No project_root provided for {name}, using legacy mode")
++        arguments.pop("_session_context", None)  # Remove old pattern
++        arguments["_execution_context"] = None
++
++    # Smart Context Injection - inject relevant documentation based on patterns
++    # This happens BEFORE thread context reconstruction to ensure injected content
++    # is included in the conversation history
++    # CONTEXT7_BYPASS: ARCH-002 - Internal utils module from same codebase
++    try:
++        from utils.smart_context_injector import inject_smart_context
++
++        # Extract prompt for pattern detection (varies by tool)
++        prompt = arguments.get("prompt", arguments.get("step", arguments.get("problem_context", "")))
++
++        if prompt:
++            # Perform smart context injection
++            modified_args, notifications = inject_smart_context(prompt, name, arguments)
++
++            # Update arguments with injected context
++            arguments = modified_args
++
++            # Log notifications if any patterns matched
++            if notifications:
++                logger.info(f"Smart context injection triggered for {name}: {', '.join(notifications)}")
++
++                # Store notifications for potential user display
++                arguments["_smart_context_notifications"] = notifications
++    except Exception as e:
++        # Smart context injection is non-critical - log but don't fail
++        logger.debug(f"Smart context injection skipped: {e}")
++
+     # Handle thread context reconstruction if continuation_id is present
+     if "continuation_id" in arguments and arguments["continuation_id"]:
+         continuation_id = arguments["continuation_id"]
+@@ -775,6 +868,9 @@
+         if "_remaining_tokens" in arguments:
+             logger.debug(f"[CONVERSATION_DEBUG] Remaining token budget: {arguments['_remaining_tokens']:,}")
+ 
++    # Critical-Engineer: consulted for smart-context-injection-integration
++    # Validated: transparent-middleware production-ready zero-breaking-changes
++
+     # Route to AI-powered tools that require Gemini API calls
+     if name in TOOLS:
+         logger.info(f"Executing tool '{name}' with {len(arguments)} parameter(s)")
+@@ -794,9 +890,7 @@
+         # Parse model:option format if present
+         model_name, model_option = parse_model_option(model_name)
+         if model_option:
+-            logger.info(f"Parsed model format - model: '{model_name}', option: '{model_option}'")
+-        else:
+-            logger.info(f"Parsed model format - model: '{model_name}'")
++            logger.debug(f"Parsed model format - model: '{model_name}', option: '{model_option}'")
+ 
+         # Consensus tool handles its own model configuration validation
+         # No special handling needed at server level
+@@ -817,6 +911,30 @@
+             # Update arguments with resolved model
+             arguments["model"] = model_name
+ 
++        # Special case: testguard tool only allows high-quality models
++        if name == "testguard":
++            allowed_models = ["google/gemini-2.5-pro", "openai/gpt-5"]
++            if model_name not in allowed_models:
++                # Default to gemini-2.5-pro if an unsupported model is specified
++                forced_model = "google/gemini-2.5-pro"
++                logger.info(
++                    f"Overriding model for testguard: {model_name} → {forced_model} (only high-quality models allowed)"
++                )
++                model_name = forced_model
++                arguments["model"] = model_name
++
++        # Special case: critical-engineer tool only allows high-quality models
++        if name == "critical-engineer":
++            allowed_models = ["google/gemini-2.5-pro", "openai/gpt-5"]
++            if model_name not in allowed_models:
++                # Default to gemini-2.5-pro if an unsupported model is specified
++                forced_model = "google/gemini-2.5-pro"
++                logger.info(
++                    f"Overriding model for critical-engineer: {model_name} → {forced_model} (only high-quality models allowed)"
++                )
++                model_name = forced_model
++                arguments["model"] = model_name
++
+         # Validate model availability at MCP boundary
+         provider = ModelProviderRegistry.get_provider_for_model(model_name)
+         if not provider:
+@@ -936,12 +1054,12 @@
+         remaining_turns = max_turns - current_turn_count - 1
+         return f"""
+ 
+-CONVERSATION CONTINUATION: You can continue this discussion with the agent! ({remaining_turns} exchanges remaining)
++CONVERSATION CONTINUATION: You can continue this discussion with Claude! ({remaining_turns} exchanges remaining)
+ 
+ Feel free to ask clarifying questions or suggest areas for deeper exploration naturally within your response.
+ If something needs clarification or you'd benefit from additional context, simply mention it conversationally.
+ 
+-IMPORTANT: When you suggest follow-ups or ask questions, you MUST explicitly instruct the agent to use the continuation_id
++IMPORTANT: When you suggest follow-ups or ask questions, you MUST explicitly instruct Claude to use the continuation_id
+ to respond. Use clear, direct language based on urgency:
+ 
+ For optional follow-ups: "Please continue this conversation using the continuation_id from this response if you'd "
+@@ -952,14 +1070,14 @@
+ For essential/critical responses: "RESPONSE REQUIRED: Please immediately continue using the continuation_id from "
+ "this response. Cannot proceed without your clarification/input."
+ 
+-This ensures the agent knows both HOW to maintain the conversation thread AND whether a response is optional, "
++This ensures Claude knows both HOW to maintain the conversation thread AND whether a response is optional, "
+ "needed, or essential.
+ 
+-The tool will automatically provide a continuation_id in the structured response that the agent can use in subsequent
++The tool will automatically provide a continuation_id in the structured response that Claude can use in subsequent
+ tool calls to maintain full conversation context across multiple exchanges.
+ 
+ Remember: Only suggest follow-ups when they would genuinely add value to the discussion, and always instruct "
+-"The agent to use the continuation_id when you do."""
++"Claude to use the continuation_id when you do."""
+ 
+ 
+ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any]:
+@@ -1035,7 +1153,7 @@
+         - Optimized file deduplication minimizes redundant content
+ 
+     Example Usage Flow:
+-        1. CLI: "Continue analyzing the security issues" + continuation_id
++        1. Claude: "Continue analyzing the security issues" + continuation_id
+         2. reconstruct_thread_context() loads previous analyze conversation
+         3. Debug tool receives full context including previous file analysis
+         4. Debug tool can reference specific findings from analyze tool
+@@ -1059,7 +1177,7 @@
+         except Exception:
+             pass
+ 
+-        # Return error asking CLI to restart conversation with full context
++        # Return error asking Claude to restart conversation with full context
+         raise ValueError(
+             f"Conversation thread '{continuation_id}' was not found or has expired. "
+             f"This may happen if the conversation was created more than 3 hours ago or if the "
+@@ -1092,12 +1210,9 @@
+     # Create model context early to use for history building
+     from utils.model_context import ModelContext
+ 
+-    tool = TOOLS.get(context.tool_name)
+-    requires_model = tool.requires_model() if tool else True
+-
+     # Check if we should use the model from the previous conversation turn
+     model_from_args = arguments.get("model")
+-    if requires_model and not model_from_args and context.turns:
++    if not model_from_args and context.turns:
+         # Find the last assistant turn to get the model used
+         for turn in reversed(context.turns):
+             if turn.role == "assistant" and turn.model_name:
+@@ -1105,99 +1220,7 @@
+                 logger.debug(f"[CONVERSATION_DEBUG] Using model from previous turn: {turn.model_name}")
+                 break
+ 
+-    # Resolve an effective model for context reconstruction when DEFAULT_MODEL=auto
+-    model_context = arguments.get("_model_context")
+-
+-    if requires_model:
+-        if model_context is None:
+-            try:
+-                model_context = ModelContext.from_arguments(arguments)
+-                arguments.setdefault("_resolved_model_name", model_context.model_name)
+-            except ValueError as exc:
+-                from providers.registry import ModelProviderRegistry
+-
+-                fallback_model = None
+-                if tool is not None:
+-                    try:
+-                        fallback_model = ModelProviderRegistry.get_preferred_fallback_model(tool.get_model_category())
+-                    except Exception as fallback_exc:  # pragma: no cover - defensive log
+-                        logger.debug(
+-                            f"[CONVERSATION_DEBUG] Unable to resolve fallback model for {context.tool_name}: {fallback_exc}"
+-                        )
+-
+-                if fallback_model is None:
+-                    available_models = ModelProviderRegistry.get_available_model_names()
+-                    if available_models:
+-                        fallback_model = available_models[0]
+-
+-                if fallback_model is None:
+-                    raise
+-
+-                logger.debug(
+-                    f"[CONVERSATION_DEBUG] Falling back to model '{fallback_model}' for context reconstruction after error: {exc}"
+-                )
+-                model_context = ModelContext(fallback_model)
+-                arguments["_model_context"] = model_context
+-                arguments["_resolved_model_name"] = fallback_model
+-
+-        from providers.registry import ModelProviderRegistry
+-
+-        provider = ModelProviderRegistry.get_provider_for_model(model_context.model_name)
+-        if provider is None:
+-            fallback_model = None
+-            if tool is not None:
+-                try:
+-                    fallback_model = ModelProviderRegistry.get_preferred_fallback_model(tool.get_model_category())
+-                except Exception as fallback_exc:  # pragma: no cover - defensive log
+-                    logger.debug(
+-                        f"[CONVERSATION_DEBUG] Unable to resolve fallback model for {context.tool_name}: {fallback_exc}"
+-                    )
+-
+-            if fallback_model is None:
+-                available_models = ModelProviderRegistry.get_available_model_names()
+-                if available_models:
+-                    fallback_model = available_models[0]
+-
+-            if fallback_model is None:
+-                raise ValueError(
+-                    f"Conversation continuation failed: model '{model_context.model_name}' is not available with current API keys."
+-                )
+-
+-            logger.debug(
+-                f"[CONVERSATION_DEBUG] Model '{model_context.model_name}' unavailable; swapping to '{fallback_model}' for context reconstruction"
+-            )
+-            model_context = ModelContext(fallback_model)
+-            arguments["_model_context"] = model_context
+-            arguments["_resolved_model_name"] = fallback_model
+-    else:
+-        if model_context is None:
+-            from providers.registry import ModelProviderRegistry
+-
+-            fallback_model = None
+-            if tool is not None:
+-                try:
+-                    fallback_model = ModelProviderRegistry.get_preferred_fallback_model(tool.get_model_category())
+-                except Exception as fallback_exc:  # pragma: no cover - defensive log
+-                    logger.debug(
+-                        f"[CONVERSATION_DEBUG] Unable to resolve fallback model for {context.tool_name}: {fallback_exc}"
+-                    )
+-
+-            if fallback_model is None:
+-                available_models = ModelProviderRegistry.get_available_model_names()
+-                if available_models:
+-                    fallback_model = available_models[0]
+-
+-            if fallback_model is None:
+-                raise ValueError(
+-                    "Conversation continuation failed: no available models detected for context reconstruction."
+-                )
+-
+-            logger.debug(
+-                f"[CONVERSATION_DEBUG] Using fallback model '{fallback_model}' for context reconstruction of tool without model requirement"
+-            )
+-            model_context = ModelContext(fallback_model)
+-            arguments["_model_context"] = model_context
+-            arguments["_resolved_model_name"] = fallback_model
++    model_context = ModelContext.from_arguments(arguments)
+ 
+     # Build conversation history with model-specific limits
+     logger.debug(f"[CONVERSATION_DEBUG] Building conversation history for thread {continuation_id}")
+@@ -1287,9 +1310,9 @@
+ @server.list_prompts()
+ async def handle_list_prompts() -> list[Prompt]:
+     """
+-    List all available prompts for CLI Code shortcuts.
++    List all available prompts for Claude Code shortcuts.
+ 
+-    This handler returns prompts that enable shortcuts like /zen:thinkdeeper.
++    This handler returns prompts that enable shortcuts like /hestai:thinkdeeper.
+     We automatically generate prompts from all tools (1:1 mapping) plus add
+     a few marketing aliases with richer templates for commonly used tools.
+ 
+@@ -1339,16 +1362,16 @@
+     """
+     Get prompt details and generate the actual prompt text.
+ 
+-    This handler is called when a user invokes a prompt (e.g., /zen:thinkdeeper or /zen:chat:gpt5).
+-    It generates the appropriate text that CLI will then use to call the
++    This handler is called when a user invokes a prompt (e.g., /hestai:thinkdeeper or /hestai:chat:o3).
++    It generates the appropriate text that Claude will then use to call the
+     underlying tool.
+ 
+-    Supports structured prompt names like "chat:gpt5" where:
++    Supports structured prompt names like "chat:o3" where:
+     - "chat" is the tool name
+-    - "gpt5" is the model to use
++    - "o3" is the model to use
+ 
+     Args:
+-        name: The name of the prompt to execute (can include model like "chat:gpt5")
++        name: The name of the prompt to execute (can include model like "chat:o3")
+         arguments: Optional arguments for the prompt (e.g., model, thinking_mode)
+ 
+     Returns:
+@@ -1361,14 +1384,14 @@
+ 
+     # Handle special "continue" case
+     if name.lower() == "continue":
+-        # This is "/zen:continue" - use chat tool as default for continuation
++        # This is "/hestai:continue" - use chat tool as default for continuation
+         tool_name = "chat"
+         template_info = {
+             "name": "continue",
+             "description": "Continue the previous conversation",
+             "template": "Continue the conversation",
+         }
+-        logger.debug("Using /zen:continue - defaulting to chat tool")
++        logger.debug("Using /hestai:continue - defaulting to chat tool")
+     else:
+         # Find the corresponding tool by checking prompt names
+         tool_name = None
+@@ -1416,13 +1439,8 @@
+ 
+     # Generate tool call instruction
+     if name.lower() == "continue":
+-        # "/zen:continue" case
+-        tool_instruction = (
+-            f"Continue the previous conversation using the {tool_name} tool. "
+-            "CRITICAL: You MUST provide the continuation_id from the previous response to maintain conversation context. "
+-            "Additionally, you should reuse the same model that was used in the previous exchange for consistency, unless "
+-            "the user specifically asks for a different model name to be used."
+-        )
++        # "/hestai:continue" case
++        tool_instruction = f"Continue the previous conversation using the {tool_name} tool"
+     else:
+         # Simple prompt case
+         tool_instruction = prompt_text
+@@ -1457,9 +1475,14 @@
+     configure_providers()
+ 
+     # Log startup message
+-    logger.info("Zen MCP Server starting up...")
++    logger.info("HestAI MCP Server starting up...")
+     logger.info(f"Log level: {log_level}")
+ 
++    # Log session manager configuration
++    logger.info(f"Session manager initialized with {len(session_manager.allowed_workspaces)} allowed workspaces")
++    logger.info(f"Session timeout: {session_manager.session_timeout} seconds")
++    logger.info(f"Max sessions: {session_manager.max_sessions}")
++
+     # Note: MCP client info will be logged during the protocol handshake
+     # (when handle_list_tools is called)
+ 
+@@ -1467,7 +1490,7 @@
+     from config import IS_AUTO_MODE
+ 
+     if IS_AUTO_MODE:
+-        logger.info("Model mode: AUTO (CLI will select the best model for each task)")
++        logger.info("Model mode: AUTO (Claude will select the best model for each task)")
+     else:
+         logger.info(f"Model mode: Fixed model '{DEFAULT_MODEL}'")
+ 
+@@ -1477,20 +1500,13 @@
+     logger.info(f"Default thinking mode (ThinkDeep): {DEFAULT_THINKING_MODE_THINKDEEP}")
+ 
+     logger.info(f"Available tools: {list(TOOLS.keys())}")
+-    logger.info("Server ready - waiting for tool requests...")
+ 
+-    # Prepare dynamic instructions for the MCP client based on model mode
+-    if IS_AUTO_MODE:
+-        handshake_instructions = (
+-            "When the user names a specific model (e.g. 'use chat with gpt5'), send that exact model in the tool call. "
+-            "When no model is mentioned, first use the `listmodels` tool from zen to obtain available models to choose the best one from."
+-        )
+-    else:
+-        handshake_instructions = (
+-            "When the user names a specific model (e.g. 'use chat with gpt5'), send that exact model in the tool call. "
+-            f"When no model is mentioned, default to '{DEFAULT_MODEL}'."
+-        )
++    # Start session manager background cleanup task
++    session_manager.start_cleanup_task()
++    logger.info("Session manager cleanup task started")
+ 
++    logger.info("Server ready - waiting for tool requests...")
++
+     # Run the server using stdio transport (standard input/output)
+     # This allows the server to be launched by MCP clients as a subprocess
+     async with stdio_server() as (read_stream, write_stream):
+@@ -1498,9 +1514,8 @@
+             read_stream,
+             write_stream,
+             InitializationOptions(
+-                server_name="zen",
++                server_name="hestai-server",
+                 server_version=__version__,
+-                instructions=handshake_instructions,
+                 capabilities=ServerCapabilities(
+                     tools=ToolsCapability(),  # Advertise tool support capability
+                     prompts=PromptsCapability(),  # Advertise prompt support capability
+@@ -1510,7 +1525,7 @@
+ 
+ 
+ def run():
+-    """Console script entry point for zen-mcp-server."""
++    """Console script entry point for hestai-mcp-server."""
+     try:
+         asyncio.run(main())
+     except KeyboardInterrupt:
