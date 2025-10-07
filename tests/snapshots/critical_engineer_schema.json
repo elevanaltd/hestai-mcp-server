@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "continuation_id": {
+      "description": "Thread continuation ID for multi-turn conversations. When provided, the complete conversation history is automatically embedded as context. Your response should build upon this history without repeating previous analysis or instructions. Focus on providing only new insights, additional findings, or answers to follow-up questions. Can be used across different tools.",
+      "type": "string"
+    },
+    "files": {
+      "description": "Optional list of file paths to provide context for validation. Can include implementation files, configuration files, or documentation. Use 'auto' as first element to auto-discover architectural context.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "images": {
+      "description": "Optional image(s) for visual context. Accepts absolute file paths or base64 data URLs. Only provide when user explicitly mentions images. When including images, please describe what you believe each image contains to aid with contextual understanding. Useful for UI discussions, diagrams, visual problems, error screens, architecture mockups, and visual analysis tasks.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "include_related": {
+      "default": false,
+      "description": "Automatically find and include related files (tests, configs). Helps identify missing test coverage or configuration issues.",
+      "type": "boolean"
+    },
+    "include_tree": {
+      "default": false,
+      "description": "Include directory tree structure for architectural awareness. Helps understand project organization and identify structural issues.",
+      "type": "boolean"
+    },
+    "max_depth": {
+      "default": 3,
+      "description": "Maximum depth for directory tree traversal (default: 3). Deeper traversal provides more context but uses more tokens.",
+      "type": "integer"
+    },
+    "max_file_tokens": {
+      "default": 5000,
+      "description": "Maximum tokens to use for file content (default: 5000). Manages token budget for efficient processing.",
+      "type": "integer"
+    },
+    "model": {
+      "default": "google/gemini-2.5-pro",
+      "description": "AI model to use for critical engineering validation (google/gemini-2.5-pro preferred)",
+      "enum": [
+        "google/gemini-2.5-pro",
+        "openai/gpt-5"
+      ],
+      "type": "string"
+    },
+    "prompt": {
+      "description": "Technical design, implementation decision, or architecture question to validate. Include context about the system, requirements, constraints, and specific concerns. The more detail you provide, the more thorough the validation can be.",
+      "type": "string"
+    },
+    "temperature": {
+      "description": "Temperature for response (0.0 to 1.0). Lower values are more focused and deterministic, higher values are more creative. Tool-specific defaults apply if not specified.",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "type": "number"
+    },
+    "thinking_mode": {
+      "description": "Thinking depth: minimal (0.5% of model max), low (8%), medium (33%), high (67%), max (100% of model max). Higher modes enable deeper reasoning at the cost of speed.",
+      "enum": [
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "max"
+      ],
+      "type": "string"
+    },
+    "use_websearch": {
+      "default": true,
+      "description": "Enable web search for documentation, best practices, and current information. When enabled, the model can request Claude to perform web searches and share results back during conversations. Particularly useful for: brainstorming sessions, architectural design discussions, exploring industry best practices, working with specific frameworks/technologies, researching solutions to complex problems, or when current documentation and community insights would enhance the analysis.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "prompt"
+  ],
+  "type": "object"
+}
