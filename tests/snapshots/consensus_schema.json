@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "continuation_id": {
+      "description": "Thread continuation ID for multi-turn conversations. When provided, the complete conversation history is automatically embedded as context. Your response should build upon this history without repeating previous analysis or instructions. Focus on providing only new insights, additional findings, or answers to follow-up questions. Can be used across different tools.",
+      "type": "string"
+    },
+    "current_model_index": {
+      "description": "Internal tracking of which model is being consulted (0-based index). Used to determine which model to call next.",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "findings": {
+      "description": "In step 1, provide your comprehensive analysis of the proposal. In steps 2+, summarize the key points from the model response received, noting agreements and disagreements with previous analyses.",
+      "type": "string"
+    },
+    "images": {
+      "description": "Optional list of image paths or base64 data URLs for visual context. Useful for UI/UX discussions, architecture diagrams, mockups, or any visual references that help inform the consensus analysis.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "model": {
+      "description": "Model to use. Native models: 'flash', 'flash-2.0', 'flash-lite', 'flash2', 'flash2.5', 'flashlite', 'gemini pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-pro', 'gpt-4.1-2025-04-14', 'gpt4.1', 'grok', 'grok-3', 'grok-3-fast', 'grok3', 'grok3-fast', 'grok3fast', 'grokfast', 'mini', 'o3', 'o3-mini', 'o3-pro', 'o3-pro-2025-06-10', 'o3mini', 'o4-mini', 'o4mini', 'pro'. OpenRouter aliases: 'anthropic/claude-3.5-haiku', 'anthropic/claude-opus-4', 'anthropic/claude-sonnet-4', 'claude', 'claude-3-haiku', 'claude-4-opus', 'claude-4-sonnet', 'claude-haiku', 'claude-opus', 'claude-sonnet', 'claude3-haiku', 'claude4-opus', 'claude4-sonnet', 'deepseek', 'deepseek-chat-v3', 'deepseek-free', 'deepseek-r1', 'deepseek-thinking', 'deepseek-v3', 'deepseek/deepseek-chat-v3-0324:free', 'deepseek/deepseek-r1-0528', 'flash', 'flash-2.5', 'flash-lite', 'flash-lite-preview', 'flash-openrouter', 'gemini', 'gemini-flash', 'gemini-flash-lite', 'gemini-pro', 'google/gemini-2.5-flash', 'google/gemini-2.5-flash-lite-preview-06-17', 'google/gemini-2.5-pro', 'gpt-4.1', 'gpt-4.1-2025-04-14', 'gpt-4.1-mini', 'gpt-4.1-openrouter', 'gpt-5', 'gpt4.1', 'gpt41', 'gpt41-mini', 'gpt5', 'haiku', 'llama', 'llama-70b', 'llama3', 'llama3-70b', 'llama3-openrouter', 'llama3.2', 'local', 'local-llama', 'meta-llama/llama-3-70b', 'mistral', 'mistral-large', 'mistralai/mistral-large-2411', 'o3', 'o3-mini', 'o3-mini-high', 'o3-pro', 'o3mini', 'o3mini-high', 'o3pro', 'o4-mini', 'o4mini', 'ollama-llama', 'openai/gpt-4.1', 'openai/gpt-4.1-mini', 'openai/gpt-5', 'openai/o3', 'openai/o3-mini', 'openai/o3-mini-high', 'openai/o3-pro', 'openai/o4-mini', 'openrouter-gpt41', 'openrouter-gpt41-mini', 'openrouter-gpt5', 'opus', 'perplexity', 'perplexity-online', 'perplexity/llama-3-sonar-large-32k-online', 'pro', 'pro-openrouter', 'r1', 'sonar', 'sonnet'. Defaults to 'gemini-2.5-flash' if not specified.",
+      "type": "string"
+    },
+    "model_responses": {
+      "description": "Accumulated responses from models consulted so far. Internal field for tracking progress.",
+      "items": {
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "models": {
+      "description": "List of model configurations to consult. Each can have a model name, stance (for/against/neutral), and optional custom stance prompt. The same model can be used multiple times with different stances, but each model + stance combination must be unique. Example: [{'model': 'o3', 'stance': 'for'}, {'model': 'o3', 'stance': 'against'}, {'model': 'flash', 'stance': 'neutral'}]",
+      "items": {
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "stance": {
+            "default": "neutral",
+            "enum": [
+              "for",
+              "against",
+              "neutral"
+            ],
+            "type": "string"
+          },
+          "stance_prompt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "next_step_required": {
+      "description": "Set to true if more models need to be consulted. False when ready for final synthesis.",
+      "type": "boolean"
+    },
+    "relevant_files": {
+      "description": "Files that are relevant to the consensus analysis. Include files that help understand the proposal, provide context, or contain implementation details.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "step": {
+      "description": "Describe your current consensus analysis step. In step 1, provide your own neutral, balanced analysis of the proposal/idea/plan after thinking carefully about all aspects. Consider technical feasibility, user value, implementation complexity, and alternatives. In subsequent steps (2+), you will receive individual model responses to synthesize. CRITICAL: Be thorough and balanced in your initial assessment, considering both benefits and risks, opportunities and challenges.",
+      "type": "string"
+    },
+    "step_number": {
+      "description": "The index of the current step in the consensus workflow, beginning at 1. Step 1 is your analysis, steps 2+ are for processing individual model responses.",
+      "minimum": 1,
+      "type": "integer"
+    },
+    "total_steps": {
+      "description": "Total number of steps needed. This equals the number of models to consult. Step 1 includes your analysis + first model consultation on return of the call. Final step includes last model consultation + synthesis.",
+      "minimum": 1,
+      "type": "integer"
+    },
+    "use_assistant_model": {
+      "default": true,
+      "description": "Whether to use assistant model for expert analysis after completing the workflow steps. Set to False to skip expert analysis and rely solely on Claude's investigation. Defaults to True for comprehensive validation.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "step",
+    "step_number",
+    "total_steps",
+    "next_step_required",
+    "findings"
+  ],
+  "title": "ConsensusRequest",
+  "type": "object"
+}
