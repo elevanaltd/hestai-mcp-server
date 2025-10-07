@@ -203,6 +203,36 @@ python -m pytest tests/test_refactor.py::TestRefactorTool::test_format_response 
 python -m pytest tests/ --cov=. --cov-report=html -m "not integration"
 ```
 
+#### Snapshot Contract Validation (Guardian Protocol)
+
+The project uses a meta-test system to enforce snapshot contract integrity:
+
+```bash
+# Run snapshot contract validation (always included in unit tests)
+python -m pytest tests/test_schema_source_parity.py -v
+```
+
+**Purpose:** Validates that snapshot files (`tests/snapshots/*.json`) match their Pydantic source models.
+
+**Guardian Protocol Compliance:**
+- **Contract-Driven-Correction:** Snapshots define test contracts; contracts must be correct before enforcement
+- **Source of Truth:** Pydantic models are the authoritative source; snapshots must match
+- **Zero Drift Tolerance:** Test fails if snapshot diverges from model definition
+
+**Current Validated Schemas:**
+- `consensus_schema.json` ↔ `ConsensusRequest`
+- `debug_schema.json` ↔ `DebugInvestigationRequest`
+- `critical_engineer_schema.json` ↔ `CriticalEngineerRequest`
+
+**Adding New Schemas:**
+To add snapshot validation for a new tool, update `SCHEMA_MODEL_MAP` in `tests/test_schema_source_parity.py`:
+```python
+SCHEMA_MODEL_MAP = [
+    ("your_tool_schema.json", YourToolRequest),
+    # ... existing entries
+]
+```
+
 #### Run Integration Tests (Uses Free Local Models)
 
 **Setup Requirements:**
