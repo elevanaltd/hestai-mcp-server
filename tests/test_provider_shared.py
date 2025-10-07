@@ -7,7 +7,6 @@ Constitutional requirement: RED state before implementation (Line 52)
 """
 
 
-
 def test_providertype_import():
     """Verify ProviderType can be imported from providers.shared
 
@@ -21,10 +20,10 @@ def test_providertype_import():
     from providers.shared import ProviderType
 
     # Verify enum values exist
-    assert hasattr(ProviderType, 'GOOGLE'), "ProviderType.GOOGLE must exist"
-    assert hasattr(ProviderType, 'OPENAI'), "ProviderType.OPENAI must exist"
-    assert hasattr(ProviderType, 'OPENROUTER'), "ProviderType.OPENROUTER must exist"
-    assert hasattr(ProviderType, 'CUSTOM'), "ProviderType.CUSTOM must exist"
+    assert hasattr(ProviderType, "GOOGLE"), "ProviderType.GOOGLE must exist"
+    assert hasattr(ProviderType, "OPENAI"), "ProviderType.OPENAI must exist"
+    assert hasattr(ProviderType, "OPENROUTER"), "ProviderType.OPENROUTER must exist"
+    assert hasattr(ProviderType, "CUSTOM"), "ProviderType.CUSTOM must exist"
 
 
 def test_providertype_values():
@@ -35,7 +34,7 @@ def test_providertype_values():
     from providers.shared import ProviderType
 
     # Verify enum string values match provider names
-    assert ProviderType.GOOGLE.value == 'google'
-    assert ProviderType.OPENAI.value == 'openai'
-    assert ProviderType.OPENROUTER.value == 'openrouter'
-    assert ProviderType.CUSTOM.value == 'custom'
+    assert ProviderType.GOOGLE.value == "google"
+    assert ProviderType.OPENAI.value == "openai"
+    assert ProviderType.OPENROUTER.value == "openrouter"
+    assert ProviderType.CUSTOM.value == "custom"

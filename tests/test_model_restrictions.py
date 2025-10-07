@@ -608,12 +608,10 @@ class TestAliasResolution:
         Expected: FAIL until providers/base.py updated with ANTHROPIC
         """
         # This will fail with AttributeError until ANTHROPIC added to enum
-        assert hasattr(ProviderType, 'ANTHROPIC'), \
-            "ProviderType.ANTHROPIC must exist (FAILS - not in enum yet)"
+        assert hasattr(ProviderType, "ANTHROPIC"), "ProviderType.ANTHROPIC must exist (FAILS - not in enum yet)"
 
         # Verify it has correct value
-        assert ProviderType.ANTHROPIC.value == 'anthropic', \
-            "ProviderType.ANTHROPIC should have value 'anthropic'"
+        assert ProviderType.ANTHROPIC.value == "anthropic", "ProviderType.ANTHROPIC should have value 'anthropic'"
 
 
 class TestAutoModeWithRestrictions:

@@ -8,6 +8,7 @@ __all__ = [
     "FixedTemperatureConstraint",
     "RangeTemperatureConstraint",
     "DiscreteTemperatureConstraint",
+    "create_temperature_constraint",
 ]
 
 # Common heuristics for determining temperature support when explicit
@@ -186,3 +187,17 @@ class DiscreteTemperatureConstraint(TemperatureConstraint):
 
     def get_default(self) -> float:
         return self.default_temp
+
+
+def create_temperature_constraint(constraint_type: str) -> TemperatureConstraint:
+    """Create temperature constraint from configuration string.
+
+    Convenience wrapper around TemperatureConstraint.create() for backward compatibility.
+
+    Args:
+        constraint_type: Type of constraint ("fixed", "range", "discrete")
+
+    Returns:
+        TemperatureConstraint object based on configuration
+    """
+    return TemperatureConstraint.create(constraint_type)
