@@ -186,5 +186,7 @@ logs/
 *.backup
 /.desktop_configured
 
+/worktrees.integration-backup/
+*.bak
 /worktrees
 /.coord

@@ -1,0 +1,336 @@
+=== __init__.py ===
+--- utils/__init__.py	2025-08-18 16:59:55
++++ /tmp/zen-upstream-analysis/utils/__init__.py	2025-10-06 13:16:45
+@@ -1,5 +1,5 @@
+ """
+-Utility functions for HestAI MCP Server
++Utility functions for Zen MCP Server
+ """
+ 
+ from .file_types import CODE_EXTENSIONS, FILE_CATEGORIES, PROGRAMMING_EXTENSIONS, TEXT_EXTENSIONS
+
+=== client_info.py ===
+--- utils/client_info.py	2025-08-18 16:59:55
++++ /tmp/zen-upstream-analysis/utils/client_info.py	2025-10-06 13:16:45
+@@ -286,8 +286,8 @@
+ #
+ #     # Customize response based on client
+ #     if client_name == "Claude":
+-#         response = f"Hello from HestAI MCP Server to {client_name}!"
++#         response = f"Hello from Zen MCP Server to {client_name}!"
+ #     elif client_name == "Gemini":
+-#         response = f"Greetings {client_name}, welcome to HestAI MCP Server!"
++#         response = f"Greetings {client_name}, welcome to Zen MCP Server!"
+ #     else:
+ #         response = f"Welcome {client_name}!"
+
+=== file_types.py ===
+--- utils/file_types.py	2025-08-18 00:30:09
++++ /tmp/zen-upstream-analysis/utils/file_types.py	2025-10-06 13:16:45
+@@ -86,6 +86,7 @@
+     ".sbt",  # SBT
+     ".pom",  # Maven POM
+     ".lock",  # Lock files
++    ".changeset",  # Precommit changeset
+ }
+ 
+ # Image file extensions - limited to what AI models actually support
+
+=== file_utils.py ===
+--- utils/file_utils.py	2025-09-14 23:28:02
++++ /tmp/zen-upstream-analysis/utils/file_utils.py	2025-10-06 13:16:45
+@@ -40,6 +40,7 @@
+ import json
+ import logging
+ import os
++from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Optional
+ 
+@@ -317,7 +318,7 @@
+     # Step 5: Check if it's the home directory root
+     if is_home_directory_root(resolved_path):
+         raise PermissionError(
+-            f"Cannot scan entire home directory: {path_str}\nPlease specify a subdirectory within your home folder."
++            f"Cannot scan entire home directory: {path_str}\n" f"Please specify a subdirectory within your home folder."
+         )
+ 
+     return resolved_path
+@@ -463,11 +464,17 @@
+             return content, estimate_tokens(content)
+ 
+         # Check file size to prevent memory exhaustion
+-        file_size = path.stat().st_size
++        stat_result = path.stat()
++        file_size = stat_result.st_size
+         logger.debug(f"[FILES] File size for {file_path}: {file_size:,} bytes")
+         if file_size > max_size:
+             logger.debug(f"[FILES] File too large: {file_path} ({file_size:,} > {max_size:,} bytes)")
+-            content = f"\n--- FILE TOO LARGE: {file_path} ---\nFile size: {file_size:,} bytes (max: {max_size:,})\n--- END FILE ---\n"
++            modified_at = datetime.fromtimestamp(stat_result.st_mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
++            content = (
++                f"\n--- FILE TOO LARGE: {file_path} (Last modified: {modified_at}) ---\n"
++                f"File size: {file_size:,} bytes (max: {max_size:,})\n"
++                "--- END FILE ---\n"
++            )
+             return content, estimate_tokens(content)
+ 
+         # Determine if we should add line numbers
+@@ -495,7 +502,12 @@
+         # NOTE: These markers ("--- BEGIN FILE: ... ---") are distinct from git diff markers
+         # ("--- BEGIN DIFF: ... ---") to allow AI to distinguish between complete file content
+         # vs. partial diff content when files appear in both sections
+-        formatted = f"\n--- BEGIN FILE: {file_path} ---\n{file_content}\n--- END FILE: {file_path} ---\n"
++        modified_at = datetime.fromtimestamp(stat_result.st_mtime, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
++        formatted = (
++            f"\n--- BEGIN FILE: {file_path} (Last modified: {modified_at}) ---\n"
++            f"{file_content}\n"
++            f"--- END FILE: {file_path} ---\n"
++        )
+         tokens = estimate_tokens(formatted)
+         logger.debug(f"[FILES] Formatted content for {file_path}: {len(formatted)} chars, {tokens} tokens")
+         return formatted, tokens
+@@ -797,7 +809,7 @@
+ 
+     IMPORTANT: This performs STRICT REJECTION at MCP boundary.
+     No partial inclusion - either all files fit or request is rejected.
+-    This forces Claude to make better file selection decisions.
++    This forces the CLI to make better file selection decisions.
+ 
+     This function MUST be called with the effective model name (after resolution).
+     It should never receive 'auto' or None - model resolution happens earlier.
+
+=== model_context.py ===
+--- utils/model_context.py	2025-08-18 00:30:09
++++ /tmp/zen-upstream-analysis/utils/model_context.py	2025-10-06 13:16:45
+@@ -73,8 +73,17 @@
+         if self._provider is None:
+             self._provider = ModelProviderRegistry.get_provider_for_model(self.model_name)
+             if not self._provider:
+-                available_models = ModelProviderRegistry.get_available_models()
+-                raise ValueError(f"Model '{self.model_name}' is not available. Available models: {available_models}")
++                available_models = ModelProviderRegistry.get_available_model_names()
++                if available_models:
++                    available_text = ", ".join(available_models)
++                else:
++                    available_text = (
++                        "No models detected. Configure provider credentials or set DEFAULT_MODEL to a valid option."
++                    )
++
++                raise ValueError(
++                    f"Model '{self.model_name}' is not available with current API keys. Available models: {available_text}."
++                )
+         return self._provider
+ 
+     @property
+
+=== model_restrictions.py ===
+--- utils/model_restrictions.py	2025-08-18 00:30:09
++++ /tmp/zen-upstream-analysis/utils/model_restrictions.py	2025-10-06 13:16:45
+@@ -21,22 +21,30 @@
+ """
+ 
+ import logging
+-import os
++from collections import defaultdict
+ from typing import Optional
+ 
+-from providers.base import ProviderType
++from providers.shared import ProviderType
++from utils.env import get_env
+ 
+ logger = logging.getLogger(__name__)
+ 
+ 
+ class ModelRestrictionService:
+-    """
+-    Centralized service for managing model usage restrictions.
++    """Central authority for environment-driven model allowlists.
+ 
+-    This service:
+-    1. Loads restrictions from environment variables at startup
+-    2. Validates restrictions against known models
+-    3. Provides a simple interface to check if a model is allowed
++    Role
++        Interpret ``*_ALLOWED_MODELS`` environment variables, keep their
++        entries normalised (lowercase), and answer whether a provider/model
++        pairing is permitted.
++
++    Responsibilities
++        * Parse, cache, and expose per-provider restriction sets
++        * Validate configuration by cross-checking each entry against the
++          provider’s alias-aware model list
++        * Offer helper methods such as ``is_allowed`` and ``filter_models`` to
++          enforce policy everywhere model names appear (tool selection, CLI
++          commands, etc.).
+     """
+ 
+     # Environment variable names
+@@ -51,12 +59,13 @@
+     def __init__(self):
+         """Initialize the restriction service by loading from environment."""
+         self.restrictions: dict[ProviderType, set[str]] = {}
++        self._alias_resolution_cache: dict[ProviderType, dict[str, str]] = defaultdict(dict)
+         self._load_from_env()
+ 
+     def _load_from_env(self) -> None:
+         """Load restrictions from environment variables."""
+         for provider_type, env_var in self.ENV_VARS.items():
+-            env_value = os.getenv(env_var)
++            env_value = get_env(env_var)
+ 
+             if env_value is None or env_value == "":
+                 # Not set or empty - no restrictions (allow all models)
+@@ -72,6 +81,7 @@
+ 
+             if models:
+                 self.restrictions[provider_type] = models
++                self._alias_resolution_cache[provider_type] = {}
+                 logger.info(f"{provider_type.value} allowed models: {sorted(models)}")
+             else:
+                 # All entries were empty after cleaning - treat as no restrictions
+@@ -94,9 +104,14 @@
+ 
+             # Get all supported models using the clean polymorphic interface
+             try:
+-                # Use list_all_known_models to get both aliases and their targets
+-                all_models = provider.list_all_known_models()
+-                supported_models = {model.lower() for model in all_models}
++                # Gather canonical models and aliases with consistent formatting
++                all_models = provider.list_models(
++                    respect_restrictions=False,
++                    include_aliases=True,
++                    lowercase=True,
++                    unique=True,
++                )
++                supported_models = set(all_models)
+             except Exception as e:
+                 logger.debug(f"Could not get model list from {provider_type.value} provider: {e}")
+                 supported_models = set()
+@@ -138,8 +153,42 @@
+             names_to_check.add(original_name.lower())
+ 
+         # If any of the names is in the allowed set, it's allowed
+-        return any(name in allowed_set for name in names_to_check)
++        if any(name in allowed_set for name in names_to_check):
++            return True
+ 
++        # Attempt to resolve canonical names for allowed aliases using provider metadata.
++        try:
++            from providers.registry import ModelProviderRegistry
++
++            provider = ModelProviderRegistry.get_provider(provider_type)
++        except Exception:  # pragma: no cover - registry lookup failure shouldn't break validation
++            provider = None
++
++        if provider:
++            cache = self._alias_resolution_cache.setdefault(provider_type, {})
++
++            for allowed_entry in list(allowed_set):
++                normalized_resolved = cache.get(allowed_entry)
++
++                if not normalized_resolved:
++                    try:
++                        resolved = provider._resolve_model_name(allowed_entry)
++                    except Exception:  # pragma: no cover - resolution failures are treated as non-matches
++                        continue
++
++                    if not resolved:
++                        continue
++
++                    normalized_resolved = resolved.lower()
++                    cache[allowed_entry] = normalized_resolved
++
++                if normalized_resolved in names_to_check:
++                    allowed_set.add(normalized_resolved)
++                    cache[normalized_resolved] = normalized_resolved
++                    return True
++
++        return False
++
+     def get_allowed_models(self, provider_type: ProviderType) -> Optional[set[str]]:
+         """
+         Get the set of allowed models for a provider.
+
+=== security_config.py ===
+--- utils/security_config.py	2025-08-19 02:35:04
++++ /tmp/zen-upstream-analysis/utils/security_config.py	2025-10-06 13:16:45
+@@ -17,16 +17,6 @@
+     "/var",
+     "/root",
+     "/home",
+-    # macOS system paths (which resolve through /private)
+-    "/private/etc",
+-    "/private/var/log",
+-    "/private/var/root",
+-    "/private/var/audit",
+-    "/private/var/at",
+-    "/System",
+-    "/Library",
+-    "/Applications",
+-    # Windows paths
+     "C:\\",
+     "C:\\Windows",
+     "C:\\Program Files",
+@@ -109,21 +99,6 @@
+     """
+     try:
+         resolved = path.resolve()
+-        path_str = str(resolved)
+-
+-        # Check if path is exactly in dangerous paths
+-        if path_str in DANGEROUS_PATHS:
+-            return True
+-
+-        # Check if path is a child of any dangerous path
+-        for dangerous_path in DANGEROUS_PATHS:
+-            if path_str.startswith(dangerous_path + "/") or path_str == dangerous_path:
+-                return True
+-
+-        # Check if path is root directory
+-        if resolved.parent == resolved:
+-            return True
+-
+-        return False
++        return str(resolved) in DANGEROUS_PATHS or resolved.parent == resolved
+     except Exception:
+         return True  # If we can't resolve, consider it dangerous
+
+=== storage_backend.py ===
+--- utils/storage_backend.py	2025-09-14 23:28:02
++++ /tmp/zen-upstream-analysis/utils/storage_backend.py	2025-10-06 13:16:45
+@@ -19,11 +19,12 @@
+ """
+ 
+ import logging
+-import os
+ import threading
+ import time
+ from typing import Optional
+ 
++from utils.env import get_env
++
+ logger = logging.getLogger(__name__)
+ 
+ 
+@@ -35,7 +36,7 @@
+         self._lock = threading.Lock()
+         # Match Redis behavior: cleanup interval based on conversation timeout
+         # Run cleanup at 1/10th of timeout interval (e.g., 18 mins for 3 hour timeout)
+-        timeout_hours = int(os.getenv("CONVERSATION_TIMEOUT_HOURS", "3"))
++        timeout_hours = int(get_env("CONVERSATION_TIMEOUT_HOURS", "3") or "3")
+         self._cleanup_interval = (timeout_hours * 3600) // 10
+         self._cleanup_interval = max(300, self._cleanup_interval)  # Minimum 5 minutes
+         self._shutdown = False
+@@ -45,7 +46,7 @@
+         self._cleanup_thread.start()
+ 
+         logger.info(
+-            f"In-memory storage initialized with {timeout_hours}h timeout, cleanup every {self._cleanup_interval // 60}m"
++            f"In-memory storage initialized with {timeout_hours}h timeout, cleanup every {self._cleanup_interval//60}m"
+         )
+ 
+     def set_with_ttl(self, key: str, ttl_seconds: int, value: str) -> None:
+
+=== token_utils.py ===
+

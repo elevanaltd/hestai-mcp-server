@@ -1,6 +1,10 @@
 """
 HestAI MCP Server - Main server implementation
 
+// Critical-Engineer: consulted for Upstream merge and integration strategy
+// Zen-MCP-Server integration proceeding with manual porting approach per critical-engineer recommendation
+// Phase 0 completed: Foundation safety measures in place (backup branch, comprehensive backups)
+
 This module implements the core MCP (Model Context Protocol) server that provides
 AI-powered tools for code analysis, review, and assistance using multiple AI models.
 
@@ -69,10 +73,12 @@ from tools import (  # noqa: E402
     AnalyzeTool,
     ChallengeTool,
     ChatTool,
+    CLinkTool,
     ConsensusTool,
     CriticalEngineerTool,
     DebugIssueTool,
     ListModelsTool,
+    LookupTool,
     PlannerTool,
     RequirementsTool,
     SecauditTool,
@@ -296,6 +302,7 @@ def filter_disabled_tools(all_tools: dict[str, Any]) -> dict[str, Any]:
 # Critical-Engineer: consulted for architectural-decisions - adding registry tool
 TOOLS = {
     "chat": ChatTool(),  # Interactive development chat and brainstorming
+    "clink": CLinkTool(),  # Bridge requests to configured AI CLIs
     "thinkdeep": ThinkDeepTool(),  # Step-by-step deep thinking workflow with expert analysis
     "planner": PlannerTool(),  # Interactive sequential planner using workflow architecture
     "consensus": ConsensusTool(),  # Step-by-step consensus workflow with multi-model analysis
@@ -307,6 +314,7 @@ TOOLS = {
     "critical-engineer": CriticalEngineerTool(),  # Technical validation for major decisions and architecture
     "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
     "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
+    "apilookup": LookupTool(),  # Quick web/API lookup instructions
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
     # Archived tools (handled by Claude subagents):
@@ -324,6 +332,16 @@ PROMPT_TEMPLATES = {
         "name": "chat",
         "description": "Chat and brainstorm ideas",
         "template": "Chat with {model} about this",
+    },
+    "clink": {
+        "name": "clink",
+        "description": "Forward a request to a configured AI CLI (e.g., Gemini)",
+        "template": "Use clink with cli_name=<cli> to run this prompt",
+    },
+    "apilookup": {
+        "name": "apilookup",
+        "description": "Look up the latest API or SDK information",
+        "template": "Lookup latest API docs for {model}",
     },
     "thinkdeep": {
         "name": "thinkdeeper",
@@ -395,12 +413,12 @@ def configure_providers():
         value = os.getenv(key)
         logger.debug(f"  {key}: {'[PRESENT]' if value else '[MISSING]'}")
     from providers import ModelProviderRegistry
-    from providers.base import ProviderType
     from providers.custom import CustomProvider
     from providers.dial import DIALModelProvider
     from providers.gemini import GeminiModelProvider
     from providers.openai_provider import OpenAIModelProvider
     from providers.openrouter import OpenRouterProvider
+    from providers.shared import ProviderType
     from providers.xai import XAIModelProvider
     from utils.model_restrictions import get_restriction_service
 

@@ -1,0 +1,1363 @@
+🔍 Running Code Quality Checks for HestAI MCP Server
+=================================================
+✅ Using venv
+
+🔍 Checking development dependencies...
+✅ Development dependencies already installed
+
+📋 Step 1: Running Linting and Formatting Checks
+--------------------------------------------------
+🔧 Running ruff linting with auto-fix...
+All checks passed!
+🎨 Running black code formatting...
+All done! ✨ 🍰 ✨
+3757 files left unchanged.
+📦 Running import sorting with isort...
+Skipped 3 files
+✅ Verifying all linting passes...
+All checks passed!
+✅ Step 1 Complete: All linting and formatting checks passed!
+
+🧪 Step 2: Running Complete Unit Test Suite
+---------------------------------------------
+🏃 Running unit tests (excluding integration tests)...
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0 -- /Volumes/HestAI-Tools/hestai-mcp-server/.hestai_venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Volumes/HestAI-Tools/hestai-mcp-server
+configfile: pytest.ini
+plugins: asyncio-1.1.0, mock-3.15.0, anyio-4.10.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 949 items / 12 deselected / 937 selected
+
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_openai_alias_target_validation_comprehensive PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_gemini_alias_target_validation_comprehensive PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_restriction_policy_allows_alias_when_target_allowed PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_restriction_policy_allows_only_alias_when_alias_specified PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_gemini_restriction_policy_allows_alias_when_target_allowed PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_gemini_restriction_policy_allows_only_alias_when_alias_specified PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_restriction_service_validation_includes_all_targets PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_both_alias_and_target_allowed_when_both_specified PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_alias_target_policy_regression_prevention PASSED [  0%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_no_duplicate_models_in_list_all_known_models PASSED [  1%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_restriction_validation_uses_polymorphic_interface PASSED [  1%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_complex_alias_chains_handled_correctly PASSED [  1%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_critical_regression_validation_sees_alias_targets PASSED [  1%]
+tests/test_alias_target_restrictions.py::TestAliasTargetRestrictions::test_critical_regression_prevents_policy_bypass PASSED [  1%]
+tests/test_auto_mode.py::TestAutoMode::test_auto_mode_detection PASSED   [  1%]
+tests/test_auto_mode.py::TestAutoMode::test_model_capabilities_descriptions PASSED [  1%]
+tests/test_auto_mode.py::TestAutoMode::test_tool_schema_in_auto_mode PASSED [  1%]
+tests/test_auto_mode.py::TestAutoMode::test_tool_schema_in_normal_mode PASSED [  1%]
+tests/test_auto_mode.py::TestAutoMode::test_auto_mode_requires_model_parameter PASSED [  2%]
+tests/test_auto_mode.py::TestAutoMode::test_unavailable_model_error_message PASSED [  2%]
+tests/test_auto_mode.py::TestAutoMode::test_model_field_schema_generation PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_selection_by_provider[provider_config0-expected_models0] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_selection_by_provider[provider_config1-expected_models1] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_selection_by_provider[provider_config2-expected_models2] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_selection_by_provider[provider_config3-expected_models3] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_selection_by_provider[provider_config4-expected_models4] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_tool_model_categories[ChatTool-ToolModelCategory.FAST_RESPONSE] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_tool_model_categories[AnalyzeTool-ToolModelCategory.EXTENDED_REASONING] PASSED [  2%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_tool_model_categories[DebugIssueTool-ToolModelCategory.EXTENDED_REASONING] PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_tool_model_categories[ThinkDeepTool-ToolModelCategory.EXTENDED_REASONING] PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_with_gemini_only_uses_correct_models PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_schema_includes_all_available_models PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_schema_with_all_providers PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_auto_mode_model_parameter_required_error PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_model_availability_with_restrictions PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_openrouter_fallback_when_no_native_apis PASSED [  3%]
+tests/test_auto_mode_comprehensive.py::TestAutoModeComprehensive::test_actual_model_name_resolution_in_auto_mode PASSED [  3%]
+tests/test_auto_mode_custom_provider_only.py::TestAutoModeCustomProviderOnly::test_reproduce_auto_mode_custom_provider_only_issue PASSED [  4%]
+tests/test_auto_mode_custom_provider_only.py::TestAutoModeCustomProviderOnly::test_custom_provider_models_available_via_registry PASSED [  4%]
+tests/test_auto_mode_custom_provider_only.py::TestAutoModeCustomProviderOnly::test_custom_provider_validate_model_name PASSED [  4%]
+tests/test_auto_mode_custom_provider_only.py::TestAutoModeCustomProviderOnly::test_auto_mode_fallback_with_custom_only_should_work PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_gemini_only_fallback_selection PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_openai_only_fallback_selection PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_both_gemini_and_openai_priority PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_xai_only_fallback_selection PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_available_models_respects_restrictions PASSED [  4%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_model_validation_across_providers PASSED [  5%]
+tests/test_auto_mode_provider_selection.py::TestAutoModeProviderSelection::test_alias_resolution_before_api_calls PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_planner_requires_model_false PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_chat_requires_model_true PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_base_tool_requires_model_default PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_auto_model_error_before_fix_simulation PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_planner_execution_bypasses_model_resolution PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_server_model_resolution_logic PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_provider_registry_auto_handling PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_end_to_end_planner_with_auto_mode PASSED [  5%]
+tests/test_auto_model_planner_fix.py::TestAutoModelPlannerFix::test_other_tools_still_require_models PASSED [  6%]
+tests/test_base_tool_optimization.py::TestBaseToolOptimization::test_token_reduction_conceptual PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_old_bug_would_miss_target_restrictions PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_old_bug_would_incorrectly_warn_about_valid_targets PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_old_bug_policy_bypass_prevention PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_demonstration_of_old_vs_new_interface PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_old_validation_interface_still_works PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_regression_proof_comprehensive_coverage PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_validation_correctly_identifies_invalid_models PASSED [  6%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_custom_provider_also_implements_fix PASSED [  7%]
+tests/test_buggy_behavior_prevention.py::TestBuggyBehaviorPrevention::test_openrouter_provider_also_implements_fix PASSED [  7%]
+tests/test_challenge.py::TestChallengeTool::test_tool_metadata PASSED    [  7%]
+tests/test_challenge.py::TestChallengeTool::test_requires_model PASSED   [  7%]
+tests/test_challenge.py::TestChallengeTool::test_schema_structure PASSED [  7%]
+tests/test_challenge.py::TestChallengeTool::test_request_model_validation PASSED [  7%]
+tests/test_challenge.py::TestChallengeTool::test_required_fields PASSED  [  7%]
+tests/test_challenge.py::TestChallengeTool::test_execute_success PASSED  [  7%]
+tests/test_challenge.py::TestChallengeTool::test_execute_error_handling PASSED [  7%]
+tests/test_challenge.py::TestChallengeTool::test_wrap_prompt_for_challenge PASSED [  8%]
+tests/test_challenge.py::TestChallengeTool::test_multiple_prompts PASSED [  8%]
+tests/test_challenge.py::TestChallengeTool::test_tool_fields PASSED      [  8%]
+tests/test_challenge.py::TestChallengeTool::test_required_fields_list PASSED [  8%]
+tests/test_challenge.py::TestChallengeTool::test_not_used_methods PASSED [  8%]
+tests/test_challenge.py::TestChallengeTool::test_special_characters_in_prompt PASSED [  8%]
+tests/test_challenge.py::TestChallengeTool::test_unicode_support PASSED  [  8%]
+tests/test_chat_simple.py::TestChatTool::test_tool_metadata PASSED       [  8%]
+tests/test_chat_simple.py::TestChatTool::test_schema_structure PASSED    [  8%]
+tests/test_chat_simple.py::TestChatTool::test_request_model_validation PASSED [  8%]
+tests/test_chat_simple.py::TestChatTool::test_required_fields PASSED     [  9%]
+tests/test_chat_simple.py::TestChatTool::test_model_availability PASSED  [  9%]
+tests/test_chat_simple.py::TestChatTool::test_model_field_schema PASSED  [  9%]
+tests/test_chat_simple.py::TestChatTool::test_prompt_preparation PASSED  [  9%]
+tests/test_chat_simple.py::TestChatTool::test_response_formatting PASSED [  9%]
+tests/test_chat_simple.py::TestChatTool::test_tool_name PASSED           [  9%]
+tests/test_chat_simple.py::TestChatTool::test_websearch_guidance PASSED  [  9%]
+tests/test_chat_simple.py::TestChatTool::test_convenience_methods PASSED [  9%]
+tests/test_chat_simple.py::TestChatRequestModel::test_field_descriptions PASSED [  9%]
+tests/test_chat_simple.py::TestChatRequestModel::test_default_values PASSED [ 10%]
+tests/test_chat_simple.py::TestChatRequestModel::test_inheritance PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_clarification_request_parsing PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_normal_response_not_parsed_as_clarification PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_malformed_clarification_request_treated_as_normal PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_clarification_with_suggested_action PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_tool_output_model_serialization PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_clarification_request_model PASSED [ 10%]
+tests/test_collaboration.py::TestDynamicContextRequests::test_error_response_format PASSED [ 10%]
+tests/test_collaboration.py::TestCollaborationWorkflow::test_dependency_analysis_triggers_clarification PASSED [ 10%]
+tests/test_collaboration.py::TestCollaborationWorkflow::test_multi_step_collaboration PASSED [ 11%]
+tests/test_config.py::TestConfig::test_version_info PASSED               [ 11%]
+tests/test_config.py::TestConfig::test_model_config PASSED               [ 11%]
+tests/test_config.py::TestConfig::test_temperature_defaults PASSED       [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_tool_metadata PASSED    [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_request_validation_step1 PASSED [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_request_validation_missing_models_step1 PASSED [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_request_validation_later_steps PASSED [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_request_validation_duplicate_model_stance PASSED [ 11%]
+tests/test_consensus.py::TestConsensusTool::test_input_schema_generation PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_get_required_actions PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_prepare_step_data PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_stance_enhanced_prompt_generation PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_should_call_expert_analysis PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_execute_workflow_step1_basic PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_execute_workflow_total_steps_calculation PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_consult_model_basic_structure PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_model_configuration_validation PASSED [ 12%]
+tests/test_consensus.py::TestConsensusTool::test_handle_work_continuation PASSED [ 13%]
+tests/test_consensus.py::TestConsensusTool::test_customize_workflow_response PASSED [ 13%]
+tests/test_conversation_field_mapping.py::test_conversation_history_field_mapping PASSED [ 13%]
+tests/test_conversation_field_mapping.py::test_unknown_tool_defaults_to_prompt PASSED [ 13%]
+tests/test_conversation_field_mapping.py::test_tool_parameter_standardization PASSED [ 13%]
+tests/test_conversation_file_features.py::TestConversationFileList::test_get_conversation_file_list_basic PASSED [ 13%]
+tests/test_conversation_file_features.py::TestConversationFileList::test_get_conversation_file_list_deduplication PASSED [ 13%]
+tests/test_conversation_file_features.py::TestFileInclusionPlanning::test_plan_file_inclusion_within_budget PASSED [ 13%]
+tests/test_conversation_file_features.py::TestFileInclusionPlanning::test_plan_file_inclusion_exceeds_budget PASSED [ 13%]
+tests/test_conversation_file_features.py::TestFileInclusionPlanning::test_plan_file_inclusion_empty_list PASSED [ 13%]
+tests/test_conversation_file_features.py::TestFileInclusionPlanning::test_plan_file_inclusion_nonexistent_files PASSED [ 14%]
+tests/test_conversation_file_features.py::TestConversationHistoryBuilding::test_build_conversation_history_with_file_content PASSED [ 14%]
+tests/test_conversation_file_features.py::TestConversationHistoryBuilding::test_build_conversation_history_file_deduplication PASSED [ 14%]
+tests/test_conversation_file_features.py::TestConversationHistoryBuilding::test_build_conversation_history_empty_turns PASSED [ 14%]
+tests/test_conversation_file_features.py::TestCrossToolFileContext::test_cross_tool_file_context_preservation PASSED [ 14%]
+tests/test_conversation_file_features.py::TestLargeConversations::test_large_conversation_with_many_files PASSED [ 14%]
+tests/test_conversation_file_features.py::TestSmallAndNewConversations::test_empty_conversation PASSED [ 14%]
+tests/test_conversation_file_features.py::TestSmallAndNewConversations::test_single_turn_conversation PASSED [ 14%]
+tests/test_conversation_file_features.py::TestFailureScenarios::test_file_list_with_missing_files PASSED [ 14%]
+tests/test_conversation_file_features.py::TestFailureScenarios::test_conversation_with_unreadable_files PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_create_thread PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_get_thread_valid PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_get_thread_invalid_uuid PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_get_thread_not_found PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_add_turn_success PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_add_turn_max_limit PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_build_conversation_history PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationMemory::test_build_conversation_history_empty PASSED [ 15%]
+tests/test_conversation_memory.py::TestConversationFlow::test_complete_conversation_cycle PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_invalid_continuation_id_error PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_dynamic_max_turns_configuration PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_follow_up_instructions_dynamic_behavior PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_follow_up_instructions_defaults_to_config PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_complete_conversation_with_dynamic_turns PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_conversation_with_files_and_context_preservation PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_stateless_request_isolation PASSED [ 16%]
+tests/test_conversation_memory.py::TestConversationFlow::test_token_limit_optimization_in_conversation_history PASSED [ 16%]
+tests/test_conversation_missing_files.py::TestConversationMissingFiles::test_build_conversation_history_handles_missing_files PASSED [ 16%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_tool_metadata PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_tool_configuration PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_model_category PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_request_model_validation PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_input_schema_model_restrictions PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_allowed_models_configuration PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_prepare_prompt_formatting PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_format_response_structure PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_system_prompt_contains_validation_framework PASSED [ 17%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_trigger_pattern_examples PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_technical_validation_scenarios[Should I use MongoDB or PostgreSQL?-database] PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_technical_validation_scenarios[How do I architect this microservice?-architecture] PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_technical_validation_scenarios[What will break if we scale 10x?-scaling] PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_technical_validation_scenarios[Is this API design secure?-security] PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_technical_validation_scenarios[Will this handle production load?-performance] PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_tool_fields_configuration PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_required_fields PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_model_selection_logic PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_integration_with_critical_engineer_protocol PASSED [ 18%]
+tests/test_critical_engineer.py::TestCriticalEngineerTool::test_red_flags_identification PASSED [ 19%]
+tests/test_critical_engineer.py::TestCriticalEngineerIntegration::test_end_to_end_validation_flow PASSED [ 19%]
+tests/test_critical_engineer.py::TestCriticalEngineerIntegration::test_technical_validator_behavior_simulation PASSED [ 19%]
+tests/test_critical_engineer.py::TestCriticalEngineerIntegration::test_critical_lenses_coverage PASSED [ 19%]
+tests/test_critical_engineer.py::TestCriticalEngineerIntegration::test_output_structure_completeness PASSED [ 19%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_request_with_files PASSED [ 19%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_request_with_tree_option PASSED [ 19%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_request_backwards_compatible PASSED [ 19%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_prepare_prompt_with_files PASSED [ 19%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_prepare_prompt_with_tree PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_architectural_context_auto_discovery PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_validation_with_file_context PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_handle_missing_files_gracefully PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_security_validation_paths PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_token_budget_management PASSED [ 20%]
+tests/test_critical_engineer_enhanced.py::TestCriticalEngineerEnhanced::test_auto_find_related_files PASSED [ 20%]
+tests/test_custom_provider.py::TestCustomProvider::test_provider_initialization_with_params PASSED [ 20%]
+tests/test_custom_provider.py::TestCustomProvider::test_provider_initialization_with_env_vars PASSED [ 20%]
+tests/test_custom_provider.py::TestCustomProvider::test_provider_initialization_missing_url PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_validate_model_names_always_true PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_get_capabilities_from_registry PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_get_capabilities_generic_fallback PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_model_alias_resolution PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_no_thinking_mode_support PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProvider::test_generate_content_with_alias_resolution PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProviderRegistration::test_custom_provider_factory_registration PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProviderRegistration::test_dual_provider_setup PASSED [ 21%]
+tests/test_custom_provider.py::TestCustomProviderRegistration::test_provider_priority_selection PASSED [ 21%]
+tests/test_custom_provider.py::TestConfigureProvidersFunction::test_configure_providers_custom_only PASSED [ 22%]
+tests/test_custom_provider.py::TestConfigureProvidersFunction::test_configure_providers_openrouter_only PASSED [ 22%]
+tests/test_custom_provider.py::TestConfigureProvidersFunction::test_configure_providers_dual_setup PASSED [ 22%]
+tests/test_custom_provider.py::TestConfigureProvidersFunction::test_configure_providers_no_valid_keys PASSED [ 22%]
+tests/test_debug.py::TestDebugTool::test_tool_metadata PASSED            [ 22%]
+tests/test_debug.py::TestDebugTool::test_request_validation PASSED       [ 22%]
+tests/test_debug.py::TestDebugTool::test_input_schema_generation PASSED  [ 22%]
+tests/test_debug.py::TestDebugTool::test_model_category_for_debugging PASSED [ 22%]
+tests/test_debug.py::TestDebugTool::test_relevant_context_handling PASSED [ 22%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_deployment_scripts_exist PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_bash_scripts_executable PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_powershell_scripts_format PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_deploy_script_docker_commands PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_build_script_functionality PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_deploy_script_health_check_integration PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_script_error_handling PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_docker_compose_commands PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_script_parameter_handling PASSED [ 23%]
+tests/test_deploy_scripts.py::TestDeploymentScripts::test_environment_preparation PASSED [ 24%]
+tests/test_deploy_scripts.py::TestHealthCheckScript::test_healthcheck_script_syntax PASSED [ 24%]
+tests/test_deploy_scripts.py::TestHealthCheckScript::test_healthcheck_functions_exist PASSED [ 24%]
+tests/test_deploy_scripts.py::TestHealthCheckScript::test_healthcheck_process_check PASSED [ 24%]
+tests/test_deploy_scripts.py::TestHealthCheckScript::test_healthcheck_import_validation PASSED [ 24%]
+tests/test_deploy_scripts.py::TestHealthCheckScript::test_healthcheck_exit_codes PASSED [ 24%]
+tests/test_deploy_scripts.py::TestScriptIntegration::test_scripts_work_with_compose_file PASSED [ 24%]
+tests/test_deploy_scripts.py::TestScriptIntegration::test_cross_platform_compatibility PASSED [ 24%]
+tests/test_deploy_scripts.py::TestScriptIntegration::test_script_logging_integration PASSED [ 24%]
+tests/test_dial_provider.py::TestDIALProvider::test_initialization_with_host PASSED [ 24%]
+tests/test_dial_provider.py::TestDIALProvider::test_initialization_default_host PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_initialization_host_normalization PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_model_validation PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_resolve_model_name PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_get_capabilities PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_get_capabilities_invalid_model PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_get_capabilities_restricted_model PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_supports_vision PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_generate_content_with_alias PASSED [ 25%]
+tests/test_dial_provider.py::TestDIALProvider::test_provider_type PASSED [ 26%]
+tests/test_dial_provider.py::TestDIALProvider::test_friendly_name PASSED [ 26%]
+tests/test_dial_provider.py::TestDIALProvider::test_configurable_api_version PASSED [ 26%]
+tests/test_dial_provider.py::TestDIALProvider::test_default_api_version PASSED [ 26%]
+tests/test_dial_provider.py::TestDIALProvider::test_allowed_models_restriction PASSED [ 26%]
+tests/test_dial_provider.py::TestDIALProvider::test_close_method PASSED  [ 26%]
+tests/test_directory_expansion_tracking.py::TestDirectoryExpansionTracking::test_directory_expansion_tracked_in_conversation_memory PASSED [ 26%]
+tests/test_directory_expansion_tracking.py::TestDirectoryExpansionTracking::test_conversation_continuation_with_directory_files PASSED [ 26%]
+tests/test_directory_expansion_tracking.py::TestDirectoryExpansionTracking::test_get_conversation_embedded_files_with_expanded_files PASSED [ 26%]
+tests/test_directory_expansion_tracking.py::TestDirectoryExpansionTracking::test_file_filtering_with_mixed_files_and_directories PASSED [ 27%]
+tests/test_directory_expansion_tracking.py::TestDirectoryExpansionTracking::test_actually_processed_files_stored_correctly PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_empty PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_not_set PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_single PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_multiple PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_extra_spaces PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_duplicates PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_tool_filtering_logic PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_unknown_tools_warning PASSED [ 27%]
+tests/test_disabled_tools.py::TestDisabledTools::test_essential_tools_warning PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[-expected0] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[   -expected1] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[,,,-expected2] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[chat-expected3] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[chat,debug-expected4] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[chat, debug, analyze-expected5] PASSED [ 28%]
+tests/test_disabled_tools.py::TestDisabledTools::test_parse_disabled_tools_parametrized[chat,debug,chat-expected6] PASSED [ 28%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_config_docker_run_format PASSED [ 28%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_config_docker_compose_format PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_config_environment_variables PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_windows_path_format PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_config_validation PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_stdio_communication PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_docker_image_reference PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_mcp_config_file_parsing PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_environment_file_integration PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerClaudeDesktopIntegration::test_docker_volume_mount_paths PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerMCPErrorHandling::test_missing_docker_image_handling PASSED [ 29%]
+tests/test_docker_claude_desktop_integration.py::TestDockerMCPErrorHandling::test_invalid_env_file_path PASSED [ 30%]
+tests/test_docker_claude_desktop_integration.py::TestDockerMCPErrorHandling::test_docker_permission_issues PASSED [ 30%]
+tests/test_docker_claude_desktop_integration.py::TestDockerMCPErrorHandling::test_resource_limit_configurations PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerMCPConfiguration::test_dockerfile_configuration PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerMCPConfiguration::test_environment_file_template PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerMCPConfiguration::test_logs_directory_setup PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerMCPConfiguration::test_docker_compose_environment_variables PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerCommandValidation::test_docker_build_command PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerCommandValidation::test_docker_run_mcp_command PASSED [ 30%]
+tests/test_docker_config_complete.py::TestDockerCommandValidation::test_docker_command_structure PASSED [ 31%]
+tests/test_docker_config_complete.py::TestIntegrationChecks::test_complete_setup_checklist PASSED [ 31%]
+tests/test_docker_config_complete.py::TestIntegrationChecks::test_mcp_integration_readiness PASSED [ 31%]
+tests/test_docker_config_complete.py::TestErrorHandling::test_missing_api_key_handling PASSED [ 31%]
+tests/test_docker_config_complete.py::TestErrorHandling::test_docker_not_available_handling PASSED [ 31%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_healthcheck_script_exists PASSED [ 31%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_healthcheck_script_executable PASSED [ 31%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_process_check_success PASSED [ 31%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_process_check_failure PASSED [ 31%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_critical_modules_import PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_optional_modules_graceful_failure PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_log_directory_check PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_health_check_timeout_handling PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheck::test_health_check_docker_configuration PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheckIntegration::test_dockerfile_health_check_setup PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheckIntegration::test_health_check_failure_scenarios PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheckIntegration::test_health_check_recovery PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheckIntegration::test_health_check_with_missing_env_vars PASSED [ 32%]
+tests/test_docker_healthcheck.py::TestDockerHealthCheckIntegration::test_health_check_performance PASSED [ 32%]
+tests/test_docker_implementation.py::TestDockerConfiguration::test_dockerfile_exists PASSED [ 33%]
+tests/test_docker_implementation.py::TestDockerConfiguration::test_docker_compose_configuration PASSED [ 33%]
+tests/test_docker_implementation.py::TestDockerConfiguration::test_environment_file_template PASSED [ 33%]
+tests/test_docker_implementation.py::TestDockerCommands::test_docker_build_command PASSED [ 33%]
+tests/test_docker_implementation.py::TestDockerCommands::test_docker_run_command_structure PASSED [ 33%]
+tests/test_docker_implementation.py::TestDockerCommands::test_docker_health_check PASSED [ 33%]
+tests/test_docker_implementation.py::TestEnvironmentValidation::test_required_api_keys_validation PASSED [ 33%]
+tests/test_docker_implementation.py::TestEnvironmentValidation::test_environment_file_parsing PASSED [ 33%]
+tests/test_docker_implementation.py::TestMCPIntegration::test_mcp_configuration_generation PASSED [ 33%]
+tests/test_docker_implementation.py::TestMCPIntegration::test_stdio_communication_structure PASSED [ 34%]
+tests/test_docker_implementation.py::TestDockerSecurity::test_non_root_user_configuration PASSED [ 34%]
+tests/test_docker_implementation.py::TestDockerSecurity::test_readonly_filesystem_configuration PASSED [ 34%]
+tests/test_docker_implementation.py::TestDockerSecurity::test_environment_variable_security PASSED [ 34%]
+tests/test_docker_implementation.py::TestDockerPerformance::test_image_size_optimization PASSED [ 34%]
+tests/test_docker_implementation.py::TestDockerPerformance::test_startup_time_expectations PASSED [ 34%]
+tests/test_docker_implementation.py::TestIntegration::test_complete_docker_setup_validation PASSED [ 34%]
+tests/test_docker_mcp_validation.py::TestDockerMCPValidation::test_dockerfile_exists_and_valid PASSED [ 34%]
+tests/test_docker_mcp_validation.py::TestDockerMCPValidation::test_docker_command_validation PASSED [ 34%]
+tests/test_docker_mcp_validation.py::TestDockerMCPValidation::test_environment_variables_validation PASSED [ 35%]
+tests/test_docker_mcp_validation.py::TestDockerMCPValidation::test_docker_security_configuration PASSED [ 35%]
+tests/test_docker_mcp_validation.py::TestDockerIntegration::test_env_file_parsing PASSED [ 35%]
+tests/test_docker_mcp_validation.py::TestDockerIntegration::test_mcp_message_structure PASSED [ 35%]
+tests/test_docker_mcp_validation.py::TestDockerPerformance::test_image_size_expectation PASSED [ 35%]
+tests/test_docker_mcp_validation.py::TestDockerPerformance::test_startup_performance PASSED [ 35%]
+tests/test_docker_security.py::TestDockerSecurity::test_non_root_user_configuration PASSED [ 35%]
+tests/test_docker_security.py::TestDockerSecurity::test_no_unnecessary_privileges PASSED [ 35%]
+tests/test_docker_security.py::TestDockerSecurity::test_read_only_filesystem PASSED [ 35%]
+tests/test_docker_security.py::TestDockerSecurity::test_environment_variable_security PASSED [ 35%]
+tests/test_docker_security.py::TestDockerSecurity::test_network_security PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecurity::test_volume_security PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecurity::test_secret_management PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecurity::test_container_capabilities PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecretsHandling::test_env_file_not_in_image PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecretsHandling::test_dockerignore_for_sensitive_files PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecretsHandling::test_no_default_api_keys PASSED [ 36%]
+tests/test_docker_security.py::TestDockerSecretsHandling::test_api_key_format_validation PASSED [ 36%]
+tests/test_docker_security.py::TestDockerComplianceChecks::test_dockerfile_best_practices PASSED [ 36%]
+tests/test_docker_security.py::TestDockerComplianceChecks::test_container_security_context PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_docker_compose_volumes_configuration PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_persistent_volume_creation PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_configuration_persistence_between_runs PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_log_persistence_configuration PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_volume_backup_restore_capability PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumePersistence::test_volume_permissions PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumeIntegration::test_mcp_config_persistence PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumeIntegration::test_docker_compose_run_volume_usage PASSED [ 37%]
+tests/test_docker_volume_persistence.py::TestDockerVolumeIntegration::test_volume_data_isolation PASSED [ 37%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_file_tree_basic PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_file_tree_max_depth PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_file_tree_excludes_dangerous_paths PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_relevant_files_basic PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_relevant_files_token_budget PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_relevant_files_missing_file PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_find_related_files_implementation_to_test PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_find_related_files_test_to_implementation PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_find_related_files_config_files PASSED [ 38%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_find_related_files_nonexistent PASSED [ 39%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_security_path_validation PASSED [ 39%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_architectural_context PASSED [ 39%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_get_test_context PASSED [ 39%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_token_estimation_accuracy PASSED [ 39%]
+tests/test_file_context_processor.py::TestFileContextProcessor::test_intelligent_file_prioritization PASSED [ 39%]
+tests/test_file_protection.py::TestMCPDirectoryDetection::test_detect_mcp_directory_dynamically PASSED [ 39%]
+tests/test_file_protection.py::TestMCPDirectoryDetection::test_no_detection_on_non_mcp_directory PASSED [ 39%]
+tests/test_file_protection.py::TestMCPDirectoryDetection::test_no_detection_on_regular_directory PASSED [ 39%]
+tests/test_file_protection.py::TestMCPDirectoryDetection::test_no_detection_on_file PASSED [ 40%]
+tests/test_file_protection.py::TestMCPDirectoryDetection::test_mcp_directory_excluded_from_scan PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_detect_exact_home_directory PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_allow_home_subdirectories PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_detect_home_patterns_macos PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_detect_home_patterns_linux PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_detect_home_patterns_windows PASSED [ 40%]
+tests/test_file_protection.py::TestHomeDirectoryProtection::test_home_directory_excluded_from_scan PASSED [ 40%]
+tests/test_file_protection.py::TestUserHomeEnvironmentVariable::test_user_home_from_pathlib PASSED [ 40%]
+tests/test_file_protection.py::TestUserHomeEnvironmentVariable::test_get_home_directory_uses_pathlib PASSED [ 40%]
+tests/test_file_protection.py::TestUserHomeEnvironmentVariable::test_home_directory_on_different_platforms PASSED [ 41%]
+tests/test_file_protection.py::TestExcludedDirectories::test_excluded_dirs_not_scanned PASSED [ 41%]
+tests/test_file_protection.py::TestExcludedDirectories::test_new_excluded_directories PASSED [ 41%]
+tests/test_file_protection.py::TestIntegrationScenarios::test_project_with_mcp_clone_inside PASSED [ 41%]
+tests/test_file_protection.py::TestIntegrationScenarios::test_security_without_workspace_root PASSED [ 41%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_missing_attributes PASSED [ 41%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_with_both_none_tokens PASSED [ 41%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_with_none_input_tokens PASSED [ 41%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_with_none_output_tokens PASSED [ 41%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_with_valid_tokens PASSED [ 42%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_with_zero_tokens PASSED [ 42%]
+tests/test_gemini_token_usage.py::TestGeminiTokenUsage::test_extract_usage_without_usage_metadata PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_conversation_turn_includes_images PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_get_conversation_image_list_newest_first PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_add_turn_with_images PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_chat_tool_schema_includes_images PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_debug_tool_schema_includes_images PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_tool_image_validation_limits PASSED [ 42%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_image_validation_model_specific_limits PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_chat_tool_execution_with_images PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_cross_tool_image_context_preservation PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_tool_request_base_class_has_images PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_data_url_image_format_support PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_empty_images_handling PASSED [ 43%]
+tests/test_image_support_integration.py::TestImageSupportIntegration::test_conversation_memory_thread_chaining_with_images PASSED [ 43%]
+tests/test_integration_utf8.py::test_utf8_json_encoding PASSED           [ 43%]
+tests/test_integration_utf8.py::test_language_instruction_generation PASSED [ 43%]
+tests/test_integration_utf8.py::test_file_utf8_handling PASSED           [ 43%]
+tests/test_integration_utf8.py::test_mcp_tools_integration PASSED        [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_prefers_openai_o3_mini_when_available PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_prefers_gemini_flash_when_openai_unavailable PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_prefers_openai_when_both_available PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_fallback_when_no_keys_available PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_available_providers_with_keys PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_auto_mode_conversation_memory_integration PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_auto_mode_with_gemini_only PASSED [ 44%]
+tests/test_intelligent_fallback.py::TestIntelligentFallback::test_non_auto_mode_unchanged PASSED [ 44%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_chat_large_prompt_detection PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_chat_normal_prompt_works PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_chat_prompt_file_handling PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_codereview_large_focus PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_multiple_files_with_prompt_txt PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_boundary_case_exactly_at_limit PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_boundary_case_just_over_limit PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_empty_prompt_no_file PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_prompt_file_read_error PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_mcp_boundary_with_large_internal_context PASSED [ 45%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_mcp_boundary_vs_internal_processing_distinction PASSED [ 46%]
+tests/test_large_prompt_handling.py::TestLargePromptHandling::test_continuation_with_huge_conversation_history PASSED [ 46%]
+tests/test_line_numbers_integration.py::TestLineNumbersIntegration::test_all_tools_want_line_numbers PASSED [ 46%]
+tests/test_line_numbers_integration.py::TestLineNumbersIntegration::test_no_tools_override_line_numbers PASSED [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_tool_metadata PASSED  [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_execute_with_no_providers PASSED [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_execute_with_gemini_configured PASSED [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_execute_with_multiple_providers PASSED [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_execute_with_openrouter PASSED [ 46%]
+tests/test_listmodels.py::TestListModelsTool::test_execute_with_custom_api PASSED [ 47%]
+tests/test_listmodels.py::TestListModelsTool::test_output_includes_usage_tips PASSED [ 47%]
+tests/test_listmodels.py::TestListModelsTool::test_model_category PASSED [ 47%]
+tests/test_listmodels_restrictions.py::TestListModelsRestrictions::test_listmodels_respects_openrouter_restrictions PASSED [ 47%]
+tests/test_listmodels_restrictions.py::TestListModelsRestrictions::test_listmodels_shows_all_models_without_restrictions PASSED [ 47%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_no_models_when_no_providers_configured PASSED [ 47%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_openrouter_models_without_api_key PASSED [ 47%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_custom_models_without_custom_url PASSED [ 47%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_no_duplicates_with_overlapping_providers PASSED [ 47%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[flash-False] PASSED [ 48%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[o3-False] PASSED [ 48%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[grok-False] PASSED [ 48%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[gemini-2.5-flash-False] PASSED [ 48%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[o4-mini-False] PASSED [ 48%]
+tests/test_model_enumeration.py::TestModelEnumeration::test_specific_native_models_only_with_api_keys[grok-3-fast-False] PASSED [ 48%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_model_preserved_from_previous_turn PASSED [ 48%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_reconstruct_thread_context_preserves_model PASSED [ 48%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_multiple_turns_uses_last_assistant_model PASSED [ 48%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_no_previous_assistant_turn_defaults PASSED [ 48%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_explicit_model_overrides_previous_turn PASSED [ 49%]
+tests/test_model_metadata_continuation.py::TestModelMetadataContinuation::test_thread_chain_model_preservation PASSED [ 49%]
+tests/test_model_resolution_bug.py::TestModelResolutionBug::test_openrouter_registry_resolves_gemini_alias PASSED [ 49%]
+tests/test_model_resolution_bug.py::TestModelResolutionBug::test_consensus_tool_model_resolution_bug_reproduction PASSED [ 49%]
+tests/test_model_resolution_bug.py::TestModelResolutionBug::test_bug_reproduction_with_malformed_model_name PASSED [ 49%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_no_restrictions_by_default PASSED [ 49%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_load_single_model_restriction PASSED [ 49%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_load_multiple_models_restriction PASSED [ 49%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_case_insensitive_and_whitespace_handling PASSED [ 49%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_empty_string_allows_all PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_filter_models PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_get_allowed_models PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_shorthand_names_in_restrictions PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_validation_against_known_models PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_openrouter_model_restrictions PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_openrouter_filter_models PASSED [ 50%]
+tests/test_model_restrictions.py::TestModelRestrictionService::test_combined_provider_restrictions PASSED [ 50%]
+tests/test_model_restrictions.py::TestProviderIntegration::test_openai_provider_respects_restrictions PASSED [ 50%]
+tests/test_model_restrictions.py::TestProviderIntegration::test_gemini_provider_respects_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestProviderIntegration::test_gemini_parameter_order_regression_protection PASSED [ 51%]
+tests/test_model_restrictions.py::TestProviderIntegration::test_gemini_parameter_order_edge_case_full_name_only PASSED [ 51%]
+tests/test_model_restrictions.py::TestCustomProviderOpenRouterRestrictions::test_custom_provider_respects_openrouter_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestCustomProviderOpenRouterRestrictions::test_custom_provider_openrouter_capabilities_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestCustomProviderOpenRouterRestrictions::test_custom_provider_no_openrouter_key_ignores_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestCustomProviderOpenRouterRestrictions::test_custom_provider_empty_restrictions_allows_all_openrouter PASSED [ 51%]
+tests/test_model_restrictions.py::TestRegistryIntegration::test_registry_with_shorthand_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestRegistryIntegration::test_get_available_models_respects_restrictions PASSED [ 51%]
+tests/test_model_restrictions.py::TestShorthandRestrictions::test_providers_validate_shorthands_correctly PASSED [ 51%]
+tests/test_model_restrictions.py::TestShorthandRestrictions::test_multiple_shorthands_for_same_model PASSED [ 52%]
+tests/test_model_restrictions.py::TestShorthandRestrictions::test_both_shorthand_and_full_name_allowed PASSED [ 52%]
+tests/test_model_restrictions.py::TestAutoModeWithRestrictions::test_fallback_model_respects_restrictions PASSED [ 52%]
+tests/test_model_restrictions.py::TestAutoModeWithRestrictions::test_fallback_with_shorthand_restrictions PASSED [ 52%]
+tests/test_o3_temperature_fix_simple.py::TestO3TemperatureParameterFixSimple::test_o3_models_exclude_temperature_from_api_call PASSED [ 52%]
+tests/test_o3_temperature_fix_simple.py::TestO3TemperatureParameterFixSimple::test_regular_models_include_temperature_in_api_call PASSED [ 52%]
+tests/test_o3_temperature_fix_simple.py::TestO3TemperatureParameterFixSimple::test_o3_models_filter_unsupported_parameters PASSED [ 52%]
+tests/test_o3_temperature_fix_simple.py::TestO3TemperatureParameterFixSimple::test_all_o3_models_have_correct_temperature_capability PASSED [ 52%]
+tests/test_o3_temperature_fix_simple.py::TestO3TemperatureParameterFixSimple::test_openai_provider_temperature_constraints PASSED [ 52%]
+tests/test_old_behavior_simulation.py::TestOldBehaviorSimulation::test_old_behavior_would_miss_target_restrictions PASSED [ 53%]
+tests/test_old_behavior_simulation.py::TestOldBehaviorSimulation::test_new_behavior_fixes_the_problem PASSED [ 53%]
+tests/test_old_behavior_simulation.py::TestOldBehaviorSimulation::test_policy_bypass_prevention_old_vs_new PASSED [ 53%]
+tests/test_old_behavior_simulation.py::TestOldBehaviorSimulation::test_demonstrate_target_coverage_improvement PASSED [ 53%]
+tests/test_old_behavior_simulation.py::TestOldBehaviorSimulation::test_comprehensive_alias_target_mapping_verification PASSED [ 53%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_alternative_token_format_with_none PASSED [ 53%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_with_all_none_tokens PASSED [ 53%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_with_none_completion_tokens PASSED [ 53%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_with_none_prompt_tokens PASSED [ 53%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_with_valid_tokens PASSED [ 54%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_with_zero_tokens PASSED [ 54%]
+tests/test_openai_compatible_token_usage.py::TestOpenAICompatibleTokenUsage::test_extract_usage_without_usage PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_initialization PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_initialization_with_custom_url PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_model_validation PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_resolve_model_name PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_get_capabilities_o3 PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_get_capabilities_with_alias PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_generate_content_resolves_alias_before_api_call PASSED [ 54%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_generate_content_other_aliases PASSED [ 55%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_generate_content_no_alias_passthrough PASSED [ 55%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_supports_thinking_mode PASSED [ 55%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_o3_pro_routes_to_responses_endpoint PASSED [ 55%]
+tests/test_openai_provider.py::TestOpenAIProvider::test_non_o3_pro_uses_chat_completions PASSED [ 55%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_provider_initialization PASSED [ 55%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_custom_headers PASSED [ 55%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_model_validation PASSED [ 55%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_get_capabilities PASSED [ 55%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_model_alias_resolution PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterProvider::test_openrouter_registration PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterAutoMode::test_openrouter_only_auto_mode PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterAutoMode::test_openrouter_with_restrictions PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterAutoMode::test_no_providers_fails_auto_mode PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterAutoMode::test_openrouter_without_registry PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterRegistry::test_registry_loading PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterRegistry::test_registry_capabilities PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterRegistry::test_multiple_aliases_same_model PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterFunctionality::test_openrouter_always_uses_correct_url PASSED [ 56%]
+tests/test_openrouter_provider.py::TestOpenRouterFunctionality::test_openrouter_headers_set_correctly PASSED [ 57%]
+tests/test_openrouter_provider.py::TestOpenRouterFunctionality::test_openrouter_model_registry_initialized PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_registry_initialization PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_custom_config_path PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_environment_variable_override PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_alias_resolution PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_direct_model_name_lookup PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_unknown_model_resolution PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_model_capabilities_conversion PASSED [ 57%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_duplicate_alias_detection PASSED [ 58%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_backwards_compatibility_max_tokens PASSED [ 58%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_missing_config_file PASSED [ 58%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_invalid_json_config PASSED [ 58%]
+tests/test_openrouter_registry.py::TestOpenRouterModelRegistry::test_model_with_all_capabilities PASSED [ 58%]
+tests/test_parse_model_option.py::TestParseModelOption::test_openrouter_free_suffix_preserved PASSED [ 58%]
+tests/test_parse_model_option.py::TestParseModelOption::test_openrouter_beta_suffix_preserved PASSED [ 58%]
+tests/test_parse_model_option.py::TestParseModelOption::test_openrouter_preview_suffix_preserved PASSED [ 58%]
+tests/test_parse_model_option.py::TestParseModelOption::test_ollama_tag_parsed_as_option PASSED [ 58%]
+tests/test_parse_model_option.py::TestParseModelOption::test_consensus_stance_parsed_as_option PASSED [ 59%]
+tests/test_parse_model_option.py::TestParseModelOption::test_openrouter_unknown_suffix_parsed_as_option PASSED [ 59%]
+tests/test_parse_model_option.py::TestParseModelOption::test_plain_model_name PASSED [ 59%]
+tests/test_parse_model_option.py::TestParseModelOption::test_url_not_parsed PASSED [ 59%]
+tests/test_parse_model_option.py::TestParseModelOption::test_whitespace_handling PASSED [ 59%]
+tests/test_parse_model_option.py::TestParseModelOption::test_case_insensitive_suffix_matching PASSED [ 59%]
+tests/test_per_tool_model_defaults.py::TestToolModelCategories::test_thinkdeep_category PASSED [ 59%]
+tests/test_per_tool_model_defaults.py::TestToolModelCategories::test_debug_category PASSED [ 59%]
+tests/test_per_tool_model_defaults.py::TestToolModelCategories::test_analyze_category PASSED [ 59%]
+tests/test_per_tool_model_defaults.py::TestToolModelCategories::test_chat_category PASSED [ 59%]
+tests/test_per_tool_model_defaults.py::TestToolModelCategories::test_base_tool_default_category PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_extended_reasoning_with_openai PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_extended_reasoning_with_gemini_only PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_fast_response_with_openai PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_fast_response_with_gemini_only PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_balanced_category_fallback PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestModelSelection::test_no_category_uses_balanced_logic PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestFlexibleModelSelection::test_fallback_handles_mixed_model_names PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestCustomProviderFallback::test_extended_reasoning_custom_fallback PASSED [ 60%]
+tests/test_per_tool_model_defaults.py::TestCustomProviderFallback::test_extended_reasoning_final_fallback PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestAutoModeErrorMessages::test_chat_auto_error_message PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestProviderHelperMethods::test_find_extended_thinking_model_custom PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestProviderHelperMethods::test_find_extended_thinking_model_openrouter PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestProviderHelperMethods::test_find_extended_thinking_model_none_found PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestEffectiveAutoMode::test_explicit_auto_mode PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestEffectiveAutoMode::test_unavailable_model_triggers_auto_mode PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestEffectiveAutoMode::test_available_model_no_auto_mode PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestRuntimeModelSelection::test_explicit_auto_in_request PASSED [ 61%]
+tests/test_per_tool_model_defaults.py::TestRuntimeModelSelection::test_unavailable_model_in_request PASSED [ 62%]
+tests/test_per_tool_model_defaults.py::TestSchemaGeneration::test_schema_with_explicit_auto_mode PASSED [ 62%]
+tests/test_per_tool_model_defaults.py::TestSchemaGeneration::test_schema_with_unavailable_default_model PASSED [ 62%]
+tests/test_per_tool_model_defaults.py::TestSchemaGeneration::test_schema_with_available_default_model PASSED [ 62%]
+tests/test_per_tool_model_defaults.py::TestUnavailableModelFallback::test_unavailable_default_model_fallback PASSED [ 62%]
+tests/test_per_tool_model_defaults.py::TestUnavailableModelFallback::test_available_default_model_no_fallback PASSED [ 62%]
+tests/test_planner.py::TestPlannerTool::test_tool_metadata PASSED        [ 62%]
+tests/test_planner.py::TestPlannerTool::test_request_validation PASSED   [ 62%]
+tests/test_planner.py::TestPlannerTool::test_input_schema_generation PASSED [ 62%]
+tests/test_planner.py::TestPlannerTool::test_model_category_for_planning PASSED [ 62%]
+tests/test_planner.py::TestPlannerTool::test_execute_first_step PASSED   [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_subsequent_step PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_with_continuation_context PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_final_step PASSED   [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_with_branching PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_with_revision PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_adjusts_total_steps PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_error_handling PASSED [ 63%]
+tests/test_planner.py::TestPlannerTool::test_execute_step_history_tracking PASSED [ 63%]
+tests/test_planner.py::TestPlannerToolIntegration::test_interactive_planning_flow PASSED [ 64%]
+tests/test_planner.py::TestPlannerToolIntegration::test_simple_planning_flow PASSED [ 64%]
+tests/test_prompt_size_limit_bug_fix.py::TestPromptSizeLimitBugFix::test_prompt_size_validation_with_conversation_history PASSED [ 64%]
+tests/test_prompt_size_limit_bug_fix.py::TestPromptSizeLimitBugFix::test_prompt_size_validation_without_original_prompt PASSED [ 64%]
+tests/test_prompt_size_limit_bug_fix.py::TestPromptSizeLimitBugFix::test_prompt_size_validation_with_missing_original_prompt PASSED [ 64%]
+tests/test_prompt_size_limit_bug_fix.py::TestPromptSizeLimitBugFix::test_base_tool_default_behavior PASSED [ 64%]
+tests/test_provider_routing_bugs.py::TestProviderRoutingBugs::test_fallback_routing_bug_reproduction PASSED [ 64%]
+tests/test_provider_routing_bugs.py::TestProviderRoutingBugs::test_fallback_should_not_register_without_api_key PASSED [ 64%]
+tests/test_provider_routing_bugs.py::TestProviderRoutingBugs::test_mixed_api_keys_correct_routing PASSED [ 64%]
+tests/test_provider_routing_bugs.py::TestOpenRouterAliasRestrictions::test_openrouter_alias_restrictions_bug_reproduction PASSED [ 64%]
+tests/test_provider_routing_bugs.py::TestOpenRouterAliasRestrictions::test_openrouter_mixed_alias_and_full_names PASSED [ 65%]
+tests/test_provider_routing_bugs.py::TestProviderMetadataBug::test_provider_used_metadata_included PASSED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_base_provider_utf8_support PASSED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_error_handling_with_utf8 PASSED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_gemini_provider_handles_api_encoding_error SKIPPED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_gemini_provider_utf8_request SKIPPED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_model_response_utf8_serialization PASSED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_openai_compatible_o3_pro_utf8 SKIPPED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_openai_provider_utf8_logging SKIPPED [ 65%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_provider_registry_utf8 PASSED [ 66%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_provider_type_enum_utf8_safe PASSED [ 66%]
+tests/test_provider_utf8.py::TestProviderUTF8Encoding::test_temperature_handling_utf8_locale PASSED [ 66%]
+tests/test_provider_utf8.py::TestLocaleModelIntegration::test_model_name_resolution_utf8 PASSED [ 66%]
+tests/test_provider_utf8.py::TestLocaleModelIntegration::test_system_prompt_enhancement_french PASSED [ 66%]
+tests/test_provider_utf8.py::TestLocaleModelIntegration::test_system_prompt_enhancement_multiple_locales PASSED [ 66%]
+tests/test_provider_utf8.py::TestLocaleModelIntegration::test_system_prompt_enhancement_with_unusual_locale_formats PASSED [ 66%]
+tests/test_providers.py::TestModelProviderRegistry::test_register_provider PASSED [ 66%]
+tests/test_providers.py::TestModelProviderRegistry::test_get_provider PASSED [ 66%]
+tests/test_providers.py::TestModelProviderRegistry::test_get_provider_no_api_key PASSED [ 67%]
+tests/test_providers.py::TestModelProviderRegistry::test_get_provider_for_model PASSED [ 67%]
+tests/test_providers.py::TestModelProviderRegistry::test_get_available_providers PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_provider_initialization PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_get_capabilities PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_get_capabilities_pro_model PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_model_shorthand_resolution PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_supports_thinking_mode PASSED [ 67%]
+tests/test_providers.py::TestGeminiProvider::test_generate_content PASSED [ 67%]
+tests/test_providers.py::TestOpenAIProvider::test_provider_initialization PASSED [ 67%]
+tests/test_providers.py::TestOpenAIProvider::test_get_capabilities_o3 PASSED [ 68%]
+tests/test_providers.py::TestOpenAIProvider::test_get_capabilities_o4_mini PASSED [ 68%]
+tests/test_providers.py::TestOpenAIProvider::test_validate_model_names PASSED [ 68%]
+tests/test_providers.py::TestOpenAIProvider::test_no_thinking_mode_support PASSED [ 68%]
+tests/test_rate_limit_patterns.py::test_openai_structured_error_retry_logic PASSED [ 68%]
+tests/test_rate_limit_patterns.py::test_gemini_structured_error_retry_logic PASSED [ 68%]
+tests/test_rate_limit_patterns.py::test_actual_log_error_from_issue_with_structured_parsing PASSED [ 68%]
+tests/test_rate_limit_patterns.py::test_non_429_errors_still_work PASSED [ 68%]
+tests/test_rate_limit_patterns.py::test_edge_cases_and_fallbacks PASSED  [ 68%]
+tests/test_ref_resolution.py::TestMinimalRefResolution::test_chat_tool_current_schema_baseline PASSED [ 69%]
+tests/test_ref_resolution.py::TestMinimalRefResolution::test_circular_reference_safety PASSED [ 69%]
+tests/test_ref_resolution.py::TestMinimalRefResolution::test_minimal_ref_schema_generation PASSED [ 69%]
+tests/test_ref_resolution.py::TestMinimalRefResolution::test_proposed_ref_optimization_structure PASSED [ 69%]
+tests/test_ref_resolution.py::TestMinimalRefResolution::test_ref_resolution_readiness_checklist PASSED [ 69%]
+tests/test_registry.py::TestRegistryTool::test_approve_blocked_entry PASSED [ 69%]
+tests/test_registry.py::TestRegistryTool::test_atomic_token_validation PASSED [ 69%]
+tests/test_registry.py::TestRegistryTool::test_create_blocked_entry PASSED [ 69%]
+tests/test_registry.py::TestRegistryTool::test_execute_method PASSED     [ 69%]
+tests/test_registry.py::TestRegistryTool::test_list_pending_approvals PASSED [ 70%]
+tests/test_registry.py::TestRegistryTool::test_reject_blocked_entry PASSED [ 70%]
+tests/test_registry.py::TestRegistryTool::test_tool_initialization PASSED [ 70%]
+tests/test_registry.py::TestRegistryTool::test_validate_token PASSED     [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_atomic_json_writes_with_temp_file PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_cleanup_old_entries_removes_from_json PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_concurrent_access_safety PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_create_new_json_file_if_not_exists PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_error_handling_for_corrupted_json_files PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_full_rebuild_pattern_correctness PASSED [ 70%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_json_format_compatibility_with_hooks PASSED [ 71%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_json_sync_after_approval_integration PASSED [ 71%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_rebuild_hook_registry_method_not_implemented_yet PASSED [ 71%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_sync_to_hook_registry_method_not_implemented_yet PASSED [ 71%]
+tests/test_registry_json_sync.py::TestRegistryJSONSync::test_update_existing_json_file_with_new_approvals PASSED [ 71%]
+tests/test_registry_mcp_interface.py::TestRegistryMCPInterface::test_execute_with_arguments_dict_new_interface PASSED [ 71%]
+tests/test_registry_mcp_interface.py::TestRegistryMCPInterface::test_execute_with_kwargs_legacy_interface PASSED [ 71%]
+tests/test_registry_mcp_interface.py::TestRegistryMCPInterface::test_execute_missing_required_arguments_validation PASSED [ 71%]
+tests/test_registry_mcp_interface.py::TestRegistryMCPInterface::test_execute_unknown_action_handling PASSED [ 71%]
+tests/test_registry_mcp_interface.py::TestRegistryMCPInterface::test_execute_all_supported_actions PASSED [ 72%]
+tests/test_registry_schema.py::TestRegistryMCPSchema::test_all_parameters_exposed_in_schema PASSED [ 72%]
+tests/test_registry_schema.py::TestRegistryMCPSchema::test_field_descriptions_indicate_requirements PASSED [ 72%]
+tests/test_registry_schema.py::TestRegistryMCPSchema::test_get_input_schema_includes_all_fields PASSED [ 72%]
+tests/test_registry_schema.py::TestRegistryMCPSchema::test_only_action_is_required_in_base_schema PASSED [ 72%]
+tests/test_schema_token_optimization.py::TestSchemaTokenOptimization::test_current_baseline_token_usage PASSED [ 72%]
+tests/test_schema_token_optimization.py::TestSchemaTokenOptimization::test_duplicate_content_identification PASSED [ 72%]
+tests/test_schema_token_optimization.py::TestSchemaTokenOptimization::test_ref_based_optimization_target SKIPPED [ 72%]
+tests/test_schema_token_optimization.py::TestSchemaTokenOptimization::test_schema_functional_contract_preservation SKIPPED [ 72%]
+tests/test_secaudit.py::TestSecauditTool::test_tool_metadata PASSED      [ 72%]
+tests/test_secaudit.py::TestSecauditTool::test_request_validation PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_request_validation_defaults PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_request_validation_invalid_threat_level PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_request_validation_invalid_audit_focus PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_input_schema_generation PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_step_guidance_step_1 PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_step_guidance_step_2 PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_step_guidance_step_4 PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_expert_analysis_trigger PASSED [ 73%]
+tests/test_secaudit.py::TestSecauditTool::test_expert_analysis_context_preparation PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_security_issues_formatting_empty PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_security_issues_formatting_with_issues PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_tool_field_definitions PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_workflow_request_model PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_workflow_system_prompt PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_compliance_requirements_validation PASSED [ 74%]
+tests/test_secaudit.py::TestSecauditTool::test_comprehensive_workflow_scenario PASSED [ 74%]
+tests/test_server.py::TestServerTools::test_handle_call_tool_unknown PASSED [ 74%]
+tests/test_server.py::TestServerTools::test_handle_chat PASSED           [ 75%]
+tests/test_server.py::TestServerTools::test_handle_version PASSED        [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_session_id_extraction_from_params PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_default_session_handling_for_missing_session_id PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_session_manager_initialization_in_server PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_project_root_validation PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_session_aware_tool_execution PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_session_lifecycle_hooks PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_backward_compatibility_no_session_params PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_tool_instance_isolation_per_session PASSED [ 75%]
+tests/test_session_integration.py::TestSessionIntegration::test_session_cleanup_on_disconnect PASSED [ 76%]
+tests/test_session_models.py::TestSessionContextModel::test_valid_session_context PASSED [ 76%]
+tests/test_session_models.py::TestSessionContextModel::test_session_id_validation PASSED [ 76%]
+tests/test_session_models.py::TestSessionContextModel::test_project_root_validation PASSED [ 76%]
+tests/test_session_models.py::TestSessionContextModel::test_to_dict_conversion PASSED [ 76%]
+tests/test_session_models.py::TestSessionContextModel::test_from_session_context_creation PASSED [ 76%]
+tests/test_session_models.py::TestToolExecutionContext::test_valid_execution_context PASSED [ 76%]
+tests/test_session_models.py::TestToolExecutionContext::test_get_project_root PASSED [ 76%]
+tests/test_session_models.py::TestToolExecutionContext::test_get_session_id PASSED [ 76%]
+tests/test_session_models.py::TestToolExecutionContext::test_optional_fields PASSED [ 77%]
+tests/test_session_models.py::TestSecurityValidation::test_path_traversal_prevention PASSED [ 77%]
+tests/test_session_models.py::TestSecurityValidation::test_fail_fast_validation PASSED [ 77%]
+tests/test_shared_schema_definitions.py::TestSharedSchemaDefinitions::test_module_exists PASSED [ 77%]
+tests/test_shared_schema_definitions.py::TestSharedSchemaDefinitions::test_get_base_definitions_structure PASSED [ 77%]
+tests/test_simple_verification.py::TestSimpleVerification::test_basic_assertion PASSED [ 77%]
+tests/test_simple_verification.py::TestSimpleVerification::test_string_operations PASSED [ 77%]
+tests/test_smart_context_injector.py::TestPatternDetection::test_keyword_matching PASSED [ 77%]
+tests/test_smart_context_injector.py::TestPatternDetection::test_combination_matching PASSED [ 77%]
+tests/test_smart_context_injector.py::TestPatternDetection::test_regex_matching_with_timeout PASSED [ 78%]
+tests/test_smart_context_injector.py::TestPatternDetection::test_confidence_scoring PASSED [ 78%]
+tests/test_smart_context_injector.py::TestPatternDetection::test_priority_sorting PASSED [ 78%]
+tests/test_smart_context_injector.py::TestThreadSafety::test_concurrent_cache_access PASSED [ 78%]
+tests/test_smart_context_injector.py::TestThreadSafety::test_circuit_breaker_thread_safety PASSED [ 78%]
+tests/test_smart_context_injector.py::TestCircuitBreaker::test_circuit_breaker_opens_after_failures PASSED [ 78%]
+tests/test_smart_context_injector.py::TestCircuitBreaker::test_circuit_breaker_resets_after_timeout PASSED [ 78%]
+tests/test_smart_context_injector.py::TestCircuitBreaker::test_circuit_breaker_success_reduces_count PASSED [ 78%]
+tests/test_smart_context_injector.py::TestConfigurationHandling::test_invalid_config_rejected PASSED [ 78%]
+tests/test_smart_context_injector.py::TestConfigurationHandling::test_invalid_regex_rejected PASSED [ 78%]
+tests/test_smart_context_injector.py::TestConfigurationHandling::test_hot_reload_configuration PASSED [ 79%]
+tests/test_smart_context_injector.py::TestFeatureFlags::test_global_disable PASSED [ 79%]
+tests/test_smart_context_injector.py::TestFeatureFlags::test_per_tool_override PASSED [ 79%]
+tests/test_smart_context_injector.py::TestFeatureFlags::test_dry_run_mode PASSED [ 79%]
+tests/test_smart_context_injector.py::TestPerformance::test_pattern_matching_timeout PASSED [ 79%]
+tests/test_smart_context_injector.py::TestPerformance::test_caching_performance PASSED [ 79%]
+tests/test_smart_context_injector.py::TestIntegration::test_full_injection_flow PASSED [ 79%]
+tests/test_smart_context_injector.py::TestIntegration::test_metrics_tracking PASSED [ 79%]
+tests/test_smart_context_injector.py::TestIntegration::test_singleton_pattern PASSED [ 79%]
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_critical_engineer_blocked_file_integration PASSED [ 80%]
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_detects_blocked_file_review PASSED [ 80%]
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_rejection_flow PASSED [ 80%]
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_returns_formatted_token PASSED [ 80%]
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_uuid_extraction_patterns PASSED [ 80%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_blocked_uuid_extraction_patterns PASSED [ 80%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_critical_engineer_includes_registry_instructions PASSED [ 80%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_no_registry_instructions_for_normal_requests PASSED [ 80%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_approve_action PASSED [ 80%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_reject_action PASSED [ 81%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_with_unknown_action PASSED [ 81%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_token_is_single_use PASSED [ 81%]
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_testguard_includes_registry_instructions PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_gemini_provider_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_openai_provider_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_xai_provider_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_dial_provider_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_list_models_includes_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_list_all_known_models_includes_aliases PASSED [ 81%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_no_string_shorthand_in_supported_models PASSED [ 82%]
+tests/test_supported_models_aliases.py::TestSupportedModelsAliases::test_resolve_returns_original_if_not_found PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_tool_metadata PASSED    [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_tool_configuration PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_model_category PASSED   [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_request_model_validation PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_session_context_usage_bug_demonstration PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_session_context_fallback_behavior PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_input_schema_model_restrictions PASSED [ 82%]
+tests/test_testguard.py::TestTestGuardTool::test_prepare_prompt_formatting PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_format_response_structure PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_system_prompt_contains_anti_patterns PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_trigger_pattern_examples PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_anti_pattern_detection_scenarios[Let's skip this failing test-skip] PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_anti_pattern_detection_scenarios[Maybe we should adjust our expectations-adjust] PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_anti_pattern_detection_scenarios[I'll comment out this test for now-comment] PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_anti_pattern_detection_scenarios[Let's try a simpler test approach-simpler] PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_anti_pattern_detection_scenarios[We need to lower the coverage threshold-lower] PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_tool_fields_configuration PASSED [ 83%]
+tests/test_testguard.py::TestTestGuardTool::test_required_fields PASSED  [ 84%]
+tests/test_testguard.py::TestTestGuardTool::test_model_selection_fallback PASSED [ 84%]
+tests/test_testguard.py::TestTestGuardTool::test_integration_with_test_methodology_protocol PASSED [ 84%]
+tests/test_testguard.py::TestTestGuardIntegration::test_end_to_end_prompt_flow PASSED [ 84%]
+tests/test_testguard.py::TestTestGuardIntegration::test_quality_gate_behavior_simulation PASSED [ 84%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_request_with_files PASSED [ 84%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_request_with_test_context PASSED [ 84%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_backwards_compatibility PASSED [ 84%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_detect_expectation_adjustment PASSED [ 84%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_detect_coverage_threshold_manipulation PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_auto_find_test_files PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_test_context_gathering PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_detect_test_skip_pattern PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_compare_test_and_implementation_changes PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_validation_with_file_context PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_handle_missing_test_files PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_security_no_system_files PASSED [ 85%]
+tests/test_testguard_enhanced.py::TestTestGuardEnhanced::test_detect_workaround_pattern PASSED [ 85%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_approved_token_generation PASSED [ 86%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_blocked_uuid_extraction PASSED [ 86%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_normal_analysis_without_blocked_change PASSED [ 86%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_prepare_prompt_for_blocked_change PASSED [ 86%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_registry_failure_still_generates_token PASSED [ 86%]
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_rejected_response_formatting PASSED [ 86%]
+tests/test_thinking_modes.py::TestThinkingModes::test_default_thinking_modes PASSED [ 86%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_mode_minimal PASSED [ 86%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_mode_low PASSED [ 86%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_mode_medium PASSED [ 86%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_mode_high PASSED [ 87%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_mode_max PASSED [ 87%]
+tests/test_thinking_modes.py::TestThinkingModes::test_thinking_budget_mapping PASSED [ 87%]
+tests/test_tools.py::TestThinkDeepTool::test_tool_metadata PASSED        [ 87%]
+tests/test_tools.py::TestThinkDeepTool::test_execute_success PASSED      [ 87%]
+tests/test_tools.py::TestCodeReviewTool::test_tool_metadata PASSED       [ 87%]
+tests/test_tools.py::TestCodeReviewTool::test_execute_with_review_type PASSED [ 87%]
+tests/test_tools.py::TestAnalyzeTool::test_tool_metadata PASSED          [ 87%]
+tests/test_tools.py::TestAnalyzeTool::test_execute_with_analysis_type PASSED [ 87%]
+tests/test_tools.py::TestAbsolutePathValidation::test_thinkdeep_tool_relative_path_rejected PASSED [ 88%]
+tests/test_tools.py::TestAbsolutePathValidation::test_chat_tool_relative_path_rejected PASSED [ 88%]
+tests/test_tools.py::TestAbsolutePathValidation::test_analyze_tool_accepts_absolute_paths PASSED [ 88%]
+tests/test_tools.py::TestSpecialStatusModels::test_trace_complete_status_in_registry PASSED [ 88%]
+tests/test_tools.py::TestSpecialStatusModels::test_trace_complete_model_validation PASSED [ 88%]
+tests/test_tracer.py::TestTracerTool::test_get_name PASSED               [ 88%]
+tests/test_tracer.py::TestTracerTool::test_get_description PASSED        [ 88%]
+tests/test_tracer.py::TestTracerTool::test_get_input_schema PASSED       [ 88%]
+tests/test_tracer.py::TestTracerTool::test_get_model_category PASSED     [ 88%]
+tests/test_tracer.py::TestTracerTool::test_request_model_validation PASSED [ 89%]
+tests/test_tracer.py::TestTracerTool::test_get_required_actions PASSED   [ 89%]
+tests/test_tracer.py::TestTracerTool::test_workflow_tool_characteristics PASSED [ 89%]
+tests/test_tracer.py::TestTracerTool::test_get_rendering_instructions_precision PASSED [ 89%]
+tests/test_tracer.py::TestTracerTool::test_get_rendering_instructions_dependencies PASSED [ 89%]
+tests/test_tracer.py::TestTracerTool::test_rendering_instructions_consistency PASSED [ 89%]
+tests/test_tracer.py::TestTracerTool::test_mode_selection_guidance PASSED [ 89%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_emoji_preservation PASSED [ 89%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_french_characters_in_file_content PASSED [ 89%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_json_dumps_ascii_encoding_comparison PASSED [ 89%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_json_dumps_utf8_encoding PASSED [ 90%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_language_instruction_empty_locale PASSED [ 90%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_language_instruction_generation_english PASSED [ 90%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_language_instruction_generation_french PASSED [ 90%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_language_instruction_no_locale PASSED [ 90%]
+tests/test_utf8_localization.py::TestUTF8Localization::test_unicode_normalization PASSED [ 90%]
+tests/test_utf8_localization.py::TestLocalizationIntegration::test_codereview_tool_french_locale_simple PASSED [ 90%]
+tests/test_utf8_localization.py::TestLocalizationIntegration::test_multiple_locales_switching PASSED [ 90%]
+tests/test_utils.py::TestFileUtils::test_read_file_content_success PASSED [ 90%]
+tests/test_utils.py::TestFileUtils::test_read_file_content_not_found PASSED [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_file_content_safe_files_allowed PASSED [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_file_content_relative_path_rejected PASSED [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_file_content_directory PASSED [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_multiple PASSED      [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_with_code PASSED     [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_directory_support PASSED [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_mixed_paths PASSED   [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_token_limit PASSED   [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_large_file PASSED    [ 91%]
+tests/test_utils.py::TestFileUtils::test_read_files_file_extensions PASSED [ 92%]
+tests/test_utils.py::TestTokenUtils::test_estimate_tokens PASSED         [ 92%]
+tests/test_utils.py::TestTokenUtils::test_check_token_limit_within PASSED [ 92%]
+tests/test_utils.py::TestTokenUtils::test_check_token_limit_exceeded PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxEnvironmentHandling::test_dotenv_import_success PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxEnvironmentHandling::test_dotenv_import_failure_graceful_handling PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxEnvironmentHandling::test_env_file_path_resolution PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxEnvironmentHandling::test_environment_variables_still_work_without_dotenv PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxEnvironmentHandling::test_dotenv_graceful_fallback_behavior PASSED [ 92%]
+tests/test_uvx_support.py::TestUvxProjectConfiguration::test_pyproject_toml_has_required_uvx_fields PASSED [ 93%]
+tests/test_uvx_support.py::TestUvxProjectConfiguration::test_pyproject_dependencies_match_requirements PASSED [ 93%]
+tests/test_uvx_support.py::TestUvxProjectConfiguration::test_uvx_entry_point_callable PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_vitest_config_detection PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_vite_config_with_test_detection PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_package_json_script_detection PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_modern_test_file_patterns PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_framework_priority_detection PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_invalid_package_json_handling PASSED [ 93%]
+tests/test_vitest_pattern_recognition.py::TestVitestPatternRecognition::test_empty_project_handling PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_intermediate_step_no_embedding PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_intermediate_step_with_continuation_no_embedding PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_final_step_embeds_files PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_final_step_new_conversation_embeds_files PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_comprehensive_file_collection_for_expert_analysis PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_force_embed_bypasses_conversation_history PASSED [ 94%]
+tests/test_workflow_file_embedding.py::TestWorkflowFileEmbedding::test_embedding_decision_logic_comprehensive PASSED [ 94%]
+tests/test_workflow_metadata.py::TestWorkflowMetadata::test_workflow_metadata_in_response PASSED [ 94%]
+tests/test_workflow_metadata.py::TestWorkflowMetadata::test_workflow_metadata_in_error_response PASSED [ 94%]
+tests/test_workflow_metadata.py::TestWorkflowMetadata::test_workflow_metadata_fallback_handling PASSED [ 95%]
+tests/test_workflow_metadata.py::TestWorkflowMetadata::test_workflow_metadata_preserves_existing_response_fields PASSED [ 95%]
+tests/test_workflow_prompt_size_validation_simple.py::TestWorkflowPromptSizeValidationSimple::test_workflow_tool_normal_step_content_works PASSED [ 95%]
+tests/test_workflow_prompt_size_validation_simple.py::TestWorkflowPromptSizeValidationSimple::test_workflow_tool_large_step_content_exceeds_limit PASSED [ 95%]
+tests/test_workflow_prompt_size_validation_simple.py::TestWorkflowPromptSizeValidationSimple::test_workflow_tool_size_validation_message PASSED [ 95%]
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_analyze_tool_utf8_response PASSED [ 95%]
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_codereview_tool_french_findings PASSED [ 95%]
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_debug_tool_french_error_analysis PASSED [ 95%]
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_utf8_emoji_preservation_in_workflow_responses PASSED [ 95%]
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_workflow_json_response_structure PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_initialization PASSED  [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_initialization_with_custom_url PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_model_validation PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_resolve_model_name PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_get_capabilities_grok3 PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_get_capabilities_grok3_fast PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_get_capabilities_with_shorthand PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_unsupported_model_capabilities PASSED [ 96%]
+tests/test_xai_provider.py::TestXAIProvider::test_no_thinking_mode_support PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_provider_type PASSED   [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_model_restrictions PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_multiple_model_restrictions PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_both_shorthand_and_full_name_allowed PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_empty_restrictions_allows_all PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_friendly_name PASSED   [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_supported_models_structure PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_generate_content_resolves_alias_before_api_call PASSED [ 97%]
+tests/test_xai_provider.py::TestXAIProvider::test_generate_content_other_aliases PASSED [ 97%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_file_context_processor_lazy_loading PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_session_context_creation_dangerous_path PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_session_context_creation_nonexistent_project_root PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_session_context_creation_outside_allowed_workspace PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_session_context_creation_valid_project_root PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionContext::test_touch_updates_activity_timestamp PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_cleanup_expired_sessions PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_cleanup_race_condition_with_session_revival SKIPPED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_end_session PASSED [ 98%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_get_or_create_session_existing_session PASSED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_get_or_create_session_new_session PASSED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_get_or_create_session_race_condition SKIPPED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_get_session_info PASSED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_get_session_nonexistent PASSED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_max_sessions_automatic_cleanup_preserves_active_sessions SKIPPED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_max_sessions_limit_enforcement_with_active_sessions SKIPPED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_max_sessions_resource_limit_with_cleanup SKIPPED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_session_manager_default_workspaces PASSED [ 99%]
+tests/unit/utils/test_session_manager.py::TestSessionManager::test_session_manager_initialization PASSED [100%]
+
+=============================== warnings summary ===============================
+tools/testguard.py:52
+  /Volumes/HestAI-Tools/hestai-mcp-server/tools/testguard.py:52: PytestCollectionWarning: cannot collect test class 'RequirementsRequest' because it has a __init__ constructor (from: tests/test_testguard_enhanced.py)
+    class RequirementsRequest(ToolRequest):
+
+tools/testguard.py:65
+  /Volumes/HestAI-Tools/hestai-mcp-server/tools/testguard.py:65: PytestCollectionWarning: cannot collect test class 'RequirementsTool' because it has a __init__ constructor (from: tests/test_testguard_enhanced.py)
+    class RequirementsTool(SimpleTool):
+
+tests/test_registry.py::TestRegistryTool::test_execute_method
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestRegistryTool.test_execute_method' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_registry.py::TestRegistryTool::test_execute_method
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestRegistryTool.test_execute_method of <tests.test_registry.TestRegistryTool testMethod=test_execute_method>>)
+    return self.run(*args, **kwds)
+
+tests/test_session_integration.py::TestSessionIntegration::test_session_aware_tool_execution
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py:88: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    self._context.run(self._callback, *self._args)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_session_integration.py::TestSessionIntegration::test_session_lifecycle_hooks
+  /Volumes/HestAI-Tools/hestai-mcp-server/.hestai_venv/lib/python3.12/site-packages/_pytest/python.py:156: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+    result = testfunction(**testargs)
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_critical_engineer_blocked_file_integration
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestSpecialistRegistryIntegration.test_critical_engineer_blocked_file_integration' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_critical_engineer_blocked_file_integration
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestSpecialistRegistryIntegration.test_critical_engineer_blocked_file_integration of <tests.test_specialist_registry_integration.TestSpecialistRegistryIntegration testMethod=test_critical_engineer_blocked_file_integration>>)
+    return self.run(*args, **kwds)
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_detects_blocked_file_review
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestSpecialistRegistryIntegration.test_testguard_detects_blocked_file_review' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_detects_blocked_file_review
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestSpecialistRegistryIntegration.test_testguard_detects_blocked_file_review of <tests.test_specialist_registry_integration.TestSpecialistRegistryIntegration testMethod=test_testguard_detects_blocked_file_review>>)
+    return self.run(*args, **kwds)
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_rejection_flow
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestSpecialistRegistryIntegration.test_testguard_rejection_flow' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_rejection_flow
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestSpecialistRegistryIntegration.test_testguard_rejection_flow of <tests.test_specialist_registry_integration.TestSpecialistRegistryIntegration testMethod=test_testguard_rejection_flow>>)
+    return self.run(*args, **kwds)
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_returns_formatted_token
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestSpecialistRegistryIntegration.test_testguard_returns_formatted_token' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_specialist_registry_integration.py::TestSpecialistRegistryIntegration::test_testguard_returns_formatted_token
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestSpecialistRegistryIntegration.test_testguard_returns_formatted_token of <tests.test_specialist_registry_integration.TestSpecialistRegistryIntegration testMethod=test_testguard_returns_formatted_token>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_blocked_uuid_extraction_patterns
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_blocked_uuid_extraction_patterns' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_blocked_uuid_extraction_patterns
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_blocked_uuid_extraction_patterns of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_blocked_uuid_extraction_patterns>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_critical_engineer_includes_registry_instructions
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_critical_engineer_includes_registry_instructions' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_critical_engineer_includes_registry_instructions
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_critical_engineer_includes_registry_instructions of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_critical_engineer_includes_registry_instructions>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_no_registry_instructions_for_normal_requests
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_no_registry_instructions_for_normal_requests' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_no_registry_instructions_for_normal_requests
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_no_registry_instructions_for_normal_requests of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_no_registry_instructions_for_normal_requests>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_approve_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_registry_execute_approve_action' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_approve_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_registry_execute_approve_action of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_registry_execute_approve_action>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_reject_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_registry_execute_reject_action' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_reject_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_registry_execute_reject_action of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_registry_execute_reject_action>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_with_unknown_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_registry_execute_with_unknown_action' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_execute_with_unknown_action
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_registry_execute_with_unknown_action of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_registry_execute_with_unknown_action>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_token_is_single_use
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_registry_token_is_single_use' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_registry_token_is_single_use
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_registry_token_is_single_use of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_registry_token_is_single_use>>)
+    return self.run(*args, **kwds)
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_testguard_includes_registry_instructions
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestStatelessTokenGeneration.test_testguard_includes_registry_instructions' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_stateless_token_generation.py::TestStatelessTokenGeneration::test_testguard_includes_registry_instructions
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestStatelessTokenGeneration.test_testguard_includes_registry_instructions of <tests.test_stateless_token_generation.TestStatelessTokenGeneration testMethod=test_testguard_includes_registry_instructions>>)
+    return self.run(*args, **kwds)
+
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_prepare_prompt_for_blocked_change
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:589: RuntimeWarning: coroutine 'TestTestguardTokenGeneration.test_prepare_prompt_for_blocked_change' was never awaited
+    if method() is not None:
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+tests/test_testguard_token_generation.py::TestTestguardTokenGeneration::test_prepare_prompt_for_blocked_change
+  /opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/case.py:690: DeprecationWarning: It is deprecated to return a value that is not None from a test case (<bound method TestTestguardTokenGeneration.test_prepare_prompt_for_blocked_change of <tests.test_testguard_token_generation.TestTestguardTokenGeneration testMethod=test_prepare_prompt_for_blocked_change>>)
+    return self.run(*args, **kwds)
+
+tests/test_workflow_utf8.py::TestWorkflowToolsUTF8::test_analyze_tool_utf8_response
+  /Volumes/HestAI-Tools/hestai-mcp-server/.hestai_venv/lib/python3.12/site-packages/_pytest/stash.py:108: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  Coroutine created at (most recent call last)
+    File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 1991, in _run_once
+      handle._run()
+    File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 88, in _run
+      self._context.run(self._callback, *self._args)
+    File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1413, in patched
+      return await func(*newargs, **newkeywargs)
+    File "/Volumes/HestAI-Tools/hestai-mcp-server/tests/test_workflow_utf8.py", line 100, in test_analyze_tool_utf8_response
+      result = await analyze_tool.execute(
+    File "/Volumes/HestAI-Tools/hestai-mcp-server/tools/workflow/base.py", line 414, in execute
+      return await self.execute_workflow(arguments)
+    File "/Volumes/HestAI-Tools/hestai-mcp-server/tools/workflow/workflow_mixin.py", line 703, in execute_workflow
+      response_data = await self.handle_work_completion(response_data, request, arguments)
+    File "/Volumes/HestAI-Tools/hestai-mcp-server/tools/workflow/workflow_mixin.py", line 1256, in handle_work_completion
+      expert_analysis = await self._call_expert_analysis(arguments, request)
+    File "/Volumes/HestAI-Tools/hestai-mcp-server/tools/workflow/workflow_mixin.py", line 1468, in _call_expert_analysis
+      model_response = provider.generate_content(
+    File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1139, in __call__
+      return self._mock_call(*args, **kwargs)
+    File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+      return self._execute_mock_call(*args, **kwargs)
+    del self._storage[key]
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+========= 926 passed, 11 skipped, 12 deselected, 33 warnings in 3.02s ==========
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 194, in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 58, in __enter__
+    self._lazy_init()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 137, in _lazy_init
+    self._loop = events.new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 823, in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 720, in new_event_loop
+    return self._loop_factory()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py", line 64, in __init__
+    super().__init__(selector)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py", line 64, in __init__
+    logger.debug('Using selector: %s', selector.__class__.__name__)
+Message: 'Using selector: %s'
+Arguments: ('KqueueSelector',)
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 645, in run_forever
+    self._run_once()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 1999, in _run_once
+    handle._run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/utils/session_manager.py", line 622, in shutdown
+    logger.info("SessionManager shutdown complete")
+Message: 'SessionManager shutdown complete'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 194, in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 58, in __enter__
+    self._lazy_init()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 137, in _lazy_init
+    self._loop = events.new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 823, in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 720, in new_event_loop
+    return self._loop_factory()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py", line 64, in __init__
+    super().__init__(selector)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py", line 64, in __init__
+    logger.debug('Using selector: %s', selector.__class__.__name__)
+Message: 'Using selector: %s'
+Arguments: ('KqueueSelector',)
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 645, in run_forever
+    self._run_once()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 1999, in _run_once
+    handle._run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/utils/session_manager.py", line 622, in shutdown
+    logger.info("SessionManager shutdown complete")
+Message: 'SessionManager shutdown complete'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 194, in run
+    with Runner(debug=debug, loop_factory=loop_factory) as runner:
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 58, in __enter__
+    self._lazy_init()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 137, in _lazy_init
+    self._loop = events.new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 823, in new_event_loop
+    return get_event_loop_policy().new_event_loop()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 720, in new_event_loop
+    return self._loop_factory()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/unix_events.py", line 64, in __init__
+    super().__init__(selector)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/selector_events.py", line 64, in __init__
+    logger.debug('Using selector: %s', selector.__class__.__name__)
+Message: 'Using selector: %s'
+Arguments: ('KqueueSelector',)
+--- Logging error ---
+Traceback (most recent call last):
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 552, in cleanup_session_manager
+    loop = asyncio.get_running_loop()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/logging/__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+ValueError: I/O operation on closed file.
+Call stack:
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/server.py", line 557, in cleanup_session_manager
+    asyncio.run(session_manager.shutdown())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 678, in run_until_complete
+    self.run_forever()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 645, in run_forever
+    self._run_once()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 1999, in _run_once
+    handle._run()
+  File "/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Volumes/HestAI-Tools/hestai-mcp-server/utils/session_manager.py", line 622, in shutdown
+    logger.info("SessionManager shutdown complete")
+Message: 'SessionManager shutdown complete'
+Arguments: ()
+✅ Step 2 Complete: All unit tests passed!
+
+🎉 All Code Quality Checks Passed!
+==================================
+✅ Linting (ruff): PASSED
+✅ Formatting (black): PASSED
+✅ Import sorting (isort): PASSED
+✅ Unit tests: PASSED
+
+🚀 Your code is ready for commit and GitHub Actions!
+💡 Remember to add simulator tests if you modified tools

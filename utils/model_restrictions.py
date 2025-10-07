@@ -21,10 +21,10 @@ Example:
 """
 
 import logging
-import os
 from typing import Optional
 
-from providers.base import ProviderType
+from providers.shared import ProviderType
+from utils.env import get_env
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class ModelRestrictionService:
     def _load_from_env(self) -> None:
         """Load restrictions from environment variables."""
         for provider_type, env_var in self.ENV_VARS.items():
-            env_value = os.getenv(env_var)
+            env_value = get_env(env_var)
 
             if env_value is None or env_value == "":
                 # Not set or empty - no restrictions (allow all models)
@@ -114,6 +114,9 @@ class ModelRestrictionService:
         """
         Check if a model is allowed for a specific provider.
 
+        Strict alias policy: Only names explicitly listed in the restriction policy are allowed.
+        This means if you specify "flash", only "flash" is allowed, not "gemini-2.5-flash".
+
         Args:
             provider_type: The provider type (OPENAI, GOOGLE, etc.)
             model_name: The canonical model name (after alias resolution)
@@ -133,11 +136,13 @@ class ModelRestrictionService:
             return True
 
         # Check both the resolved name and original name (if different)
+        # This handles the case where the user passes the original alias
         names_to_check = {model_name.lower()}
         if original_name and original_name.lower() != model_name.lower():
             names_to_check.add(original_name.lower())
 
-        # If any of the names is in the allowed set, it's allowed
+        # Strict policy: Only allow if the name (resolved or original) is explicitly in the allowed set
+        # We do NOT do reverse resolution of allowed entries
         return any(name in allowed_set for name in names_to_check)
 
     def get_allowed_models(self, provider_type: ProviderType) -> Optional[set[str]]:

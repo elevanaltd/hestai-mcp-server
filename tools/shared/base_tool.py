@@ -41,6 +41,8 @@ except ImportError:
     ContinuationOffer = None
     ToolOutput = None
 
+# // Critical-Engineer: consulted for Base tool abstraction merge strategy
+
 logger = logging.getLogger(__name__)
 
 
@@ -301,6 +303,10 @@ class BaseTool(ABC):
         Returns:
             Dict containing the model field JSON schema
         """
+        # Critical-Engineer: consulted for Base tool abstraction merge strategy
+        # Conservative refactoring: Extract context window formatting to helper method
+        # Preserve HestAI's $ref optimization, enum field, and detailed descriptions
+        # Upstream's enum removal would break auto-mode LLM model selection
         import os
 
         # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal imports
@@ -329,8 +335,8 @@ class BaseTool(ABC):
             ]
 
             # Get descriptions from enabled providers
-            from providers.base import ProviderType
             from providers.registry import ModelProviderRegistry
+            from providers.shared import ProviderType
 
             # Map provider types to readable names
             provider_names = {
@@ -378,16 +384,12 @@ class BaseTool(ABC):
                         config = registry.resolve(alias)
                         # Check if this is a custom model that requires custom endpoints
                         if config and config.is_custom:
-                            # Format context window
-                            context_tokens = config.context_window
-                            if context_tokens >= 1_000_000:
-                                context_str = f"{context_tokens // 1_000_000}M"
-                            elif context_tokens >= 1_000:
-                                context_str = f"{context_tokens // 1_000}K"
-                            else:
-                                context_str = str(context_tokens)
+                            # Format context window using helper
+                            context_str = self._format_context_window(config.context_window)
+                            if context_str is None:
+                                context_str = str(config.context_window)
 
-                            desc_line = f"- '{alias}' ({context_str} context): {config.description}"
+                            desc_line = f"- '{alias}' ({context_str}): {config.description}"
                             if desc_line not in model_desc_parts:  # Avoid duplicates
                                 model_desc_parts.append(desc_line)
                 except Exception as e:
@@ -419,21 +421,17 @@ class BaseTool(ABC):
                     if model_configs:
                         model_desc_parts.append("\nOpenRouter models (use these aliases):")
                         for alias, config in model_configs:  # Show ALL models so Claude can choose
-                            # Format context window in human-readable form
-                            context_tokens = config.context_window
-                            if context_tokens >= 1_000_000:
-                                context_str = f"{context_tokens // 1_000_000}M"
-                            elif context_tokens >= 1_000:
-                                context_str = f"{context_tokens // 1_000}K"
-                            else:
-                                context_str = str(context_tokens)
+                            # Format context window using helper
+                            context_str = self._format_context_window(config.context_window)
+                            if context_str is None:
+                                context_str = str(config.context_window)
 
                             # Build description line
                             if config.description:
-                                desc = f"- '{alias}' ({context_str} context): {config.description}"
+                                desc = f"- '{alias}' ({context_str}): {config.description}"
                             else:
                                 # Fallback to showing the model name if no description
-                                desc = f"- '{alias}' ({context_str} context): {config.model_name}"
+                                desc = f"- '{alias}' ({context_str}): {config.model_name}"
                             model_desc_parts.append(desc)
 
                         # Show all models - no truncation needed
@@ -1046,25 +1044,41 @@ class BaseTool(ABC):
         )
         return result, actually_processed_files
 
-    def get_websearch_instruction(self, use_websearch: bool, tool_specific: Optional[str] = None) -> str:
+    # DEPRECATED: This method is maintained for backward compatibility with existing tools.
+    # TODO: Refactor all 15+ tool calls to use the new internal method and remove this wrapper post-integration.
+    def get_websearch_instruction(
+        self, use_websearch: Optional[bool] = True, tool_specific: Optional[str] = None
+    ) -> str:
         """
-        Generate standardized web search instruction based on the use_websearch parameter.
+        Shim for backward compatibility. Faithfully reproduces the original contract.
 
         Args:
-            use_websearch: Whether web search is enabled
-            tool_specific: Optional tool-specific search guidance
+            use_websearch: Whether to include web search instructions. Defaults to True.
+                          None is treated as True for backward compatibility.
+            tool_specific: Optional tool-specific web search guidance.
 
         Returns:
-            str: Web search instruction to append to prompt, or empty string
+            Web search instruction string, or empty string if use_websearch is False.
         """
+        # Handle None as True (default behavior)
+        if use_websearch is None:
+            use_websearch = True
+
+        # CRITICAL: This check preserves the original contract.
+        # If web search is not requested, we MUST return an empty string.
         if not use_websearch:
             return ""
 
+        # If web search IS requested, delegate to the new internal implementation.
+        return self._internal_get_websearch_instruction(tool_specific)
+
+    def _internal_get_websearch_instruction(self, tool_specific: Optional[str] = None) -> str:
+        """Generate standardized web search instruction. New code should call this directly."""
         base_instruction = """
 
-WEB SEARCH CAPABILITY: You can request Claude to perform web searches to enhance your analysis with current information!
+WEB SEARCH CAPABILITY: You can request the calling agent to perform web searches to enhance your analysis with current information!
 
-IMPORTANT: When you identify areas where web searches would significantly improve your response (such as checking current documentation, finding recent solutions, verifying best practices, or gathering community insights), you MUST explicitly instruct Claude to perform specific web searches and then respond back using the continuation_id from this response to continue the analysis.
+IMPORTANT: When you identify areas where web searches would significantly improve your response (such as checking current documentation, finding recent solutions, verifying best practices, or gathering community insights), you MUST explicitly instruct the agent to perform specific web searches and then respond back using the continuation_id from this response to continue the analysis.
 
 Use clear, direct language based on the value of the search:
 
@@ -1077,11 +1091,7 @@ For critical/essential information: "SEARCH REQUIRED: Please immediately perform
 This ensures you get the most current and comprehensive information while maintaining conversation context through the continuation_id."""
 
         if tool_specific:
-            return f"""{base_instruction}
-
-{tool_specific}
-
-When recommending searches, be specific about what information you need and why it would improve your analysis."""
+            return f"{base_instruction}\n\n{tool_specific}\n\nWhen recommending searches, be specific about what information you need and why it would improve your analysis."
 
         # Default instruction for all tools
         return f"""{base_instruction}
@@ -1094,7 +1104,28 @@ Consider requesting searches for:
 - Security advisories and patches
 - Performance benchmarks and optimizations
 
-When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct Claude to use the continuation_id from this response when providing search results."""
+When recommending searches, be specific about what information you need and why it would improve your analysis. Always remember to instruct agent to use the continuation_id from this response when providing search results."""
+
+    # === HELPER METHOD FOR CONTEXT WINDOW FORMATTING ===
+    # // Critical-Engineer: consulted for Base tool abstraction and upstream divergence strategy
+    @staticmethod
+    def _format_context_window(tokens: int) -> Optional[str]:
+        """Convert a raw context window into a short display string."""
+
+        if not tokens or tokens <= 0:
+            return None
+
+        if tokens >= 1_000_000:
+            if tokens % 1_000_000 == 0:
+                return f"{tokens // 1_000_000}M ctx"
+            return f"{tokens / 1_000_000:.1f}M ctx"
+
+        if tokens >= 1_000:
+            if tokens % 1_000 == 0:
+                return f"{tokens // 1_000}K ctx"
+            return f"{tokens / 1_000:.1f}K ctx"
+
+        return f"{tokens} ctx"
 
     def get_language_instruction(self) -> str:
         """
@@ -1513,7 +1544,7 @@ When recommending searches, be specific about what information you need and why 
         # Apply 40MB cap for custom models if needed
         effective_limit_mb = max_size_mb
         try:
-            from providers.base import ProviderType
+            from providers.shared import ProviderType
 
             # ModelCapabilities dataclass has provider field defined
             if capabilities.provider == ProviderType.CUSTOM:

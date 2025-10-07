@@ -327,10 +327,10 @@ class TestCrossToolFileContext:
 
         history, tokens = build_conversation_history(context)
 
-        # Verify cross-tool context
-        assert "--- Turn 1 (Gemini using analyze) ---" in history
+        # Verify cross-tool context (model-agnostic labels from Phase 0.75)
+        assert "--- Turn 1 (Assistant using analyze) ---" in history
         assert "--- Turn 2 (Claude) ---" in history
-        assert "--- Turn 3 (Gemini using testgen) ---" in history
+        assert "--- Turn 3 (Assistant using testgen) ---" in history
 
         # Verify file context preservation
         assert "Files used in this turn: " + src_file in history

@@ -1,0 +1,48 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.11, pytest-8.4.2, pluggy-1.6.0 -- /Volumes/HestAI-Tools/hestai-mcp-server/.hestai_venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Volumes/HestAI-Tools/hestai-mcp-server
+configfile: pytest.ini
+plugins: asyncio-1.1.0, mock-3.15.0, anyio-4.10.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 969 items / 1 error / 12 deselected / 957 selected
+
+==================================== ERRORS ====================================
+____________ ERROR collecting tests/test_listmodels_restrictions.py ____________
+ImportError while importing test module '/Volumes/HestAI-Tools/hestai-mcp-server/tests/test_listmodels_restrictions.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+.hestai_venv/lib/python3.12/site-packages/_pytest/python.py:485: in importtestmodule
+    mod = import_path(
+.hestai_venv/lib/python3.12/site-packages/_pytest/pathlib.py:569: in import_path
+    importlib.import_module(module_name)
+/opt/homebrew/Cellar/python@3.12/3.12.11/Frameworks/Python.framework/Versions/3.12/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+.hestai_venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:184: in exec_module
+    exec(co, module.__dict__)
+tests/test_listmodels_restrictions.py:8: in <module>
+    from providers.shared import ModelProvider, ProviderType
+E   ImportError: cannot import name 'ModelProvider' from 'providers.shared' (/Volumes/HestAI-Tools/hestai-mcp-server/providers/shared/__init__.py)
+=============================== warnings summary ===============================
+tools/testguard.py:52
+  /Volumes/HestAI-Tools/hestai-mcp-server/tools/testguard.py:52: PytestCollectionWarning: cannot collect test class 'RequirementsRequest' because it has a __init__ constructor (from: tests/test_testguard_enhanced.py)
+    class RequirementsRequest(ToolRequest):
+
+tools/testguard.py:65
+  /Volumes/HestAI-Tools/hestai-mcp-server/tools/testguard.py:65: PytestCollectionWarning: cannot collect test class 'RequirementsTool' because it has a __init__ constructor (from: tests/test_testguard_enhanced.py)
+    class RequirementsTool(SimpleTool):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/test_listmodels_restrictions.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+================= 12 deselected, 2 warnings, 1 error in 0.99s ==================

@@ -196,7 +196,7 @@ class TestConversationMemory:
 
         # Test speaker identification
         assert "--- Turn 1 (Claude) ---" in history
-        assert "--- Turn 2 (Gemini using chat) ---" in history
+        assert "--- Turn 2 (Assistant using chat) ---" in history
 
         # Test content
         assert "What is Python?" in history
@@ -623,9 +623,9 @@ class TestConversationFlow:
         history, tokens = build_conversation_history(final_context)
 
         # Verify chronological order and speaker identification
-        assert "--- Turn 1 (Gemini using analyze) ---" in history
+        assert "--- Turn 1 (Assistant using analyze) ---" in history
         assert "--- Turn 2 (Claude) ---" in history
-        assert "--- Turn 3 (Gemini using analyze) ---" in history
+        assert "--- Turn 3 (Assistant using analyze) ---" in history
 
         # Verify all files are preserved in chronological order
         turn_1_files = "Files used in this turn: /project/src/main.py, /project/src/utils.py"
@@ -642,9 +642,9 @@ class TestConversationFlow:
         assert "Test coverage analysis complete. Coverage is 85%." in history
 
         # Verify chronological ordering (turn 1 appears before turn 2, etc.)
-        turn_1_pos = history.find("--- Turn 1 (Gemini using analyze) ---")
+        turn_1_pos = history.find("--- Turn 1 (Assistant using analyze) ---")
         turn_2_pos = history.find("--- Turn 2 (Claude) ---")
-        turn_3_pos = history.find("--- Turn 3 (Gemini using analyze) ---")
+        turn_3_pos = history.find("--- Turn 3 (Assistant using analyze) ---")
 
         assert turn_1_pos < turn_2_pos < turn_3_pos
 

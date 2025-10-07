@@ -41,9 +41,9 @@ if sys.platform == "win32":
 
 # Register providers for all tests
 from providers import ModelProviderRegistry  # noqa: E402
-from providers.base import ProviderType  # noqa: E402
 from providers.gemini import GeminiModelProvider  # noqa: E402
 from providers.openai_provider import OpenAIModelProvider  # noqa: E402
+from providers.shared import ProviderType  # noqa: E402
 from providers.xai import XAIModelProvider  # noqa: E402
 
 # Register providers at test startup
@@ -100,7 +100,7 @@ def mock_provider_availability(request, monkeypatch):
             return
 
     # Ensure providers are registered (in case other tests cleared the registry)
-    from providers.base import ProviderType
+    from providers.shared import ProviderType
 
     registry = ModelProviderRegistry()
 
