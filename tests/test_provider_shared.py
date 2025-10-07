@@ -6,7 +6,6 @@ It MUST fail until providers/shared/ is created with ProviderType enum.
 Constitutional requirement: RED state before implementation (Line 52)
 """
 
-import pytest
 
 
 def test_providertype_import():

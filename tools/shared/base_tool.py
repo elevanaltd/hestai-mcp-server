@@ -335,8 +335,8 @@ class BaseTool(ABC):
             ]
 
             # Get descriptions from enabled providers
-            from providers.base import ProviderType
             from providers.registry import ModelProviderRegistry
+            from providers.shared import ProviderType
 
             # Map provider types to readable names
             provider_names = {
@@ -1544,7 +1544,7 @@ When recommending searches, be specific about what information you need and why 
         # Apply 40MB cap for custom models if needed
         effective_limit_mb = max_size_mb
         try:
-            from providers.base import ProviderType
+            from providers.shared import ProviderType
 
             # ModelCapabilities dataclass has provider field defined
             if capabilities.provider == ProviderType.CUSTOM:

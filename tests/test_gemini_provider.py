@@ -8,8 +8,6 @@ Constitutional requirement: RED state before implementation (Line 52)
 
 import inspect
 
-import pytest
-
 
 def test_gemini_provider_imports():
     """Verify Gemini provider uses new SDK (google-genai not google.generativeai)

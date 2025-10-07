@@ -3,21 +3,12 @@
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any, Optional
 
+# Import ProviderType from shared module to avoid duplication
+from providers.shared import ProviderType
+
 logger = logging.getLogger(__name__)
-
-
-class ProviderType(Enum):
-    """Supported model provider types."""
-
-    GOOGLE = "google"
-    OPENAI = "openai"
-    XAI = "xai"
-    OPENROUTER = "openrouter"
-    CUSTOM = "custom"
-    DIAL = "dial"
 
 
 class TemperatureConstraint(ABC):

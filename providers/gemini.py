@@ -556,3 +556,61 @@ class GeminiModelProvider(ModelProvider):
 
         # Ultimate fallback to best available model
         return find_best(allowed_models)
+
+    # ------------------------------------------------------------------
+    # Abstract method implementations (required by ModelProvider base)
+    # ------------------------------------------------------------------
+
+    def get_capabilities(self, model_name: str) -> ModelCapabilities:
+        """Get capabilities for a specific Gemini model."""
+        # Resolve shorthand
+        resolved_name = self._resolve_model_name(model_name)
+
+        if resolved_name not in self.MODEL_CAPABILITIES:
+            raise ValueError(f"Unsupported Gemini model: {model_name}")
+
+        # Check if model is allowed by restrictions
+        from utils.model_restrictions import get_restriction_service
+
+        restriction_service = get_restriction_service()
+        # IMPORTANT: Parameter order is (provider_type, model_name, original_name)
+        # resolved_name is the canonical model name, model_name is the user input
+        if not restriction_service.is_allowed(ProviderType.GOOGLE, resolved_name, model_name):
+            raise ValueError(f"Gemini model '{resolved_name}' is not allowed by restriction policy.")
+
+        # Return the ModelCapabilities object directly from MODEL_CAPABILITIES
+        return self.MODEL_CAPABILITIES[resolved_name]
+
+    def count_tokens(self, text: str, model_name: str) -> int:
+        """Count tokens for the given text using Gemini's tokenizer."""
+        self._resolve_model_name(model_name)
+
+        # For now, use a simple estimation
+        # TODO: Use actual Gemini tokenizer when available in SDK
+        # Rough estimation: ~4 characters per token for English text
+        return len(text) // 4
+
+    def validate_model_name(self, model_name: str) -> bool:
+        """Validate if the model name is supported and allowed."""
+        resolved_name = self._resolve_model_name(model_name)
+
+        # First check if model is supported
+        if resolved_name not in self.MODEL_CAPABILITIES:
+            return False
+
+        # Then check if model is allowed by restrictions
+        from utils.model_restrictions import get_restriction_service
+
+        restriction_service = get_restriction_service()
+        # IMPORTANT: Parameter order is (provider_type, model_name, original_name)
+        # resolved_name is the canonical model name, model_name is the user input
+        if not restriction_service.is_allowed(ProviderType.GOOGLE, resolved_name, model_name):
+            logger.debug(f"Gemini model '{model_name}' -> '{resolved_name}' blocked by restrictions")
+            return False
+
+        return True
+
+    def supports_thinking_mode(self, model_name: str) -> bool:
+        """Check if the model supports extended thinking mode."""
+        capabilities = self.get_capabilities(model_name)
+        return capabilities.supports_extended_thinking
