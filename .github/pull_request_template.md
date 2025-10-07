@@ -76,3 +76,60 @@ Fixes #(issue number)
 ## Additional Notes
 
 Any additional information that reviewers should know.
+
+---
+
+## Snapshot Contract Validation (If Applicable)
+
+<!-- ⚠️ CRITICAL: Only complete this section if PR adds/modifies files in tests/snapshots/ -->
+<!-- This section enforces test methodology guardian protocol for contract correctness -->
+
+### Does this PR modify snapshot files?
+
+- [ ] Yes - Complete validation checklist below
+- [ ] No - Skip this section
+
+### Snapshot Validation Checklist
+
+**For each modified snapshot file, reviewer MUST verify:**
+
+#### Cross-Reference Validation (Critical - Automated by Meta-Test)
+
+The automated meta-test (`tests/test_schema_source_parity.py`) will verify:
+- [ ] Schema matches source Pydantic model (tool implementation)
+- [ ] All parameters from model present in snapshot
+- [ ] Required fields match actual tool enforcement
+- [ ] Type constraints accurate (enums, min/max, patterns)
+
+**If meta-test fails, the snapshot contract has drifted from its source of truth.**
+
+#### Human Review Requirements (Not Automated)
+
+Reviewer must manually verify:
+- [ ] Field descriptions are accurate and helpful
+- [ ] Enum values match actual application constraints
+- [ ] Default values are appropriate for the use case
+- [ ] Optional parameters properly marked and documented
+
+#### Completeness Check
+
+- [ ] All tool parameters documented in schema
+- [ ] No placeholder or dummy values present
+- [ ] JSON syntax valid (no trailing commas, proper escaping)
+- [ ] Formatting consistent with other snapshots
+
+#### Regression Prevention
+
+- [ ] If schema existed before, breaking changes documented in PR description
+- [ ] Intentional changes justified with clear rationale
+- [ ] Unexpected differences investigated and explained
+
+### Guardian Protocol Compliance
+
+**Contract-Driven-Correction:** Snapshots define test contracts. Contracts must be correct before enforcement.
+
+**Truth Over Convenience:** Do not approve snapshots that validate current behavior if that behavior is incorrect.
+
+**Process Integrity:** New snapshots require two-PR process:
+1. First PR: Establish baseline (snapshots only)
+2. Second PR: Enforce contract (code + tests validate against baseline)

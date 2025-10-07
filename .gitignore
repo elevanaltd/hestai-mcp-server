@@ -188,4 +188,5 @@ logs/
 
 /worktrees.integration-backup/
 *.bak
+/worktrees
 /.coord

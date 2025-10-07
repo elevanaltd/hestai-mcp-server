@@ -1,27 +1,107 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
+  "description": "Request model for debug investigation steps matching original debug tool exactly",
   "properties": {
-    "backtrack_from_step": {
-      "description": "If an earlier finding or hypothesis needs to be revised or discarded, specify the step number from which to start over. Use this to acknowledge investigative dead ends and correct the course.",
-      "minimum": 1,
-      "type": "integer"
-    },
-    "confidence": {
-      "description": "Indicate your current confidence in the hypothesis. Use: 'exploring' (starting out), 'low' (early idea), 'medium' (some supporting evidence), 'high' (strong evidence), 'very_high' (very strong evidence), 'almost_certain' (nearly confirmed), 'certain' (100% confidence - root cause and minimal fix are both confirmed locally with no need for external model validation). Do NOT use 'certain' unless the issue can be fully resolved with a fix, use 'very_high' or 'almost_certain' instead when not 100% sure. Using 'certain' means you have complete confidence locally and prevents external model validation. Also do NOT set confidence to 'certain' if the user has strongly requested that external validation MUST be performed.",
-      "enum": [
-        "exploring",
-        "low",
-        "medium",
-        "high",
-        "very_high",
-        "almost_certain",
-        "certain"
+    "model": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "type": "string"
+      "default": null,
+      "description": "Model to use. See tool's input schema for available models and their capabilities. Use 'auto' to let Claude select the best model for the task.",
+      "title": "Model"
+    },
+    "temperature": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Temperature"
+    },
+    "thinking_mode": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Thinking Mode"
+    },
+    "use_websearch": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Use Websearch"
     },
     "continuation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
       "description": "Thread continuation ID for multi-turn conversations. When provided, the complete conversation history is automatically embedded as context. Your response should build upon this history without repeating previous analysis or instructions. Focus on providing only new insights, additional findings, or answers to follow-up questions. Can be used across different tools.",
+      "title": "Continuation Id"
+    },
+    "images": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Optional list of absolute paths to screenshots or UI visuals that clarify the issue. Only include if they materially assist understanding or hypothesis formulation.",
+      "title": "Images"
+    },
+    "step": {
+      "description": "Describe what you're currently investigating by thinking deeply about the issue and its possible causes. In step 1, clearly state the issue and begin forming an investigative direction after thinking carefullyabout the described problem. Ask further questions from the user if you think these will help with yourunderstanding and investigation. CRITICAL: Remember that reported symptoms might originate from code far from where they manifest. Also be aware that after thorough investigation, you might find NO BUG EXISTS - it could be a misunderstanding or expectation mismatch. Consider not only obvious failures, but also subtle contributing factors like upstream logic, invalid inputs, missing preconditions, or hidden side effects. Map out the flow of related functions or modules. Identify call paths where input values or branching logic could cause instability. In concurrent systems, watch for race conditions, shared state, or timing dependencies. In all later steps, continue exploring with precision: trace deeper dependencies, verify hypotheses, and adapt your understanding as you uncover more evidence.",
+      "title": "Step",
+      "type": "string"
+    },
+    "step_number": {
+      "description": "The index of the current step in the investigation sequence, beginning at 1. Each step should build upon or revise the previous one.",
+      "title": "Step Number",
+      "type": "integer"
+    },
+    "total_steps": {
+      "description": "Your current estimate for how many steps will be needed to complete the investigation. Adjust as new findings emerge.",
+      "title": "Total Steps",
+      "type": "integer"
+    },
+    "next_step_required": {
+      "description": "Set to true if you plan to continue the investigation with another step. False means you believe the root cause is known or the investigation is complete.",
+      "title": "Next Step Required",
+      "type": "boolean"
+    },
+    "findings": {
+      "description": "Summarize everything discovered in this step. Include new clues, unexpected behavior, evidence from code or logs, or disproven theories. Be specific and avoid vague language\u2014document what you now know and how it affects your hypothesis. IMPORTANT: If you find no evidence supporting the reported issue after thorough investigation, document this clearly. Finding 'no bug' is a valid outcome if the investigation was comprehensive. In later steps, confirm or disprove past findings with reason.",
+      "title": "Findings",
       "type": "string"
     },
     "files_checked": {
@@ -29,43 +109,7 @@
       "items": {
         "type": "string"
       },
-      "type": "array"
-    },
-    "findings": {
-      "description": "Summarize everything discovered in this step. Include new clues, unexpected behavior, evidence from code or logs, or disproven theories. Be specific and avoid vague language\u2014document what you now know and how it affects your hypothesis. IMPORTANT: If you find no evidence supporting the reported issue after thorough investigation, document this clearly. Finding 'no bug' is a valid outcome if the investigation was comprehensive. In later steps, confirm or disprove past findings with reason.",
-      "type": "string"
-    },
-    "hypothesis": {
-      "description": "A concrete theory for what's causing the issue based on the evidence so far. This can include suspected failures, incorrect assumptions, or violated constraints. VALID HYPOTHESES INCLUDE: 'No bug found - possible user misunderstanding' or 'Symptoms appear unrelated to any code issue' if evidence supports this. When no bug is found, consider suggesting: 'Recommend discussing with thought partner/engineering assistant for clarification of expected behavior.' You are encouraged to revise or abandon hypotheses in later steps as needed based on evidence.",
-      "type": "string"
-    },
-    "images": {
-      "description": "Optional list of absolute paths to screenshots or UI visuals that clarify the issue. Only include if they materially assist understanding or hypothesis formulation.",
-      "items": {
-        "type": "string"
-      },
-      "type": "array"
-    },
-    "issues_found": {
-      "description": "Issues identified with severity levels during work",
-      "items": {
-        "type": "object"
-      },
-      "type": "array"
-    },
-    "model": {
-      "description": "Model to use. Native models: 'flash', 'flash-2.0', 'flash-lite', 'flash2', 'flash2.5', 'flashlite', 'gemini pro', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-pro', 'gpt-4.1-2025-04-14', 'gpt4.1', 'grok', 'grok-3', 'grok-3-fast', 'grok3', 'grok3-fast', 'grok3fast', 'grokfast', 'mini', 'o3', 'o3-mini', 'o3-pro', 'o3-pro-2025-06-10', 'o3mini', 'o4-mini', 'o4mini', 'pro'. OpenRouter aliases: 'anthropic/claude-3.5-haiku', 'anthropic/claude-opus-4', 'anthropic/claude-sonnet-4', 'claude', 'claude-3-haiku', 'claude-4-opus', 'claude-4-sonnet', 'claude-haiku', 'claude-opus', 'claude-sonnet', 'claude3-haiku', 'claude4-opus', 'claude4-sonnet', 'deepseek', 'deepseek-chat-v3', 'deepseek-free', 'deepseek-r1', 'deepseek-thinking', 'deepseek-v3', 'deepseek/deepseek-chat-v3-0324:free', 'deepseek/deepseek-r1-0528', 'flash', 'flash-2.5', 'flash-lite', 'flash-lite-preview', 'flash-openrouter', 'gemini', 'gemini-flash', 'gemini-flash-lite', 'gemini-pro', 'google/gemini-2.5-flash', 'google/gemini-2.5-flash-lite-preview-06-17', 'google/gemini-2.5-pro', 'gpt-4.1', 'gpt-4.1-2025-04-14', 'gpt-4.1-mini', 'gpt-4.1-openrouter', 'gpt-5', 'gpt4.1', 'gpt41', 'gpt41-mini', 'gpt5', 'haiku', 'llama', 'llama-70b', 'llama3', 'llama3-70b', 'llama3-openrouter', 'llama3.2', 'local', 'local-llama', 'meta-llama/llama-3-70b', 'mistral', 'mistral-large', 'mistralai/mistral-large-2411', 'o3', 'o3-mini', 'o3-mini-high', 'o3-pro', 'o3mini', 'o3mini-high', 'o3pro', 'o4-mini', 'o4mini', 'ollama-llama', 'openai/gpt-4.1', 'openai/gpt-4.1-mini', 'openai/gpt-5', 'openai/o3', 'openai/o3-mini', 'openai/o3-mini-high', 'openai/o3-pro', 'openai/o4-mini', 'openrouter-gpt41', 'openrouter-gpt41-mini', 'openrouter-gpt5', 'opus', 'perplexity', 'perplexity-online', 'perplexity/llama-3-sonar-large-32k-online', 'pro', 'pro-openrouter', 'r1', 'sonar', 'sonnet'. Defaults to 'gemini-2.5-flash' if not specified.",
-      "type": "string"
-    },
-    "next_step_required": {
-      "description": "Set to true if you plan to continue the investigation with another step. False means you believe the root cause is known or the investigation is complete.",
-      "type": "boolean"
-    },
-    "relevant_context": {
-      "description": "Methods/functions identified as involved in the issue",
-      "items": {
-        "type": "string"
-      },
+      "title": "Files Checked",
       "type": "array"
     },
     "relevant_files": {
@@ -73,48 +117,77 @@
       "items": {
         "type": "string"
       },
+      "title": "Relevant Files",
       "type": "array"
     },
-    "step": {
-      "description": "Describe what you're currently investigating by thinking deeply about the issue and its possible causes. In step 1, clearly state the issue and begin forming an investigative direction after thinking carefullyabout the described problem. Ask further questions from the user if you think these will help with yourunderstanding and investigation. CRITICAL: Remember that reported symptoms might originate from code far from where they manifest. Also be aware that after thorough investigation, you might find NO BUG EXISTS - it could be a misunderstanding or expectation mismatch. Consider not only obvious failures, but also subtle contributing factors like upstream logic, invalid inputs, missing preconditions, or hidden side effects. Map out the flow of related functions or modules. Identify call paths where input values or branching logic could cause instability. In concurrent systems, watch for race conditions, shared state, or timing dependencies. In all later steps, continue exploring with precision: trace deeper dependencies, verify hypotheses, and adapt your understanding as you uncover more evidence.",
-      "type": "string"
+    "relevant_context": {
+      "description": "List methods or functions that are central to the issue, in the format 'ClassName.methodName' or 'functionName'. Prioritize those that influence or process inputs, drive branching, or pass state between modules.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Relevant Context",
+      "type": "array"
     },
-    "step_number": {
-      "description": "The index of the current step in the investigation sequence, beginning at 1. Each step should build upon or revise the previous one.",
-      "minimum": 1,
-      "type": "integer"
+    "issues_found": {
+      "description": "Issues identified with severity levels during work",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Issues Found",
+      "type": "array"
     },
-    "temperature": {
-      "description": "Temperature for response (0.0 to 1.0). Lower values are more focused and deterministic, higher values are more creative. Tool-specific defaults apply if not specified.",
-      "maximum": 1.0,
-      "minimum": 0.0,
-      "type": "number"
-    },
-    "thinking_mode": {
-      "description": "Thinking depth: minimal (0.5% of model max), low (8%), medium (33%), high (67%), max (100% of model max). Higher modes enable deeper reasoning at the cost of speed.",
-      "enum": [
-        "minimal",
-        "low",
-        "medium",
-        "high",
-        "max"
+    "confidence": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "type": "string"
+      "default": "low",
+      "description": "Indicate your current confidence in the hypothesis. Use: 'exploring' (starting out), 'low' (early idea), 'medium' (some supporting evidence), 'high' (strong evidence), 'very_high' (very strong evidence), 'almost_certain' (nearly confirmed), 'certain' (100% confidence - root cause and minimal fix are both confirmed locally with no need for external model validation). Do NOT use 'certain' unless the issue can be fully resolved with a fix, use 'very_high' or 'almost_certain' instead when not 100% sure. Using 'certain' means you have complete confidence locally and prevents external model validation. Also do NOT set confidence to 'certain' if the user has strongly requested that external validation MUST be performed.",
+      "title": "Confidence"
     },
-    "total_steps": {
-      "description": "Your current estimate for how many steps will be needed to complete the investigation. Adjust as new findings emerge.",
-      "minimum": 1,
-      "type": "integer"
+    "hypothesis": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "A concrete theory for what's causing the issue based on the evidence so far. This can include suspected failures, incorrect assumptions, or violated constraints. VALID HYPOTHESES INCLUDE: 'No bug found - possible user misunderstanding' or 'Symptoms appear unrelated to any code issue' if evidence supports this. When no bug is found, consider suggesting: 'Recommend discussing with thought partner/engineering assistant for clarification of expected behavior.' You are encouraged to revise or abandon hypotheses in later steps as needed based on evidence.",
+      "title": "Hypothesis"
+    },
+    "backtrack_from_step": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "If an earlier finding or hypothesis needs to be revised or discarded, specify the step number from which to start over. Use this to acknowledge investigative dead ends and correct the course.",
+      "title": "Backtrack From Step"
     },
     "use_assistant_model": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
       "default": true,
       "description": "Whether to use assistant model for expert analysis after completing the workflow steps. Set to False to skip expert analysis and rely solely on Claude's investigation. Defaults to True for comprehensive validation.",
-      "type": "boolean"
-    },
-    "use_websearch": {
-      "default": true,
-      "description": "Enable web search for documentation, best practices, and current information. When enabled, the model can request Claude to perform web searches and share results back during conversations. Particularly useful for: brainstorming sessions, architectural design discussions, exploring industry best practices, working with specific frameworks/technologies, researching solutions to complex problems, or when current documentation and community insights would enhance the analysis.",
-      "type": "boolean"
+      "title": "Use Assistant Model"
     }
   },
   "required": [
@@ -124,6 +197,6 @@
     "next_step_required",
     "findings"
   ],
-  "title": "DebugRequest",
+  "title": "DebugInvestigationRequest",
   "type": "object"
 }
