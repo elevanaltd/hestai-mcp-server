@@ -3,11 +3,38 @@
 Comprehensive Integration Plan: Zen-MCP-Server → HestAI-MCP-Server
 
 **Document Status:** Active Integration Plan - PHASE 0.5 IN PROGRESS
-**Version:** 1.2 (Updated with Evidence-Based Phase 0.5 STEP 3 Completion)
+**Version:** 1.3 (Added Branch-per-Step Mandate)
 **Last Updated:** 2025-10-07
 **Owner:** Technical Architecture Team
 **Phase 0 Status:** ✅ COMPLETE - See docs/108-DOC-PHASE-0-COMPLETION-REPORT.md
 **Phase 0.5 Status:** IN PROGRESS - STEP 3 COMPLETE ✅
+
+// Critical-Engineer: consulted for integration branching strategy and risk mitigation
+
+---
+
+## MANDATORY BRANCHING STRATEGY
+
+**Constitutional Principle (Line 84 - MINIMAL_INTERVENTION):** Each step must have independent rollback capability.
+
+**Branch-per-Step Policy:**
+- ✅ **MANDATORY:** Every numbered step/phase creates its own branch
+- ✅ **Chain-based:** Each branch builds from the previous completed step
+- ✅ **Isolated Risk:** Step failure only discards that branch, preserves prior work
+- ✅ **Focused Review:** One logical change per branch for review clarity
+
+**Branching Sequence:**
+```
+sync/02-env-utility (STEP 3 ✅ - env.py, conversation_memory.py, config.py)
+  └─> sync/03-utils-validation (STEP 4 - remaining utils analysis)
+       └─> sync/04-server-hybrid (STEP 5 - server.py 975-line merge)
+            └─> sync/05-gemini-sdk-migration (Phase 0.75 - provider rewrite)
+                 └─> FINAL MERGE to upstream-integration-staging
+```
+
+**Rationale:** A 975-line server.py merge (STEP 5) cannot be coupled with foundation changes (STEP 3). If server merge fails, we must preserve validated env.py and conversation_memory.py work. Branch-per-step provides trivial rollback: `git branch -D <failed-branch>`.
+
+**Anti-Pattern:** ❌ "God Branch" - Monolithic branch mixing unrelated changes creates rollback disasters.
 
 ---
 
