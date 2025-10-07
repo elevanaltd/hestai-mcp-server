@@ -372,7 +372,7 @@ Changes:
 
 ---
 
-### Phase 0.75: Provider Architecture Foundation (✅ COMPLETE with conditions)
+### Phase 0.75: Provider Architecture Foundation (✅ COMPLETE)
 
 **Status:** ✅ COMPLETE (GO - STEP 5 unblocked)
 **Completion Date:** 2025-10-07
@@ -404,15 +404,56 @@ Changes:
 - `decision-records/2025-10-07_phase075-provider-arch/evidence-diffs/GREEN_STATE_EVIDENCE.txt` - TDD GREEN state (6 passing tests)
 - `decision-records/2025-10-07_phase075-provider-arch/evidence-diffs/EMERGENCY_FIX_SUMMARY.md` - Emergency fix report
 
-**Known Issues (10 tests, NOT blockers):**
-1. Schema snapshots need update (2 tests) - Quick fix: ~10 minutes
-2. Alias/restriction feature incomplete (5 tests) - Feature work: ~2-4 hours
-3. ModelCapabilities dual-class issue (2 tests) - Cleanup: ~1 hour
-4. Conversation test expectations (1 test) - Quick fix: ~5 minutes
+---
 
-**Total effort to 100%:** ~4-6 hours (can be completed during STEP 5)
+### STEP 5: Server Strategic Hybrid (✅ COMPLETE)
 
-**Next Phase:** STEP 5 (Server Strategic Hybrid) - Ready to proceed
+**Status:** ✅ COMPLETE
+**Completion Date:** 2025-10-07
+**Branch:** sync/05-server-hybrid
+**Commits:** f2cef60, b519c3f, 3fbae3d, 981789d
+**Duration:** ~8 hours (multi-session)
+
+**Primary Objective:** ACHIEVED ✅
+- Server.py strategic hybrid (surgical 14-line merge, not 975-line rewrite)
+- SessionManager preserved (Human decision: Option 1)
+- 18 tools operational (16 HestAI + 2 Zen)
+
+**STEP 5 Deliverables:**
+- ✅ clink tool integrated (CLI delegation to Gemini/Codex/Qwen)
+- ✅ apilookup tool integrated (API documentation lookup)
+- ✅ clink/ infrastructure ported (~1,654 lines: agents, parsers, registry)
+- ✅ Server.py strategic hybrid (+14 lines only, SessionManager 100% intact)
+- ✅ Alias/restriction feature complete (strict policy, -32 lines, 82% simpler)
+- ✅ Schema snapshots updated (consensus, debug)
+- ✅ Conversation test updated (model-agnostic labels)
+
+**Test Results:** 775/776 passing (99.87%)
+
+**Critical-Engineer Verdict:** GO - Production ready
+
+**Known Issues (1 pre-existing, NOT blocker):**
+- `test_no_string_shorthand_in_supported_models` - Phase 0.75 artifact (ModelCapabilities dual-class)
+- Fix time: ~1 hour (Phase 1 cleanup)
+
+**Human Decision Record:**
+- **Decision Point:** SessionManager strategy (preserve vs port)
+- **Decision:** Option 1 - Preserve HestAI SessionManager (P0 security)
+- **Rationale:** Project-aware context isolation is non-negotiable security feature
+
+**Evidence Files:**
+- `decision-records/2025-10-07_step5-server-hybrid/STEP_5_COMPLETION_REPORT.md` - Full completion report
+- `/tmp/RED_state_alias_feature.txt` - Alias feature RED state (5 failing)
+- `/tmp/GREEN_state_alias_feature.txt` - Alias feature GREEN state (28/28 passing)
+- `/tmp/final_test_results_step5.txt` - Final test suite (775/776)
+- `/tmp/quality_gates_step5.txt` - Linting + full tests
+
+**Technical Highlights:**
+- Strategic hybrid pattern: 14-line change vs 975-line rewrite (99% code preservation)
+- Alias security fix: Closed P1 vulnerability (strict policy enforcement)
+- TRACED protocol: Full compliance (T-R-A-C-E-D complete)
+
+**Next Phase:** Phase 1 (Role Deduplication) OR merge to main
 
 ---
 
