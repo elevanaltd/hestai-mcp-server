@@ -597,6 +597,25 @@ class TestShorthandRestrictions:
         assert gemini_provider.validate_model_name("gemini-2.5-flash")
 
 
+class TestAliasResolution:
+    """Test alias resolution for model restrictions (Phase 0.75 Mandate)."""
+
+    def test_anthropic_provider_type_exists(self):
+        """Verify ProviderType.ANTHROPIC exists
+
+        Phase 0.75 requirement: Add ANTHROPIC to ProviderType enum
+
+        Expected: FAIL until providers/base.py updated with ANTHROPIC
+        """
+        # This will fail with AttributeError until ANTHROPIC added to enum
+        assert hasattr(ProviderType, 'ANTHROPIC'), \
+            "ProviderType.ANTHROPIC must exist (FAILS - not in enum yet)"
+
+        # Verify it has correct value
+        assert ProviderType.ANTHROPIC.value == 'anthropic', \
+            "ProviderType.ANTHROPIC should have value 'anthropic'"
+
+
 class TestAutoModeWithRestrictions:
     """Test auto mode behavior with restrictions."""
 
