@@ -1,0 +1,20 @@
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:    ProviderType,
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:                if not restriction_service.is_allowed(ProviderType.OPENROUTER, config.model_name, model_name):
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:                capabilities.provider = ProviderType.OPENROUTER
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:                capabilities.provider = ProviderType.CUSTOM
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:                provider=ProviderType.CUSTOM,
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:    def get_provider_type(self) -> ProviderType:
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/custom.py:        return ProviderType.CUSTOM
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:from .base import ModelProvider, ProviderType
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:    def register_provider(cls, provider_type: ProviderType, provider_class: type[ModelProvider]) -> None:
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            provider_type: Type of the provider (e.g., ProviderType.GOOGLE)
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:    def get_provider(cls, provider_type: ProviderType, force_new: bool = False) -> Optional[ModelProvider]:
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:        if provider_type == ProviderType.CUSTOM:
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.GOOGLE,  # Direct Gemini access
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.OPENAI,  # Direct OpenAI access
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.XAI,  # Direct X.AI GROK access
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.DIAL,  # DIAL unified API access
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.CUSTOM,  # Local/self-hosted models
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:            ProviderType.OPENROUTER,  # Catch-all for cloud models
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:    def get_available_providers(cls) -> list[ProviderType]:
+/Volumes/HestAI-Tools/hestai-mcp-server/providers/registry.py:    def get_available_models(cls, respect_restrictions: bool = True) -> dict[str, ProviderType]:

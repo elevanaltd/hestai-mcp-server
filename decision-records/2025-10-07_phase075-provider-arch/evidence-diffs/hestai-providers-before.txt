@@ -1,0 +1,15 @@
+total 368
+-rw-r--r--@  1 shaunbuswell  authedusers    594 Aug 18 00:30 __init__.py
+drwxr-xr-x@ 24 shaunbuswell  authedusers    768 Oct  6 17:14 __pycache__
+drwxr-xr-x@ 14 shaunbuswell  authedusers    448 Oct  7 00:25 .
+drwxr-xr-x@ 59 shaunbuswell  authedusers   1888 Oct  7 01:29 ..
+-rw-r--r--@  1 shaunbuswell  authedusers  16317 Aug 18 00:30 base.py
+-rw-r--r--@  1 shaunbuswell  authedusers  13422 Aug 18 00:30 custom.py
+-rw-r--r--@  1 shaunbuswell  authedusers  23238 Sep 14 23:28 dial.py
+-rw-r--r--@  1 shaunbuswell  authedusers  19849 Aug 18 16:59 gemini.py
+-rw-r--r--@  1 shaunbuswell  authedusers  33828 Aug 18 00:30 openai_compatible.py
+-rw-r--r--@  1 shaunbuswell  authedusers   8409 Aug 18 00:30 openai_provider.py
+-rw-r--r--@  1 shaunbuswell  authedusers   8856 Aug 18 00:30 openrouter_registry.py
+-rw-r--r--@  1 shaunbuswell  authedusers  12042 Aug 18 16:59 openrouter.py
+-rw-r--r--@  1 shaunbuswell  authedusers  21057 Aug 18 16:59 registry.py
+-rw-r--r--@  1 shaunbuswell  authedusers   5323 Aug 18 00:30 xai.py
