@@ -54,9 +54,25 @@ class ModelCapabilities:
 
     # Additional attributes
     max_image_size_mb: float = 0.0
+    is_custom: bool = False  # Whether this model requires custom API endpoints
     temperature_constraint: TemperatureConstraint = field(
         default_factory=lambda: RangeTemperatureConstraint(0.0, 2.0, 0.3)
     )
+
+    # Backward compatibility property for existing code
+    @property
+    def temperature_range(self) -> tuple[float, float]:
+        """Backward compatibility for existing code that uses temperature_range."""
+        from .temperature import DiscreteTemperatureConstraint, FixedTemperatureConstraint
+
+        if isinstance(self.temperature_constraint, RangeTemperatureConstraint):
+            return (self.temperature_constraint.min_temp, self.temperature_constraint.max_temp)
+        elif isinstance(self.temperature_constraint, FixedTemperatureConstraint):
+            return (self.temperature_constraint.value, self.temperature_constraint.value)
+        elif isinstance(self.temperature_constraint, DiscreteTemperatureConstraint):
+            values = self.temperature_constraint.allowed_values
+            return (min(values), max(values))
+        return (0.0, 2.0)  # Fallback
 
     def get_effective_temperature(self, requested_temperature: float) -> Optional[float]:
         """Return the temperature that should be sent to the provider.

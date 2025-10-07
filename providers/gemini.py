@@ -8,7 +8,8 @@ from typing import Optional
 
 import google.generativeai as genai
 
-from .base import ModelCapabilities, ModelProvider, ModelResponse, ProviderType, create_temperature_constraint
+from .base import ModelProvider, ModelResponse, ProviderType, create_temperature_constraint
+from .shared import ModelCapabilities
 
 logger = logging.getLogger(__name__)
 

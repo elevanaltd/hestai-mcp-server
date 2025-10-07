@@ -5,8 +5,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-# Import ProviderType from shared module to avoid duplication
-from providers.shared import ProviderType
+# Import shared types to avoid duplication
+from providers.shared import ModelCapabilities, ProviderType
 
 logger = logging.getLogger(__name__)
 
@@ -113,55 +113,6 @@ def create_temperature_constraint(constraint_type: str) -> TemperatureConstraint
     else:
         # Default range constraint (for "range" or None)
         return RangeTemperatureConstraint(0.0, 2.0, 0.7)
-
-
-@dataclass
-class ModelCapabilities:
-    """Capabilities and constraints for a specific model."""
-
-    provider: ProviderType
-    model_name: str
-    friendly_name: str  # Human-friendly name like "Gemini" or "OpenAI"
-    context_window: int  # Total context window size in tokens
-    max_output_tokens: int  # Maximum output tokens per request
-    supports_extended_thinking: bool = False
-    supports_system_prompts: bool = True
-    supports_streaming: bool = True
-    supports_function_calling: bool = False
-    supports_images: bool = False  # Whether model can process images
-    max_image_size_mb: float = 0.0  # Maximum total size for all images in MB
-    supports_temperature: bool = True  # Whether model accepts temperature parameter in API calls
-
-    # Additional fields for comprehensive model information
-    description: str = ""  # Human-readable description of the model
-    aliases: list[str] = field(default_factory=list)  # Alternative names/shortcuts for the model
-
-    # JSON mode support (for providers that support structured output)
-    supports_json_mode: bool = False
-
-    # Thinking mode support (for models with thinking capabilities)
-    max_thinking_tokens: int = 0  # Maximum thinking tokens for extended reasoning models
-
-    # Custom model flag (for models that only work with custom endpoints)
-    is_custom: bool = False  # Whether this model requires custom API endpoints
-
-    # Temperature constraint object - preferred way to define temperature limits
-    temperature_constraint: TemperatureConstraint = field(
-        default_factory=lambda: RangeTemperatureConstraint(0.0, 2.0, 0.7)
-    )
-
-    # Backward compatibility property for existing code
-    @property
-    def temperature_range(self) -> tuple[float, float]:
-        """Backward compatibility for existing code that uses temperature_range."""
-        if isinstance(self.temperature_constraint, RangeTemperatureConstraint):
-            return (self.temperature_constraint.min_temp, self.temperature_constraint.max_temp)
-        elif isinstance(self.temperature_constraint, FixedTemperatureConstraint):
-            return (self.temperature_constraint.value, self.temperature_constraint.value)
-        elif isinstance(self.temperature_constraint, DiscreteTemperatureConstraint):
-            values = self.temperature_constraint.allowed_values
-            return (min(values), max(values))
-        return (0.0, 2.0)  # Fallback
 
 
 @dataclass
