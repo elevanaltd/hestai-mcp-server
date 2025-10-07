@@ -73,10 +73,12 @@ from tools import (  # noqa: E402
     AnalyzeTool,
     ChallengeTool,
     ChatTool,
+    CLinkTool,
     ConsensusTool,
     CriticalEngineerTool,
     DebugIssueTool,
     ListModelsTool,
+    LookupTool,
     PlannerTool,
     RequirementsTool,
     SecauditTool,
@@ -300,6 +302,7 @@ def filter_disabled_tools(all_tools: dict[str, Any]) -> dict[str, Any]:
 # Critical-Engineer: consulted for architectural-decisions - adding registry tool
 TOOLS = {
     "chat": ChatTool(),  # Interactive development chat and brainstorming
+    "clink": CLinkTool(),  # Bridge requests to configured AI CLIs
     "thinkdeep": ThinkDeepTool(),  # Step-by-step deep thinking workflow with expert analysis
     "planner": PlannerTool(),  # Interactive sequential planner using workflow architecture
     "consensus": ConsensusTool(),  # Step-by-step consensus workflow with multi-model analysis
@@ -311,6 +314,7 @@ TOOLS = {
     "critical-engineer": CriticalEngineerTool(),  # Technical validation for major decisions and architecture
     "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
     "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
+    "apilookup": LookupTool(),  # Quick web/API lookup instructions
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
     # Archived tools (handled by Claude subagents):
@@ -328,6 +332,16 @@ PROMPT_TEMPLATES = {
         "name": "chat",
         "description": "Chat and brainstorm ideas",
         "template": "Chat with {model} about this",
+    },
+    "clink": {
+        "name": "clink",
+        "description": "Forward a request to a configured AI CLI (e.g., Gemini)",
+        "template": "Use clink with cli_name=<cli> to run this prompt",
+    },
+    "apilookup": {
+        "name": "apilookup",
+        "description": "Look up the latest API or SDK information",
+        "template": "Lookup latest API docs for {model}",
     },
     "thinkdeep": {
         "name": "thinkdeeper",
