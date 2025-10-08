@@ -19,6 +19,17 @@
     "codereviewer": {
       "prompt_path": "systemprompts/clink/default_codereviewer.txt",
       "role_args": []
+    },
+    "surveyor": {
+      "prompt_path": "systemprompts/clink/surveyor.txt",
+      "role_args": [
+        "--include-directories",
+        "/Users/shaunbuswell/.claude/agents"
+      ]
+    },
+    "testguard": {
+      "prompt_path": "systemprompts/clink/testguard.txt",
+      "role_args": []
     }
   }
 }
