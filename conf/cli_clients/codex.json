@@ -18,6 +18,14 @@
     "codereviewer": {
       "prompt_path": "systemprompts/clink/codex_codereviewer.txt",
       "role_args": []
+    },
+    "quality-observer": {
+      "prompt_path": "systemprompts/clink/quality-observer.txt",
+      "role_args": []
+    },
+    "critical-engineer": {
+      "prompt_path": "systemprompts/clink/critical-engineer.txt",
+      "role_args": []
     }
   }
 }

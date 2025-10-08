@@ -1,0 +1,367 @@
+{
+  "metadata": {
+    "date": "2025-10-07",
+    "total_agents_analyzed": 61,
+    "categorization_basis": "Constitutional authority, complexity, autonomy requirements",
+    "tiers": {
+      "tier1_gemini": "Exploration & discovery - autonomous research, no authority",
+      "tier2_codex": "Code analysis & review - advisory, no blocking decisions",
+      "tier3_claude": "Authority & implementation - GO/NO-GO, blocking authority, complex workflows"
+    }
+  },
+
+  "tier1_gemini_cli": {
+    "description": "Autonomous exploration agents - 1M context, free tier, structured findings",
+    "agents": [
+      {
+        "name": "research-analyst",
+        "purpose": "Fact finding, reality validation, technical feasibility assessment",
+        "key_capability": "Deep research, systematic investigation, evidence gathering",
+        "reasoning": "Pure research/exploration, no authority, produces findings for validation"
+      },
+      {
+        "name": "research-analyst-pattern-extractor",
+        "purpose": "Pattern extraction and modularity analysis",
+        "key_capability": "Systematic investigation, reusable component identification",
+        "reasoning": "Pattern discovery across codebase, no decisions, exploration focus"
+      },
+      {
+        "name": "research-curator",
+        "purpose": "Observation, pattern recognition, insight preservation",
+        "key_capability": "Cross-category pattern recognition, knowledge curation",
+        "reasoning": "Meta-observation and pattern synthesis, no authority"
+      },
+      {
+        "name": "documentation-researcher",
+        "purpose": "Real-time library documentation retrieval",
+        "key_capability": "Context7 integration, API validation, framework updates",
+        "reasoning": "Pure research tool, fetches documentation, no decisions"
+      },
+      {
+        "name": "session-briefer",
+        "purpose": "Comprehensive session briefings for context understanding",
+        "key_capability": "Session history synthesis, context reconstruction",
+        "reasoning": "Information synthesis, no authority, produces briefings"
+      },
+      {
+        "name": "idea-clarifier",
+        "purpose": "Concept refinement, problem essence discovery",
+        "key_capability": "Unspoken needs discovery, empathetic exploration",
+        "reasoning": "Discovery and clarification, no authority, advisory only"
+      },
+      {
+        "name": "edge-optimizer",
+        "purpose": "Boundary exploration, breakthrough optimization",
+        "key_capability": "Hidden brilliance discovery, peripheral innovation",
+        "reasoning": "Exploration at solution boundaries, advisory suggestions"
+      }
+    ]
+  },
+
+  "tier2_codex_cli": {
+    "description": "Code analysis & review - advisory validation, no blocking authority",
+    "agents": [
+      {
+        "name": "code-review-specialist",
+        "purpose": "Code quality enforcement, security/architecture/performance assessment",
+        "key_capability": "Expert code review, evidence-based assessment",
+        "reasoning": "Code-focused analysis, can run on Codex for code understanding, but has AUTHORITY - may need Claude"
+      },
+      {
+        "name": "quality-observer",
+        "purpose": "Code assessment, standards compliance, security validation",
+        "key_capability": "Quality assurance, test coverage, vulnerability scanning",
+        "reasoning": "Observation and metrics, advisory role, code-focused"
+      },
+      {
+        "name": "complexity-guard",
+        "purpose": "Prevent over-engineering, find simpler solutions",
+        "key_capability": "Completion through subtraction, simplification",
+        "reasoning": "Advisory guard against complexity, no blocking authority"
+      },
+      {
+        "name": "ideator",
+        "purpose": "Creative exploration, enhancement, innovation catalyst",
+        "key_capability": "Breakthrough ideas, evidence-based creativity",
+        "reasoning": "Creative advisory, no authority, generates possibilities"
+      },
+      {
+        "name": "ideator-catalyst",
+        "purpose": "Creative solutions within North Star boundaries",
+        "key_capability": "Edge exploration, alternative approaches",
+        "reasoning": "Advisory catalyst, generates options, no decisions"
+      },
+      {
+        "name": "design-architect",
+        "purpose": "Blueprint refinement, implementation specification",
+        "key_capability": "Architectural design, technical specifications",
+        "reasoning": "Design and specification, but D3 phase requires validation - borderline Tier 3"
+      },
+      {
+        "name": "synthesizer",
+        "purpose": "Breakthrough creation, both-and thinking",
+        "key_capability": "Third-way solutions, architectural transcendence",
+        "reasoning": "Synthesis and integration, advisory, no authority"
+      }
+    ]
+  },
+
+  "tier3_claude_code": {
+    "description": "Constitutional authority - GO/NO-GO decisions, blocking authority, implementation",
+    "agents": [
+      {
+        "name": "holistic-orchestrator",
+        "purpose": "Ultimate system orchestrator with constitutional authority",
+        "key_capability": "Cross-boundary coherence, gap ownership, prophetic failure prediction",
+        "reasoning": "CONSTITUTIONAL AUTHORITY, buck stops here, blocking decisions"
+      },
+      {
+        "name": "critical-engineer",
+        "purpose": "Production readiness validator with domain accountability",
+        "key_capability": "GO/NO-GO decisions, 12 critical domains, blocking authority",
+        "reasoning": "BLOCKING AUTHORITY for 12 domains, production validation"
+      },
+      {
+        "name": "critical-engineer-sonnet",
+        "purpose": "Production readiness validator (Sonnet variant)",
+        "key_capability": "Domain accountability, priority-based resolution",
+        "reasoning": "BLOCKING AUTHORITY, critical domain enforcement"
+      },
+      {
+        "name": "critical-design-validator",
+        "purpose": "Architectural validation with NO-GO authority",
+        "key_capability": "B0 quality gate, design validation, feasibility assessment",
+        "reasoning": "NO-GO AUTHORITY at B0 gates, blocking decisions"
+      },
+      {
+        "name": "critical-implementation-validator",
+        "purpose": "Implementation validation, VAD compliance, production readiness",
+        "key_capability": "Working implementation validation, course corrections",
+        "reasoning": "BUILD phase validation, critical assessment authority"
+      },
+      {
+        "name": "error-architect",
+        "purpose": "Constitutional error resolution authority",
+        "key_capability": "Mandatory systematic triage, enforcement protocol",
+        "reasoning": "CONSTITUTIONAL AUTHORITY, cannot bypass systematic approach"
+      },
+      {
+        "name": "security-specialist",
+        "purpose": "Defensive security with BLOCKING priority",
+        "key_capability": "AUTH_DOMAIN, SECRETS_MANAGEMENT, security scanning",
+        "reasoning": "BLOCKING AUTHORITY for security gaps, immediate resolution"
+      },
+      {
+        "name": "requirements-steward",
+        "purpose": "Architectural conscience, process adherence validation",
+        "key_capability": "North Star alignment, process drift detection",
+        "reasoning": "MANDATORY at phase boundaries, guards against drift"
+      },
+      {
+        "name": "hestai-doc-steward",
+        "purpose": "Document governance with BLOCKING authority",
+        "key_capability": "Rejects wasteful docs, approves valuable knowledge",
+        "reasoning": "BLOCKING AUTHORITY for HestAI documentation decisions"
+      },
+      {
+        "name": "implementation-lead",
+        "purpose": "Build phase execution, task coordination, code development",
+        "key_capability": "Development workflow, quality standards, architectural coherence",
+        "reasoning": "BUILD phase execution, code generation, complex workflows"
+      },
+      {
+        "name": "completion-architect",
+        "purpose": "Final integration, system unification",
+        "key_capability": "Integration mastery, complete system testing",
+        "reasoning": "Final integration phase, comprehensive testing, delivery"
+      },
+      {
+        "name": "build-plan-checker",
+        "purpose": "Build plan validation with GO/NO-GO recommendations",
+        "key_capability": "Gap analysis, deviation detection, quality validation",
+        "reasoning": "GO/NO-GO authority for build progression"
+      },
+      {
+        "name": "coherence-oracle",
+        "purpose": "System coherence guardian, prophetic analysis",
+        "key_capability": "Cross-boundary pattern recognition, gap detection",
+        "reasoning": "Ultimate accountability, system-wide coherence authority"
+      },
+      {
+        "name": "solution-steward",
+        "purpose": "Delivery handoff, knowledge synthesis",
+        "key_capability": "Comprehensive documentation, continuity preservation",
+        "reasoning": "Final delivery phase, handoff coordination"
+      },
+      {
+        "name": "workspace-architect",
+        "purpose": "B1_02 phase workspace creation, project structure",
+        "key_capability": "Cross-referential synthesis, content editing",
+        "reasoning": "BUILD preparation phase, structural setup"
+      }
+    ]
+  },
+
+  "specialized_tools_tier3": {
+    "description": "Specialized tools requiring Claude Code for specific workflows",
+    "agents": [
+      {
+        "name": "subagent-creator",
+        "purpose": "Creates OCTAVE-optimized agents from requirements",
+        "reasoning": "Complex agent generation, requires full Claude capabilities"
+      },
+      {
+        "name": "octave-specialist",
+        "purpose": "OCTAVE syntax validation, semantic compression",
+        "reasoning": "Specialized OCTAVE processing, complex transformations"
+      },
+      {
+        "name": "octave-forge-master",
+        "purpose": "Agent forging, semantic weaving, production optimization",
+        "reasoning": "Complex agent transformation, constitutional foundations"
+      },
+      {
+        "name": "octave-validator",
+        "purpose": "OCTAVE document validation for v3.0 compliance",
+        "reasoning": "Specialized validation, semantic coherence checking"
+      },
+      {
+        "name": "semantic-optimizer",
+        "purpose": "OCTAVE document enhancement, pattern optimization",
+        "reasoning": "Complex optimization, mythological pattern synthesis"
+      },
+      {
+        "name": "compression-fidelity-validator",
+        "purpose": "Validates OCTAVE compressions maintain information parity",
+        "reasoning": "Specialized validation, fidelity checking"
+      },
+      {
+        "name": "documentation-compressor",
+        "purpose": "Compress technical docs into OCTAVE format",
+        "reasoning": "Complex compression, OCTAVE transformation"
+      },
+      {
+        "name": "sessions-manager",
+        "purpose": "HestAI session management operations",
+        "reasoning": "Session orchestration, state management"
+      },
+      {
+        "name": "directory-curator",
+        "purpose": "Safely reorganize directories with git-first protocols",
+        "reasoning": "File system operations, git integration, safety protocols"
+      }
+    ]
+  },
+
+  "domain_specific_tier3": {
+    "description": "Domain-specific agents requiring specialized context",
+    "agents": [
+      {
+        "name": "smartsuite-expert",
+        "purpose": "SmartSuite operations, field format mastery",
+        "reasoning": "Domain expert authority, API operations, integration"
+      },
+      {
+        "name": "eav-admin",
+        "purpose": "EAV administrative excellence, SmartSuite integration",
+        "reasoning": "Domain expertise, strategic oversight, proven patterns"
+      },
+      {
+        "name": "eav-coherence-oracle",
+        "purpose": "EAV coherence guardian, silo detection",
+        "reasoning": "Domain-specific coherence, convergence enforcement"
+      },
+      {
+        "name": "accounting-partner",
+        "purpose": "EAV business accounting, financial management",
+        "reasoning": "Domain expertise, financial operations"
+      }
+    ]
+  },
+
+  "raph_processing_tier3": {
+    "description": "RAPH processing pipeline - specialized constitutional analysis",
+    "agents": [
+      {
+        "name": "raph-read",
+        "purpose": "Constitutional extraction, foundation transformation",
+        "reasoning": "Specialized RAPH phase 1, constitutional processing"
+      },
+      {
+        "name": "raph-read-max",
+        "purpose": "READ with compression optimization",
+        "reasoning": "Enhanced RAPH phase 1 with deduplication"
+      },
+      {
+        "name": "raph-absorb",
+        "purpose": "Relationship mapping, consistency measurement",
+        "reasoning": "RAPH phase 2, strict typing, validation gates"
+      },
+      {
+        "name": "raph-perceive",
+        "purpose": "Pattern recognition from relationship mappings",
+        "reasoning": "RAPH phase 3, emergent pattern identification"
+      },
+      {
+        "name": "raph-harmonise",
+        "purpose": "Integration synthesis, operational harmony",
+        "reasoning": "RAPH phase 4, cross-domain synthesis"
+      }
+    ]
+  },
+
+  "administrative_tier3": {
+    "description": "Administrative and meta-level agents",
+    "agents": [
+      {
+        "name": "system-steward",
+        "purpose": "Observation preservation, documentation management",
+        "reasoning": "Git stewardship, system integrity, emergence observation"
+      },
+      {
+        "name": "research-curator-subagent",
+        "purpose": "Knowledge gap detection using 248-doc library",
+        "reasoning": "Automated research library access, gap resolution"
+      },
+      {
+        "name": "task-decomposer-validator",
+        "purpose": "Build plan quality validation, gap analysis",
+        "reasoning": "Independent validation, critical review authority"
+      },
+      {
+        "name": "error-architect-surface",
+        "purpose": "Surface-level error triage, quick fixes",
+        "reasoning": "Escalates to error-architect for systemic issues"
+      }
+    ]
+  },
+
+  "summary": {
+    "total_agents": 61,
+    "tier1_gemini_count": 7,
+    "tier2_codex_count": 7,
+    "tier3_claude_count": 47,
+    "tier3_breakdown": {
+      "constitutional_authority": 15,
+      "specialized_tools": 9,
+      "domain_specific": 4,
+      "raph_processing": 5,
+      "administrative": 4,
+      "validators": 10
+    },
+    "key_insights": [
+      "Most agents (77%) require Claude Code due to constitutional authority or complex workflows",
+      "Only 11% are pure exploration agents suitable for Gemini CLI",
+      "Code analysis agents (11%) could leverage Codex CLI",
+      "Authority pattern: BLOCKING_AUTHORITY, GO/NO-GO, constitutional enforcement → Tier 3",
+      "Exploration pattern: research, discovery, pattern recognition, advisory → Tier 1",
+      "Analysis pattern: code review, quality assessment, advisory validation → Tier 2"
+    ],
+    "recommendations": {
+      "immediate": "Deploy surveyor (already created) + 6 other Tier 1 agents to Gemini CLI",
+      "phase_2": "Port Tier 2 code analysis agents to Codex CLI for A/B testing vs Gemini",
+      "preserve_claude": "Keep all 47 Tier 3 agents on Claude Code (authority + complexity required)",
+      "quota_savings": "Estimated 20-30% Claude quota preservation by offloading Tier 1 exploration"
+    }
+  }
+}
