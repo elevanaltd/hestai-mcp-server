@@ -402,6 +402,7 @@ The `apilookup` tool provides token-efficient API documentation lookup by delega
 The `clink` tool enables delegation to external AI CLIs to preserve Claude Code quota and leverage free/existing subscriptions.
 
 **Supported CLIs:**
+- **Claude CLI** - Use existing Anthropic subscription or API key
 - **Gemini CLI** - 1000 free requests/day
 - **Codex CLI** - Use existing Codex subscription
 - **Qwen CLI** - Alternative AI provider
@@ -410,42 +411,57 @@ The `clink` tool enables delegation to external AI CLIs to preserve Claude Code 
 
 **Configuration:**
 
-1. **Install CLI client** (example for Gemini CLI):
-```bash
-# Install Gemini CLI (if available)
-pip install gemini-cli  # or appropriate installation method
+1. **Install CLI client**:
 
-# Configure API key
+```bash
+# Claude CLI - comes with Claude Code, or install separately:
+# https://www.anthropic.com/claude-code
+
+# Gemini CLI
+pip install gemini-cli  # or appropriate installation method
 export GEMINI_API_KEY="your-key-here"
+
+# Codex CLI
+# Follow Codex installation instructions
 ```
 
 2. **Configure in MCP server:**
 CLI clients are configured via JSON files in `conf/cli_clients/`:
-- `conf/cli_clients/gemini.json`
-- `conf/cli_clients/codex.json`
+- `conf/cli_clients/claude.json` - Claude CLI (Anthropic subscription/API)
+- `conf/cli_clients/gemini.json` - Gemini CLI (free tier available)
+- `conf/cli_clients/codex.json` - Codex CLI (existing subscription)
 
 **Usage via MCP:**
 ```json
 {
   "tool": "mcp__hestai__clink",
   "prompt": "Review this code for basic style issues: [code snippet]",
+  "cli_name": "claude",
+  "role": "codereviewer"
+}
+```
+
+Or delegate to Gemini:
+```json
+{
+  "tool": "mcp__hestai__clink",
+  "prompt": "Explain the architecture of this module",
   "cli_name": "gemini",
-  "role": "code-reviewer",
-  "model": "gemini-2.5-flash"
+  "role": "default"
 }
 ```
 
 **Benefits:**
-- **Quota preservation:** Delegate routine tasks to free CLIs
+- **Quota preservation:** Delegate routine tasks to alternative CLIs
 - **Cost optimization:** Use Gemini's 1000 free requests/day for non-critical work
-- **Subscription leverage:** Utilize existing Codex subscriptions efficiently
+- **Subscription leverage:** Utilize existing Claude/Codex subscriptions efficiently
 - **Shared context:** Maintains conversation continuity across CLI delegations
 
 **Use Cases:**
-- Code reviews for style/formatting (delegate to Gemini)
-- Documentation generation (use free quota)
-- Simple refactoring tasks (preserve Claude quota)
-- Batch processing (leverage free tier limits)
+- **Claude CLI**: Leverage existing Anthropic subscription for isolated analysis
+- **Gemini CLI**: Code reviews, documentation generation (free tier)
+- **Codex CLI**: Simple refactoring tasks, batch processing
+- **Cross-CLI workflows**: Start analysis in one CLI, continue implementation in another
 
 **Environment Variables:**
 ```bash
@@ -456,6 +472,18 @@ CLI_CLIENTS_CONFIG_PATH=conf/cli_clients/
 GEMINI_API_KEY="..."
 CODEX_API_KEY="..."
 ```
+
+**Troubleshooting:**
+
+*Codex "Not inside a trusted directory" error:*
+```
+CLI 'codex' execution failed: Not inside a trusted directory and --skip-git-repo-check was not specified
+```
+
+**Fix:** Codex CLI requires either being in a git repository or using `--skip-git-repo-check` flag. This is already included in `conf/cli_clients/codex.json` but if you see this error:
+1. Verify the flag is present: `"--skip-git-repo-check"` in `additional_args`
+2. Restart your MCP session for config changes to take effect
+3. Alternatively, run from within a git repository directory
 
 ---
 

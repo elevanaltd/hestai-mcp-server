@@ -188,6 +188,9 @@ class CLinkTool(SimpleTool):
 
         self._model_context = arguments.get("_model_context")
 
+        # Store client name for prompt preparation
+        self._current_client_name = client_config.name
+
         try:
             prompt_text = await self._prepare_prompt_for_role(request, role_config)
         except Exception as exc:
@@ -195,8 +198,18 @@ class CLinkTool(SimpleTool):
             return [self._error_response(f"Failed to prepare prompt: {exc}")]
 
         agent = create_agent(client_config)
+
+        # For Claude CLI, pass system prompt separately for --append-system-prompt injection
+        # For other CLIs, system prompt is embedded in prompt_text
+        system_prompt = None
+        if client_config.name.lower() == "claude":
+            system_prompt = self.get_system_prompt()
+
         try:
-            result = await agent.run(role=role_config, prompt=prompt_text, files=files, images=images)
+            # Claude agent accepts system_prompt parameter, others ignore it
+            result = await agent.run(
+                role=role_config, prompt=prompt_text, files=files, images=images, system_prompt=system_prompt
+            )
         except CLIAgentError as exc:
             metadata = self._build_error_metadata(client_config, exc)
 
@@ -262,7 +275,11 @@ class CLinkTool(SimpleTool):
         return await self._prepare_prompt_for_role(request, role_config)
 
     async def _prepare_prompt_for_role(self, request: CLinkRequest, role: ResolvedCLIRole) -> str:
-        """Load the role prompt and assemble the final user message."""
+        """Load the role prompt and assemble the final user message.
+
+        For Claude CLI, the system prompt is extracted separately and passed via
+        --append-system-prompt. For other CLIs, it's embedded in the user prompt.
+        """
         self._active_system_prompt = role.prompt_path.read_text(encoding="utf-8")
         try:
             user_content = self.handle_prompt_file_with_fallback(request).strip()
@@ -271,8 +288,13 @@ class CLinkTool(SimpleTool):
 
             sections: list[str] = []
             active_prompt = self.get_system_prompt().strip()
-            if active_prompt:
+
+            # For Claude CLI, system prompt is passed separately via --append-system-prompt
+            # For other CLIs, embed it in the user prompt
+            client_name = getattr(self, "_current_client_name", "").lower()
+            if active_prompt and client_name != "claude":
                 sections.append(active_prompt)
+
             sections.append(guidance)
             sections.append("=== USER REQUEST ===\n" + user_content)
             if file_section:
