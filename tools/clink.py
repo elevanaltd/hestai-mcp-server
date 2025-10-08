@@ -199,9 +199,19 @@ class CLinkTool(SimpleTool):
             result = await agent.run(role=role_config, prompt=prompt_text, files=files, images=images)
         except CLIAgentError as exc:
             metadata = self._build_error_metadata(client_config, exc)
+
+            # Enhanced error message for workspace directory issues
+            error_message = str(exc)
+            if "workspace directories" in error_message or "FatalToolExecutionError" in error_message:
+                error_message += (
+                    "\n\n💡 TIP: To add another directory to this role's workspace, "
+                    f"update conf/cli_clients/{client_config.name}.json with:\n"
+                    f'  "role_args": ["--include-directories", "/path/to/directory"]'
+                )
+
             error_output = ToolOutput(
                 status="error",
-                content=f"CLI '{client_config.name}' execution failed: {exc}",
+                content=f"CLI '{client_config.name}' execution failed: {error_message}",
                 content_type="text",
                 metadata=metadata,
             )
