@@ -279,10 +279,22 @@ class CLinkTool(SimpleTool):
 
         For Claude CLI, the system prompt is extracted separately and passed via
         --append-system-prompt. For other CLIs, it's embedded in the user prompt.
+
+        FIRST_TURN detection: If no continuation_id, prepend [FIRST_TURN] marker
+        to signal constitutional activation to agents with ACTIVATION_PROTOCOL.
         """
         self._active_system_prompt = role.prompt_path.read_text(encoding="utf-8")
         try:
             user_content = self.handle_prompt_file_with_fallback(request).strip()
+
+            # FIRST_TURN detection for constitutional activation
+            continuation_id = self.get_request_continuation_id(request)
+            is_first_turn = not continuation_id
+
+            if is_first_turn:
+                # Prepend marker for agents with ACTIVATION_PROTOCOL
+                user_content = f"[FIRST_TURN]\n\n{user_content}"
+
             guidance = self._agent_capabilities_guidance()
             file_section = self._format_file_references(self.get_request_files(request))
 

@@ -26,7 +26,11 @@
     },
     "critical-engineer": {
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": []
+      "role_args": ["--model", "gpt-5-codex"]
+    },
+    "holistic-orchestrator": {
+      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
+      "role_args": ["--model", "gpt-5-codex"]
     }
   }
 }
