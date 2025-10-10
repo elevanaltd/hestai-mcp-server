@@ -11,11 +11,11 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
-from tests.mock_helpers import create_mock_provider
 from tools.chat import ChatTool
 from tools.models import ToolOutput
 from utils.conversation_memory import add_turn, create_thread
+
+from tests.mock_helpers import create_mock_provider
 
 
 class TestDirectoryExpansionTracking:

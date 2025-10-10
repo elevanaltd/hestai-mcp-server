@@ -12,7 +12,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from utils.file_context_processor import FileContextProcessor
 
 

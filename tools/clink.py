@@ -280,8 +280,9 @@ class CLinkTool(SimpleTool):
         For Claude CLI, the system prompt is extracted separately and passed via
         --append-system-prompt. For other CLIs, it's embedded in the user prompt.
 
-        FIRST_TURN detection: If no continuation_id, prepend [FIRST_TURN] marker
-        to signal constitutional activation to agents with ACTIVATION_PROTOCOL.
+        FIRST_TURN detection: If no continuation_id, inject explicit activation
+        instructions to trigger RAPH constitutional activation. Can be disabled
+        with [no-raph] flag in the user prompt.
         """
         self._active_system_prompt = role.prompt_path.read_text(encoding="utf-8")
         try:
@@ -291,9 +292,8 @@ class CLinkTool(SimpleTool):
             continuation_id = self.get_request_continuation_id(request)
             is_first_turn = not continuation_id
 
-            if is_first_turn:
-                # Prepend marker for agents with ACTIVATION_PROTOCOL
-                user_content = f"[FIRST_TURN]\n\n{user_content}"
+            # Check for [no-raph] flag to skip activation
+            skip_activation = is_first_turn and "[no-raph]" in user_content.lower()
 
             guidance = self._agent_capabilities_guidance()
             file_section = self._format_file_references(self.get_request_files(request))
@@ -306,8 +306,25 @@ class CLinkTool(SimpleTool):
             client_name = getattr(self, "_current_client_name", "").lower()
             if active_prompt and client_name != "claude":
                 sections.append(active_prompt)
+                # Activation instruction is now embedded in user request below
 
             sections.append(guidance)
+
+            # For first turn, embed compact RAPH activation with cognitive forcing
+            # Requires evidence-based analysis that cannot be faked through parroting
+            if is_first_turn and not skip_activation:
+                user_content = (
+                    "⚠️ CONSTITUTIONAL ACTIVATION REQUIRED (compact evidence-based mode):\n\n"
+                    "Before executing the request, demonstrate constitutional integration:\n"
+                    "1. READ: List 3-4 core constitutional principles most relevant to THIS request (cite line numbers)\n"
+                    "2. ABSORB: Identify 1 constitutional tension that applies to THIS SPECIFIC TASK\n"
+                    "3. PERCEIVE: Predict 1 edge case where your constitution guides THIS TASK differently than generic approach\n"
+                    "4. HARMONISE: State 1 specific behavioral difference you will apply in YOUR EXECUTION\n\n"
+                    "Output format: TodoWrite([{READ/ABSORB/PERCEIVE/HARMONISE phases}]) + 'Activation Ready: READ=X, ABSORB=Y, PERCEIVE=Z, HARMONISE=W'\n"
+                    "Then execute the request with constitutional awareness.\n\n"
+                    "=== REQUEST ===\n" + user_content
+                )
+
             sections.append("=== USER REQUEST ===\n" + user_content)
             if file_section:
                 sections.append("=== FILE REFERENCES ===\n" + file_section)

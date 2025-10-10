@@ -15,8 +15,9 @@ from pydantic import Field
 if TYPE_CHECKING:
     from tools.models import ToolModelCategory
 
-from config import TEMPERATURE_ANALYTICAL
 from tools.shared.base_models import ToolRequest
+
+from config import TEMPERATURE_ANALYTICAL
 
 from .simple.base import SimpleTool
 

@@ -3,7 +3,6 @@ Tests for the tracer tool functionality
 """
 
 import pytest
-
 from tools.models import ToolModelCategory
 from tools.tracer import TracerRequest, TracerTool
 

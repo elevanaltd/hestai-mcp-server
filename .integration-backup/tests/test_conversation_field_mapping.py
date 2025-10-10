@@ -6,9 +6,9 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from utils.conversation_memory import ConversationTurn, ThreadContext
 
 from server import reconstruct_thread_context
-from utils.conversation_memory import ConversationTurn, ThreadContext
 
 
 @pytest.mark.asyncio

@@ -14,10 +14,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from mcp.types import TextContent
-
-from config import MCP_PROMPT_SIZE_LIMIT
 from tools.chat import ChatTool
 from tools.codereview import CodeReviewTool
+
+from config import MCP_PROMPT_SIZE_LIMIT
 
 # from tools.debug import DebugIssueTool  # Commented out - debug tool refactored
 

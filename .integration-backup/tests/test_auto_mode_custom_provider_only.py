@@ -5,7 +5,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from providers.base import ProviderType
 from providers.registry import ModelProviderRegistry
 

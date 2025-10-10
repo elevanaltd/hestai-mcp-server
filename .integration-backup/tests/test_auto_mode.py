@@ -5,7 +5,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from tools.chat import ChatTool
 
 

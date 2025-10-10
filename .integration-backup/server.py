@@ -58,11 +58,6 @@ from mcp.types import (  # noqa: E402
     ToolsCapability,
 )
 
-from config import (  # noqa: E402
-    DEFAULT_MODEL,
-    __version__,
-)
-
 # TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
 # Context7: consulted for tools - internal module
 from tools import (  # noqa: E402
@@ -95,6 +90,11 @@ from tools.shared.session_models import SessionContextModel, ToolExecutionContex
 # Context7: consulted for utils.session_manager - internal module
 # Critical-Engineer: consulted for architectural-decisions - adding session management for project isolation
 from utils.session_manager import SecurityError, SessionManager, SessionNotFoundError  # noqa: E402
+
+from config import (  # noqa: E402
+    DEFAULT_MODEL,
+    __version__,
+)
 
 # Configure logging for server operations
 # Can be controlled via LOG_LEVEL environment variable (DEBUG, INFO, WARNING, ERROR)

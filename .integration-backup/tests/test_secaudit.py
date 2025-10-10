@@ -3,7 +3,6 @@ Tests for the secaudit tool using WorkflowTool architecture.
 """
 
 import pytest
-
 from tools.models import ToolModelCategory
 from tools.secaudit import SecauditRequest, SecauditTool
 

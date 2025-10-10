@@ -4,7 +4,6 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
-
 from providers import ModelProviderRegistry, ModelResponse
 from providers.base import ProviderType
 from providers.gemini import GeminiModelProvider

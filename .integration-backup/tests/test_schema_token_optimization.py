@@ -10,11 +10,11 @@ import logging
 import os
 from unittest import TestCase, skipUnless
 
-# Context7: consulted for server - internal module
-from server import TOOLS as TOOL_REGISTRY
-
 # Context7: consulted for utils
 from utils.token_utils import estimate_tokens
+
+# Context7: consulted for server - internal module
+from server import TOOLS as TOOL_REGISTRY
 
 logger = logging.getLogger(__name__)
 

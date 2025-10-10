@@ -5,7 +5,6 @@ Tests for the planner tool.
 from unittest.mock import patch
 
 import pytest
-
 from tools.models import ToolModelCategory
 from tools.planner import PlannerRequest, PlannerTool
 

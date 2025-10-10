@@ -3,7 +3,7 @@
   "command": "claude",
   "additional_args": [
     "--permission-mode",
-    "acceptEdits",
+    "bypassPermissions",
     "--model",
     "sonnet"
   ],
@@ -19,6 +19,14 @@
     },
     "codereviewer": {
       "prompt_path": "systemprompts/clink/default_codereviewer.txt",
+      "role_args": []
+    },
+    "holistic-orchestrator": {
+      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
+      "role_args": []
+    },
+    "north-star-architect": {
+      "prompt_path": "systemprompts/clink/north-star-architect.txt",
       "role_args": []
     }
   }

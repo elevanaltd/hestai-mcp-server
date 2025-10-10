@@ -8,7 +8,6 @@ This module contains unit tests to ensure that the Chat tool
 from unittest.mock import patch
 
 import pytest
-
 from tools.chat import ChatRequest, ChatTool
 
 

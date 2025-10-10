@@ -5,7 +5,6 @@ Tests for individual tool implementations
 import json
 
 import pytest
-
 from tools import AnalyzeTool, ChatTool, CodeReviewTool, ThinkDeepTool
 
 

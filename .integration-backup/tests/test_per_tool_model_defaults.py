@@ -6,7 +6,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from providers.registry import ModelProviderRegistry, ProviderType
 from tools.analyze import AnalyzeTool
 from tools.chat import ChatTool

@@ -12,7 +12,6 @@ import os
 from unittest.mock import Mock
 
 import pytest
-
 from providers.base import ProviderType
 from providers.registry import ModelProviderRegistry
 from tools.chat import ChatTool

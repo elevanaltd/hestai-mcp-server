@@ -5,7 +5,6 @@ Tests for the Consensus tool using WorkflowTool architecture.
 from unittest.mock import Mock
 
 import pytest
-
 from tools.consensus import ConsensusRequest, ConsensusTool
 from tools.models import ToolModelCategory
 

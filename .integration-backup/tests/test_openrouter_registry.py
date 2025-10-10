@@ -5,7 +5,6 @@ import os
 import tempfile
 
 import pytest
-
 from providers.base import ModelCapabilities, ProviderType
 from providers.openrouter_registry import OpenRouterModelRegistry
 

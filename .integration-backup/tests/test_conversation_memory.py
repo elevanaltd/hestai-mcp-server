@@ -9,8 +9,6 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
-
-from server import get_follow_up_instructions
 from utils.conversation_memory import (
     CONVERSATION_TIMEOUT_SECONDS,
     MAX_CONVERSATION_TURNS,
@@ -21,6 +19,8 @@ from utils.conversation_memory import (
     create_thread,
     get_thread,
 )
+
+from server import get_follow_up_instructions
 
 
 class TestConversationMemory:

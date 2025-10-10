@@ -9,7 +9,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
-
 from providers.base import ProviderType
 from providers.gemini import GeminiModelProvider
 from providers.openai_provider import OpenAIModelProvider

@@ -11,10 +11,10 @@ Bug: https://github.com/elevanaltd/hestai-mcp-server/issues/111
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from server import reconstruct_thread_context
 from utils.conversation_memory import add_turn, create_thread, get_thread
 from utils.model_context import ModelContext
+
+from server import reconstruct_thread_context
 
 
 class TestModelMetadataContinuation:

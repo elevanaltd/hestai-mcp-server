@@ -31,7 +31,6 @@ import pytest
 
 # Load environment variables from .env file
 from dotenv import load_dotenv
-
 from tools.analyze import AnalyzeTool
 from tools.chat import ChatTool
 from tools.codereview import CodeReviewTool

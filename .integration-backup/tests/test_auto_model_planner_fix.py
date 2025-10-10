@@ -9,7 +9,6 @@ still properly require model resolution.
 from unittest.mock import patch
 
 from mcp.types import TextContent
-
 from tools.chat import ChatTool
 from tools.planner import PlannerTool
 from tools.shared.base_tool import BaseTool

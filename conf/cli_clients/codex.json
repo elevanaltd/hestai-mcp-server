@@ -28,8 +28,16 @@
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
       "role_args": ["--model", "gpt-5-codex"]
     },
+    "ho-liaison": {
+      "prompt_path": "systemprompts/clink/ho-liaison.txt",
+      "role_args": ["--model", "gpt-5-codex"]
+    },
     "holistic-orchestrator": {
       "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
+      "role_args": ["--model", "gpt-5-codex"]
+    },
+    "north-star-architect": {
+      "prompt_path": "systemprompts/clink/north-star-architect.txt",
       "role_args": ["--model", "gpt-5-codex"]
     }
   }

@@ -22,7 +22,6 @@ if TYPE_CHECKING:
     # CONTEXT7_BYPASS: INFRA-003 - Internal session models from same codebase
     from tools.shared.session_models import ToolExecutionContext
 
-from config import MCP_PROMPT_SIZE_LIMIT
 from providers import ModelProvider, ModelProviderRegistry
 from utils import check_token_limit
 from utils.conversation_memory import (
@@ -31,6 +30,8 @@ from utils.conversation_memory import (
     get_thread,
 )
 from utils.file_utils import read_file_content, read_files
+
+from config import MCP_PROMPT_SIZE_LIMIT
 
 # Import models from tools.models for compatibility
 try:
@@ -191,8 +192,9 @@ class BaseTool(ABC):
         Returns:
             bool: True if model parameter should be required in the schema
         """
-        from config import DEFAULT_MODEL
         from providers.registry import ModelProviderRegistry
+
+        from config import DEFAULT_MODEL
 
         # Case 1: Explicit auto mode
         if DEFAULT_MODEL.lower() == "auto":
@@ -303,9 +305,10 @@ class BaseTool(ABC):
         """
         import os
 
+        from tools.shared.schema_definitions import USE_SCHEMA_REFS, SharedSchemaDefinitions
+
         # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal imports
         from config import DEFAULT_MODEL
-        from tools.shared.schema_definitions import USE_SCHEMA_REFS, SharedSchemaDefinitions
 
         # Check if we should use $ref optimization
         if USE_SCHEMA_REFS:
