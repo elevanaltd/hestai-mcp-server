@@ -6,11 +6,11 @@ import json
 from unittest.mock import Mock, patch
 
 import pytest
+
+from tests.mock_helpers import create_mock_provider
 from tools.analyze import AnalyzeTool
 from tools.debug import DebugIssueTool
 from tools.models import FilesNeededRequest, ToolOutput
-
-from tests.mock_helpers import create_mock_provider
 
 
 class TestDynamicContextRequests:

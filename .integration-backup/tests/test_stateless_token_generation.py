@@ -13,6 +13,7 @@ import unittest
 
 # Context7: consulted for pytest
 import pytest
+
 from tools.critical_engineer import CriticalEngineerTool
 
 # Context7: consulted for tools - internal modules

@@ -5,6 +5,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from providers.base import ProviderType
 from providers.registry import ModelProviderRegistry
 from tools.analyze import AnalyzeTool

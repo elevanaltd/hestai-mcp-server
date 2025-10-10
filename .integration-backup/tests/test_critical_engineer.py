@@ -6,6 +6,7 @@ properly validates technical designs and identifies failure modes.
 """
 
 import pytest
+
 from tools.critical_engineer import CriticalEngineerRequest, CriticalEngineerTool
 
 

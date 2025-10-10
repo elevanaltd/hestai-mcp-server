@@ -4,6 +4,7 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+
 from providers.base import ProviderType
 from providers.openrouter import OpenRouterProvider
 from providers.registry import ModelProviderRegistry

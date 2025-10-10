@@ -15,6 +15,7 @@ import uuid
 from unittest.mock import Mock, patch
 
 import pytest
+
 from tools.chat import ChatTool
 from tools.debug import DebugIssueTool
 from utils.conversation_memory import (

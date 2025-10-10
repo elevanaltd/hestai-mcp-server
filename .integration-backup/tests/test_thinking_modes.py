@@ -5,6 +5,7 @@ Tests for thinking_mode functionality across all tools
 from unittest.mock import patch
 
 import pytest
+
 from tools.analyze import AnalyzeTool
 from tools.codereview import CodeReviewTool
 from tools.debug import DebugIssueTool

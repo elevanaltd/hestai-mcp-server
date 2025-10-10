@@ -7,6 +7,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+
 from tools.registry import RegistryTool
 
 

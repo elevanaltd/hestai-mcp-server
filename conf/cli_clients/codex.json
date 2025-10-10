@@ -47,6 +47,10 @@
     "validator": {
       "prompt_path": "systemprompts/clink/validator.txt",
       "role_args": []
+    },
+    "synthesizer": {
+      "prompt_path": "systemprompts/clink/synthesizer.txt",
+      "role_args": []
     }
   }
 }
