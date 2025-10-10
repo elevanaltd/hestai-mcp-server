@@ -1,10 +1,11 @@
 {
-  "name": "codex",
-  "command": "codex",
+  "name": "claude",
+  "command": "claude",
   "additional_args": [
-    "--json",
-    "--dangerously-bypass-approvals-and-sandbox",
-    "--skip-git-repo-check"
+    "--permission-mode",
+    "bypassPermissions",
+    "--model",
+    "sonnet"
   ],
   "env": {},
   "roles": {
@@ -17,32 +18,20 @@
       "role_args": []
     },
     "codereviewer": {
-      "prompt_path": "systemprompts/clink/codex_codereviewer.txt",
+      "prompt_path": "systemprompts/clink/default_codereviewer.txt",
       "role_args": []
-    },
-    "quality-observer": {
-      "prompt_path": "systemprompts/clink/quality-observer.txt",
-      "role_args": []
-    },
-    "critical-engineer": {
-      "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": ["--model", "gpt-5-codex"]
-    },
-    "ho-liaison": {
-      "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": ["--model", "gpt-5-codex"]
     },
     "holistic-orchestrator": {
       "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-      "role_args": ["--model", "gpt-5-codex"]
+      "role_args": []
     },
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": ["--model", "gpt-5-codex"]
+      "role_args": []
     },
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
-      "role_args": ["--model", "gpt-5-codex"]
+      "role_args": []
     },
     "validator": {
       "prompt_path": "systemprompts/clink/validator.txt",

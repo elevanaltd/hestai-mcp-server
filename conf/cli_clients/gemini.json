@@ -4,7 +4,13 @@
   "additional_args": [
     "--telemetry",
     "false",
-    "--yolo"
+    "--yolo",
+    "--include-directories",
+    "/Users/shaunbuswell/.claude/agents",
+    "--include-directories",
+    "/Volumes/HestAI-old/hestai-tests",
+    "--include-directories",
+    "/Volumes/HestAI-Projects/eav-orchestrator-mvp"
   ],
   "env": {},
   "roles": {
@@ -22,13 +28,30 @@
     },
     "surveyor": {
       "prompt_path": "systemprompts/clink/surveyor.txt",
-      "role_args": [
-        "--include-directories",
-        "/Users/shaunbuswell/.claude/agents"
-      ]
+      "role_args": []
+    },
+    "holistic-orchestrator": {
+      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
+      "role_args": []
+    },
+    "north-star-architect": {
+      "prompt_path": "systemprompts/clink/north-star-architect.txt",
+      "role_args": []
     },
     "testguard": {
       "prompt_path": "systemprompts/clink/testguard.txt",
+      "role_args": []
+    },
+    "ideator": {
+      "prompt_path": "systemprompts/clink/ideator.txt",
+      "role_args": []
+    },
+    "validator": {
+      "prompt_path": "systemprompts/clink/validator.txt",
+      "role_args": []
+    },
+    "synthesizer": {
+      "prompt_path": "systemprompts/clink/synthesizer.txt",
       "role_args": []
     }
   }

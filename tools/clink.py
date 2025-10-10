@@ -188,6 +188,16 @@ class CLinkTool(SimpleTool):
 
         self._model_context = arguments.get("_model_context")
 
+        # Store client name for prompt preparation
+        self._current_client_name = client_config.name
+
+        # For Claude CLI, extract system prompt before prepare_prompt clears it
+        # This must be done BEFORE calling _prepare_prompt_for_role because that
+        # method clears _active_system_prompt in its finally block
+        system_prompt = None
+        if client_config.name.lower() == "claude":
+            system_prompt = role_config.prompt_path.read_text(encoding="utf-8")
+
         try:
             prompt_text = await self._prepare_prompt_for_role(request, role_config)
         except Exception as exc:
@@ -195,8 +205,12 @@ class CLinkTool(SimpleTool):
             return [self._error_response(f"Failed to prepare prompt: {exc}")]
 
         agent = create_agent(client_config)
+
         try:
-            result = await agent.run(role=role_config, prompt=prompt_text, files=files, images=images)
+            # Claude agent accepts system_prompt parameter, others ignore it
+            result = await agent.run(
+                role=role_config, prompt=prompt_text, files=files, images=images, system_prompt=system_prompt
+            )
         except CLIAgentError as exc:
             metadata = self._build_error_metadata(client_config, exc)
 
@@ -262,23 +276,81 @@ class CLinkTool(SimpleTool):
         return await self._prepare_prompt_for_role(request, role_config)
 
     async def _prepare_prompt_for_role(self, request: CLinkRequest, role: ResolvedCLIRole) -> str:
-        """Load the role prompt and assemble the final user message."""
+        """Load the role prompt and assemble the final user message.
+
+        For Claude CLI, the system prompt is extracted separately and passed via
+        --append-system-prompt. For other CLIs, it's embedded in the user prompt.
+
+        FIRST_TURN detection: If no continuation_id, inject explicit activation
+        instructions to trigger RAPH constitutional activation. Can be disabled
+        with [no-raph] flag in the user prompt.
+        """
         self._active_system_prompt = role.prompt_path.read_text(encoding="utf-8")
         try:
             user_content = self.handle_prompt_file_with_fallback(request).strip()
-            guidance = self._agent_capabilities_guidance()
+
+            # FIRST_TURN detection for constitutional activation
+            continuation_id = self.get_request_continuation_id(request)
+            is_first_turn = not continuation_id
+
+            # Check for [no-raph] flag to skip activation
+            skip_activation = is_first_turn and "[no-raph]" in user_content.lower()
+
+            # Determine client name for prompt customization
+            client_name = getattr(self, "_current_client_name", "").lower()
+
+            guidance = self._agent_capabilities_guidance(client_name)
             file_section = self._format_file_references(self.get_request_files(request))
 
             sections: list[str] = []
             active_prompt = self.get_system_prompt().strip()
-            if active_prompt:
+
+            # For Claude CLI, system prompt is passed separately via --append-system-prompt
+            # For other CLIs, embed it in the user prompt
+            if active_prompt and client_name != "claude":
                 sections.append(active_prompt)
+                # Activation instruction is now embedded in user request below
+
             sections.append(guidance)
+
+            # For first turn, embed compact RAPH activation with cognitive forcing
+            # Requires evidence-based analysis that cannot be faked through parroting
+            if is_first_turn and not skip_activation:
+                user_content = (
+                    "⚠️ CONSTITUTIONAL ACTIVATION REQUIRED (compact evidence-based mode):\n\n"
+                    "Before executing the request below, perform constitutional integration in <100 words:\n\n"
+                    "**READ**: List 3-4 core constitutional principles most relevant to THIS request (cite line numbers from your system prompt)\n"
+                    "**ABSORB**: Identify 1 constitutional tension that applies to THIS SPECIFIC TASK\n"
+                    "**PERCEIVE**: Predict 1 edge case where your constitution guides THIS TASK differently than a generic approach\n"
+                    "**HARMONISE**: State 1 specific behavioral difference you will apply in YOUR EXECUTION\n\n"
+                    "Format your activation as:\n"
+                    "```\n"
+                    "ACTIVATION:\n"
+                    "READ: [3-4 principles with line #s]\n"
+                    "ABSORB: [1 tension]\n"
+                    "PERCEIVE: [1 edge case]\n"
+                    "HARMONISE: [1 behavioral difference]\n"
+                    "Activation Ready: READ=X, ABSORB=1, PERCEIVE=1, HARMONISE=1\n"
+                    "```\n\n"
+                    "Then execute the request with constitutional awareness.\n\n"
+                    "=== REQUEST ===\n" + user_content
+                )
+
             sections.append("=== USER REQUEST ===\n" + user_content)
             if file_section:
                 sections.append("=== FILE REFERENCES ===\n" + file_section)
             sections.append("Provide your response below using your own CLI tools as needed:")
-            return "\n\n".join(sections)
+
+            final_prompt = "\n\n".join(sections)
+
+            # Debug logging to understand activation behavior
+            import sys
+
+            debug_info = f"\n{'='*60}\nCLINK PROMPT DEBUG for {client_name}\nfirst_turn={is_first_turn}, skip_activation={skip_activation}\n{'='*60}\n{final_prompt[:1500]}...\n{'='*60}\n"
+            print(debug_info, file=sys.stderr)
+            logger.warning(debug_info)  # Use warning to ensure it appears in logs
+
+            return final_prompt
         finally:
             self._active_system_prompt = ""
 
@@ -418,9 +490,10 @@ class CLinkTool(SimpleTool):
         error_output = ToolOutput(status="error", content=message, content_type="text")
         return TextContent(type="text", text=error_output.model_dump_json())
 
-    def _agent_capabilities_guidance(self) -> str:
+    def _agent_capabilities_guidance(self, client_name: str) -> str:
+        cli_display = client_name.title() if client_name else "the CLI"
         return (
-            "You are operating through the Gemini CLI agent. You have access to your full suite of "
+            f"You are operating through the {cli_display} agent. You have access to your full suite of "
             "CLI capabilities—including launching web searches, reading files, and using any other "
             "available tools. Gather current information yourself and deliver the final answer without "
             "asking the Zen MCP host to perform searches or file reads."
