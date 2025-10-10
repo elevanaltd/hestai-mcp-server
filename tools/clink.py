@@ -345,6 +345,7 @@ class CLinkTool(SimpleTool):
 
             # Debug logging to understand activation behavior
             import sys
+
             debug_info = f"\n{'='*60}\nCLINK PROMPT DEBUG for {client_name}\nfirst_turn={is_first_turn}, skip_activation={skip_activation}\n{'='*60}\n{final_prompt[:1500]}...\n{'='*60}\n"
             print(debug_info, file=sys.stderr)
             logger.warning(debug_info)  # Use warning to ensure it appears in logs
