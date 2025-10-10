@@ -41,6 +41,10 @@
     "testguard": {
       "prompt_path": "systemprompts/clink/testguard.txt",
       "role_args": []
+    },
+    "ideator": {
+      "prompt_path": "systemprompts/clink/ideator.txt",
+      "role_args": []
     }
   }
 }

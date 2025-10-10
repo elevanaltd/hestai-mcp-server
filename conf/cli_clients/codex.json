@@ -39,6 +39,10 @@
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
       "role_args": ["--model", "gpt-5-codex"]
+    },
+    "ideator": {
+      "prompt_path": "systemprompts/clink/ideator.txt",
+      "role_args": ["--model", "gpt-5-codex"]
     }
   }
 }
