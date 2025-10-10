@@ -43,6 +43,10 @@
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
       "role_args": ["--model", "gpt-5-codex"]
+    },
+    "validator": {
+      "prompt_path": "systemprompts/clink/validator.txt",
+      "role_args": []
     }
   }
 }

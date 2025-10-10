@@ -45,6 +45,10 @@
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
       "role_args": []
+    },
+    "validator": {
+      "prompt_path": "systemprompts/clink/validator.txt",
+      "role_args": []
     }
   }
 }
