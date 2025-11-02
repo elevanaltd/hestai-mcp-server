@@ -73,7 +73,7 @@ class TestDisabledTools:
         assert len(enabled_tools) == 5  # All tools included
         assert set(enabled_tools.keys()) == set(ALL_TOOLS.keys())
 
-        # Test case 2: Disable some regular tools
+        # Test case 2: Disable some operational tools
         disabled_tools = {"debug", "analyze"}
         enabled_tools = apply_tool_filter(ALL_TOOLS, disabled_tools)
 
@@ -84,13 +84,13 @@ class TestDisabledTools:
         assert "version" in enabled_tools
         assert "listmodels" in enabled_tools
 
-        # Test case 3: Attempt to disable essential tools
+        # Test case 3: Disable diagnostic tools (now allowed in three-tier model)
         disabled_tools = {"version", "chat"}
         enabled_tools = apply_tool_filter(ALL_TOOLS, disabled_tools)
 
-        assert "version" in enabled_tools  # Essential tool not disabled
-        assert "chat" not in enabled_tools  # Regular tool disabled
-        assert "listmodels" in enabled_tools  # Essential tool included
+        assert "version" not in enabled_tools  # Diagnostic tool CAN be disabled
+        assert "chat" not in enabled_tools  # Operational tool disabled
+        assert "listmodels" in enabled_tools  # Other diagnostic tool not disabled
 
     def test_unknown_tools_warning(self, caplog):
         """Test that unknown tool names generate appropriate warnings."""
@@ -107,8 +107,8 @@ class TestDisabledTools:
             validate_disabled_tools(disabled_tools, ALL_TOOLS)
             assert "Unknown tools in DISABLED_TOOLS: ['another_unknown', 'unknown_tool']" in caplog.text
 
-    def test_essential_tools_warning(self, caplog):
-        """Test warning when trying to disable essential tools."""
+    def test_diagnostic_tools_warning(self, caplog):
+        """Test warning when disabling diagnostic tools (three-tier model)."""
         ALL_TOOLS = {
             "chat": MockTool("chat"),
             "debug": MockTool("debug"),
@@ -116,11 +116,36 @@ class TestDisabledTools:
             "version": MockTool("version"),
             "listmodels": MockTool("listmodels"),
         }
-        disabled_tools = {"version", "chat", "debug"}
+        disabled_tools = {"version", "listmodels", "chat"}
 
         with caplog.at_level(logging.WARNING):
             validate_disabled_tools(disabled_tools, ALL_TOOLS)
-            assert "Cannot disable essential tools: ['version']" in caplog.text
+            # Should warn about diagnostic tools being disabled
+            assert "Disabling diagnostic tools: ['listmodels', 'version']" in caplog.text
+            assert "troubleshooting visibility reduced" in caplog.text
+
+    def test_diagnostic_tools_can_be_disabled(self):
+        """Test that diagnostic tools can actually be disabled in three-tier model."""
+        ALL_TOOLS = {
+            "chat": MockTool("chat"),
+            "version": MockTool("version"),
+            "listmodels": MockTool("listmodels"),
+        }
+        disabled_tools = {"version", "listmodels"}
+
+        enabled_tools = apply_tool_filter(ALL_TOOLS, disabled_tools)
+
+        # Diagnostic tools CAN be disabled (unlike old behavior)
+        assert "version" not in enabled_tools
+        assert "listmodels" not in enabled_tools
+        assert "chat" in enabled_tools
+        assert len(enabled_tools) == 1
+
+    def test_no_mandatory_tools_currently(self):
+        """Test that MANDATORY_TOOLS is empty (no tools have technical dependencies)."""
+        from server import MANDATORY_TOOLS
+
+        assert len(MANDATORY_TOOLS) == 0, "MANDATORY_TOOLS should be empty - no current technical dependencies"
 
     @pytest.mark.parametrize(
         "env_value,expected",
