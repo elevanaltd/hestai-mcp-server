@@ -40,6 +40,50 @@
     "synthesizer": {
       "prompt_path": "systemprompts/clink/synthesizer.txt",
       "role_args": []
+    },
+    "edge-optimizer": {
+      "prompt_path": "systemprompts/clink/edge-optimizer.txt",
+      "role_args": []
+    },
+    "design-architect": {
+      "prompt_path": "systemprompts/clink/design-architect.txt",
+      "role_args": []
+    },
+    "visual-architect": {
+      "prompt_path": "systemprompts/clink/visual-architect.txt",
+      "role_args": []
+    },
+    "technical-architect": {
+      "prompt_path": "systemprompts/clink/technical-architect.txt",
+      "role_args": []
+    },
+    "critical-design-validator": {
+      "prompt_path": "systemprompts/clink/critical-design-validator.txt",
+      "role_args": []
+    },
+    "requirements-steward": {
+      "prompt_path": "systemprompts/clink/requirements-steward.txt",
+      "role_args": []
+    },
+    "critical-engineer": {
+      "prompt_path": "systemprompts/clink/critical-engineer.txt",
+      "role_args": []
+    },
+    "test-methodology-guardian": {
+      "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
+      "role_args": []
+    },
+    "universal-test-engineer": {
+      "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
+      "role_args": []
+    },
+    "implementation-lead": {
+      "prompt_path": "systemprompts/clink/implementation-lead.txt",
+      "role_args": []
+    },
+    "principal-engineer": {
+      "prompt_path": "systemprompts/clink/principal-engineer.txt",
+      "role_args": []
     }
   }
 }

@@ -205,8 +205,14 @@ session_manager: SessionManager = SessionManager(
 )
 
 
-# Constants for tool filtering
-ESSENTIAL_TOOLS = {"version", "listmodels"}
+# Constants for tool filtering - Three-tier disablement model
+# TIER 1: MANDATORY - Cannot disable (technical dependencies)
+MANDATORY_TOOLS: set[str] = set()  # Currently none - no tools have hard dependencies
+
+# TIER 2: DIAGNOSTIC - Can disable with warning (lose troubleshooting visibility)
+DIAGNOSTIC_TOOLS = {"version", "listmodels"}
+
+# TIER 3: OPERATIONAL - Freely disableable (all other tools)
 
 
 def parse_disabled_tools_env() -> set[str]:
@@ -226,13 +232,31 @@ def validate_disabled_tools(disabled_tools: set[str], all_tools: dict[str, Any])
     """
     Validate the disabled tools list and log appropriate warnings.
 
+    Three-tier validation:
+    - MANDATORY tools: Cannot disable (raises ValueError)
+    - DIAGNOSTIC tools: Can disable with warning (reduced troubleshooting visibility)
+    - OPERATIONAL tools: Can disable freely
+
     Args:
         disabled_tools: Set of tool names requested to be disabled
         all_tools: Dictionary of all available tool instances
+
+    Raises:
+        ValueError: If attempting to disable mandatory tools
     """
-    essential_disabled = disabled_tools & ESSENTIAL_TOOLS
-    if essential_disabled:
-        logger.warning(f"Cannot disable essential tools: {sorted(essential_disabled)}")
+    # Check for mandatory tools (hard block)
+    mandatory_disabled = disabled_tools & MANDATORY_TOOLS
+    if mandatory_disabled:
+        raise ValueError(f"Cannot disable mandatory tools (technical dependencies): {sorted(mandatory_disabled)}")
+
+    # Check for diagnostic tools (warn but allow)
+    diagnostic_disabled = disabled_tools & DIAGNOSTIC_TOOLS
+    if diagnostic_disabled:
+        logger.warning(
+            f"⚠️  Disabling diagnostic tools: {sorted(diagnostic_disabled)} " f"- troubleshooting visibility reduced"
+        )
+
+    # Check for unknown tools
     unknown_tools = disabled_tools - set(all_tools.keys())
     if unknown_tools:
         logger.warning(f"Unknown tools in DISABLED_TOOLS: {sorted(unknown_tools)}")
@@ -241,6 +265,9 @@ def validate_disabled_tools(disabled_tools: set[str], all_tools: dict[str, Any])
 def apply_tool_filter(all_tools: dict[str, Any], disabled_tools: set[str]) -> dict[str, Any]:
     """
     Apply the disabled tools filter to create the final tools dictionary.
+
+    Only MANDATORY tools are forced enabled. DIAGNOSTIC and OPERATIONAL tools
+    can be disabled based on user configuration.
 
     Args:
         all_tools: Dictionary of all available tool instances
@@ -251,7 +278,8 @@ def apply_tool_filter(all_tools: dict[str, Any], disabled_tools: set[str]) -> di
     """
     enabled_tools = {}
     for tool_name, tool_instance in all_tools.items():
-        if tool_name in ESSENTIAL_TOOLS or tool_name not in disabled_tools:
+        # Only MANDATORY tools are forced enabled (DIAGNOSTIC can be disabled)
+        if tool_name in MANDATORY_TOOLS or tool_name not in disabled_tools:
             enabled_tools[tool_name] = tool_instance
         else:
             logger.debug(f"Tool '{tool_name}' disabled via DISABLED_TOOLS")
@@ -269,7 +297,9 @@ def log_tool_configuration(disabled_tools: set[str], enabled_tools: dict[str, An
     if not disabled_tools:
         logger.info("All tools enabled (DISABLED_TOOLS not set)")
         return
-    actual_disabled = disabled_tools - ESSENTIAL_TOOLS
+
+    # Only MANDATORY tools cannot be disabled, so actual_disabled includes DIAGNOSTIC
+    actual_disabled = disabled_tools - MANDATORY_TOOLS
     if actual_disabled:
         logger.debug(f"Disabled tools: {sorted(actual_disabled)}")
         logger.info(f"Active tools: {sorted(enabled_tools.keys())}")
@@ -324,6 +354,69 @@ TOOLS = {
     # - testgen -> use universal-test-engineer subagent
     # - docgen -> use documentation subagents
 }
+
+
+def validate_tool_documentation(tools: dict[str, Any]) -> None:
+    """
+    Validate .env documentation matches actual TOOLS registry.
+
+    Detects configuration drift by comparing documented tools in .env
+    against the actual TOOLS registry. Logs warnings when drift is detected.
+
+    Args:
+        tools: Dictionary of actual tool instances from TOOLS registry
+    """
+    # Expected tools from .env comment documentation
+    # This list should be kept in sync with .env documentation
+    DOCUMENTED_TOOLS = {
+        # Diagnostic (TIER 2)
+        "version",
+        "listmodels",
+        # Workflow (TIER 3 - OPERATIONAL)
+        "chat",
+        "thinkdeep",
+        "planner",
+        "consensus",
+        "debug",
+        "secaudit",
+        "analyze",
+        "tracer",
+        # Validation (TIER 3 - OPERATIONAL)
+        "critical-engineer",
+        "testguard",
+        "challenge",
+        # Infrastructure (TIER 3 - OPERATIONAL)
+        "clink",
+        "apilookup",
+        "registry",
+    }
+
+    actual_tools = set(tools.keys())
+
+    # Check for drift
+    missing_from_docs = actual_tools - DOCUMENTED_TOOLS
+    documented_but_missing = DOCUMENTED_TOOLS - actual_tools
+
+    if missing_from_docs:
+        logger.warning(
+            f"⚠️  Configuration drift detected: Tools in registry but not documented in .env: "
+            f"{sorted(missing_from_docs)}"
+        )
+
+    if documented_but_missing:
+        logger.warning(
+            f"⚠️  Configuration drift detected: Tools documented in .env but not in registry: "
+            f"{sorted(documented_but_missing)} (may be archived)"
+        )
+
+    if not missing_from_docs and not documented_but_missing:
+        logger.debug("✓ Tool documentation in sync with registry")
+
+
+# Validate tool documentation before filtering
+validate_tool_documentation(TOOLS)
+
+# Apply disabled tools filter
 TOOLS = filter_disabled_tools(TOOLS)
 
 # Rich prompt templates for all tools
