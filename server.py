@@ -247,16 +247,13 @@ def validate_disabled_tools(disabled_tools: set[str], all_tools: dict[str, Any])
     # Check for mandatory tools (hard block)
     mandatory_disabled = disabled_tools & MANDATORY_TOOLS
     if mandatory_disabled:
-        raise ValueError(
-            f"Cannot disable mandatory tools (technical dependencies): {sorted(mandatory_disabled)}"
-        )
+        raise ValueError(f"Cannot disable mandatory tools (technical dependencies): {sorted(mandatory_disabled)}")
 
     # Check for diagnostic tools (warn but allow)
     diagnostic_disabled = disabled_tools & DIAGNOSTIC_TOOLS
     if diagnostic_disabled:
         logger.warning(
-            f"⚠️  Disabling diagnostic tools: {sorted(diagnostic_disabled)} "
-            f"- troubleshooting visibility reduced"
+            f"⚠️  Disabling diagnostic tools: {sorted(diagnostic_disabled)} " f"- troubleshooting visibility reduced"
         )
 
     # Check for unknown tools
