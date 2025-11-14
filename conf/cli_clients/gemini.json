@@ -106,6 +106,10 @@
       "prompt_path": "systemprompts/clink/ethos-label-priming.txt",
       "role_args": []
     },
+    "octave-specialist": {
+      "prompt_path": "systemprompts/clink/octave-specialist.txt",
+      "role_args": []
+    },
     "principal-engineer": {
       "prompt_path": "systemprompts/clink/principal-engineer.txt",
       "role_args": []
