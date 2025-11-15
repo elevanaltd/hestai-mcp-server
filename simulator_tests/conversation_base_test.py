@@ -80,6 +80,22 @@ class ConversationBaseTest(BaseSimulatorTest):
             if project_root not in sys.path:
                 sys.path.insert(0, project_root)
 
+            # Clear DISABLED_TOOLS to ensure all tools are available for testing
+            # Tests should run with full tool availability regardless of production config
+            # Set to empty string (not delete) to prevent dotenv from reloading from .env file
+            if "DISABLED_TOOLS" in os.environ:
+                self.logger.debug(f"Clearing DISABLED_TOOLS (was: {os.environ['DISABLED_TOOLS']})")
+            os.environ["DISABLED_TOOLS"] = ""  # Empty string prevents dotenv reload
+
+            # Force reimport of server module to pick up cleared DISABLED_TOOLS
+            if "server" in sys.modules:
+                self.logger.debug("Removing server module from cache to force reimport")
+                del sys.modules["server"]
+                # Also remove any other modules that might have cached the tools
+                for module_name in list(sys.modules.keys()):
+                    if module_name.startswith("tools.") or module_name == "tools":
+                        del sys.modules[module_name]
+
             # Import and configure providers first (this is what main() does)
             from server import TOOLS, configure_providers
 
