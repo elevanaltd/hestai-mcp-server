@@ -10,7 +10,7 @@
     "--include-directories",
     "/Volumes/HestAI-old/hestai-tests",
     "--include-directories",
-    "/Volumes/HestAI-Projects/eav-orchestrator-mvp",
+    "/Volumes/HestAI-Projects",
     "--include-directories",
     "/Users/shaunbuswell/Development/elevana-projects/archive/elevana-input-hub/input-hub-current"
   ],
