@@ -332,7 +332,11 @@ class CLinkTool(SimpleTool):
                     "HARMONISE: [1 behavioral difference]\n"
                     "Activation Ready: READ=X, ABSORB=1, PERCEIVE=1, HARMONISE=1\n"
                     "```\n\n"
-                    "Then execute the request with constitutional awareness.\n\n"
+                    "**CRITICAL: After completing activation above, IMMEDIATELY proceed to execute the full request below in the SAME response.**\n\n"
+                    "Do NOT stop after activation acknowledgment. Your response must include:\n"
+                    "1. Activation (compact, <100 words)\n"
+                    "2. Complete execution of the request with full deliverables\n\n"
+                    "Activation-only responses waste the turn and will be rejected.\n\n"
                     "=== REQUEST ===\n" + user_content
                 )
 

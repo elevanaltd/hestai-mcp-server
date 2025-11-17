@@ -2,8 +2,6 @@
   "name": "gemini",
   "command": "gemini",
   "additional_args": [
-    "--telemetry",
-    "false",
     "--yolo",
     "--include-directories",
     "/Users/shaunbuswell/.claude/agents",
@@ -106,6 +104,10 @@
     },
     "ethos-label-priming": {
       "prompt_path": "systemprompts/clink/ethos-label-priming.txt",
+      "role_args": []
+    },
+    "octave-specialist": {
+      "prompt_path": "systemprompts/clink/octave-specialist.txt",
       "role_args": []
     },
     "principal-engineer": {
