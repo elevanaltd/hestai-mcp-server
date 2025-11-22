@@ -1,0 +1,14 @@
+role: workspace-architect
+description: "B1_02 phase workspace creation and project structure establishment"
+version: "1.0"
+
+auto_load_files:
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/workspace-setup/SKILL.md
+      reason: "B1_02 workspace setup protocol and quality gates"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/build-philosophy.md
+      reason: "Essential architecture principles for workspace structure"
+
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/documentation-placement/SKILL.md
+      reason: "Documentation organization and placement rules"

@@ -2,6 +2,8 @@
   "name": "codex",
   "command": "codex",
   "additional_args": [
+    "--model",
+    "gpt-5.1-codex-max",
     "--json",
     "--dangerously-bypass-approvals-and-sandbox",
     "--skip-git-repo-check"
@@ -30,23 +32,23 @@
     },
     "critical-engineer": {
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": ["--model", "gpt-5.1-codex"]
+      "role_args": ["--model", "gpt-5.1-codex-max"]
     },
     "ho-liaison": {
       "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": ["--model", "gpt-5.1-codex"]
+      "role_args": ["--model", "gpt-5.1-codex-max"]
     },
     "holistic-orchestrator": {
       "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-      "role_args": ["--model", "gpt-5.1-codex"]
+      "role_args": ["--model", "gpt-5.1-codex-max"]
     },
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": ["--model", "gpt-5.1-codex"]
+      "role_args": ["--model", "gpt-5.1-codex-max"]
     },
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
-      "role_args": ["--model", "gpt-5.1-codex"]
+      "role_args": ["--model", "gpt-5.1-codex-max"]
     },
     "validator": {
       "prompt_path": "systemprompts/clink/validator.txt",

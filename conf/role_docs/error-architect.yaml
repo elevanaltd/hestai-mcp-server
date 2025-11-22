@@ -1,0 +1,14 @@
+role: error-architect
+description: "Systematic error resolution with priority-based triage"
+version: "1.0"
+
+auto_load_files:
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/error-triage/SKILL.md
+      reason: "Build→Types→Unused→Async→Logic→Tests priority order"
+    - path: /Users/shaunbuswell/.claude/skills/ci-error-resolution/SKILL.md
+      reason: "CI/CD pipeline failure resolution patterns"
+
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/anti-patterns.md
+      reason: "Common error-causing anti-patterns"

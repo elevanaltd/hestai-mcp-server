@@ -1,0 +1,16 @@
+role: test-methodology-guardian
+description: "Test infrastructure authority and integrity enforcement"
+version: "1.0"
+
+auto_load_files:
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/test-infrastructure/SKILL.md
+      reason: "Core test infrastructure patterns and standards"
+    - path: /Users/shaunbuswell/.claude/skills/test-ci-pipeline/SKILL.md
+      reason: "CI/CD pipeline testing configuration"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/tdd-discipline.md
+      reason: "TDD methodology enforcement"
+
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/supabase-test-harness/SKILL.md
+      reason: "Database testing patterns for Supabase"

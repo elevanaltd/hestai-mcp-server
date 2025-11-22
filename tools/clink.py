@@ -18,6 +18,7 @@ from config import TEMPERATURE_BALANCED
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_models import COMMON_FIELD_DESCRIPTIONS
 from tools.simple.base import SchemaBuilder, SimpleTool
+from utils.role_manifest import load_role_documentation
 
 logger = logging.getLogger(__name__)
 
@@ -182,13 +183,25 @@ class CLinkTool(SimpleTool):
         except KeyError as exc:
             return [self._error_response(str(exc))]
 
-        files = self.get_request_files(request)
+        # Get explicitly requested files
+        explicit_files = self.get_request_files(request)
+
+        # Auto-load role documentation and merge with explicit files
+        # Mandatory files are always loaded, optional files only if explicitly requested
+        files = load_role_documentation(
+            role=request.role,
+            explicit_files=explicit_files,
+            include_optional=False,  # Only load mandatory files by default
+        )
+
         images = self.get_request_images(request)
         continuation_id = self.get_request_continuation_id(request)
 
         self._model_context = arguments.get("_model_context")
 
-        # Store client name for prompt preparation
+        # Store merged files and client name for prompt preparation
+        # This ensures agent is aware of auto-loaded files
+        self._merged_files = files
         self._current_client_name = client_config.name
 
         # For Claude CLI, extract system prompt before prepare_prompt clears it
@@ -300,7 +313,9 @@ class CLinkTool(SimpleTool):
             client_name = getattr(self, "_current_client_name", "").lower()
 
             guidance = self._agent_capabilities_guidance(client_name)
-            file_section = self._format_file_references(self.get_request_files(request))
+            # Use merged files (auto-loaded + explicit) so agent knows about all files
+            merged_files = getattr(self, "_merged_files", self.get_request_files(request))
+            file_section = self._format_file_references(merged_files)
 
             sections: list[str] = []
             active_prompt = self.get_system_prompt().strip()
@@ -357,6 +372,7 @@ class CLinkTool(SimpleTool):
             return final_prompt
         finally:
             self._active_system_prompt = ""
+            self._merged_files = None  # Clean up instance state
 
     def _build_success_metadata(
         self,
