@@ -1,4 +1,4 @@
-"""clink tool - bridge Zen MCP requests to external AI CLIs."""
+"""clink tool - bridge HestAI MCP requests to external AI CLIs."""
 
 from __future__ import annotations
 
@@ -78,7 +78,7 @@ class CLinkTool(SimpleTool):
 
     def get_description(self) -> str:
         return (
-            "Link a request to an external AI CLI (Gemini CLI, Qwen CLI, etc.) through Zen MCP to reuse "
+            "Link a request to an external AI CLI (Gemini CLI, Qwen CLI, etc.) through HestAI MCP to reuse "
             "their capabilities inside existing workflows."
         )
 
@@ -516,7 +516,7 @@ class CLinkTool(SimpleTool):
             f"You are operating through the {cli_display} agent. You have access to your full suite of "
             "CLI capabilities—including launching web searches, reading files, and using any other "
             "available tools. Gather current information yourself and deliver the final answer without "
-            "asking the Zen MCP host to perform searches or file reads."
+            "asking the HestAI MCP host to perform searches or file reads."
         )
 
     def _format_file_references(self, files: list[str]) -> str:
