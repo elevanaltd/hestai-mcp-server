@@ -1,0 +1,16 @@
+role: code-review-specialist
+description: "Code quality enforcer for CODE_REVIEW_STANDARDS domain"
+version: "1.0"
+
+auto_load_files:
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/build-philosophy.md
+      reason: "Quality standards and MIP compliance"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/anti-patterns.md
+      reason: "Common anti-patterns to detect in code review"
+
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/test-infrastructure/SKILL.md
+      reason: "Test quality assessment during reviews"
+    - path: /Volumes/HestAI-Projects/eav-monorepo/.claude/skills/api-security/SKILL.md
+      reason: "Security review patterns"

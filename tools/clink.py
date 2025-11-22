@@ -18,6 +18,7 @@ from config import TEMPERATURE_BALANCED
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_models import COMMON_FIELD_DESCRIPTIONS
 from tools.simple.base import SchemaBuilder, SimpleTool
+from utils.role_manifest import load_role_documentation
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +183,17 @@ class CLinkTool(SimpleTool):
         except KeyError as exc:
             return [self._error_response(str(exc))]
 
-        files = self.get_request_files(request)
+        # Get explicitly requested files
+        explicit_files = self.get_request_files(request)
+
+        # Auto-load role documentation and merge with explicit files
+        # Mandatory files are always loaded, optional files only if explicitly requested
+        files = load_role_documentation(
+            role=request.role,
+            explicit_files=explicit_files,
+            include_optional=False,  # Only load mandatory files by default
+        )
+
         images = self.get_request_images(request)
         continuation_id = self.get_request_continuation_id(request)
 

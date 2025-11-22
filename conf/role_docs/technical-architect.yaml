@@ -1,0 +1,12 @@
+role: technical-architect
+description: "Technical architecture and system design with verified emergent solutions"
+version: "1.0"
+
+auto_load_files:
+  # Only universal architectural knowledge - system-agnostic
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/build-philosophy.md
+      reason: "Minimal Intervention Principle - essential vs accumulative architecture"
+
+  # Context-specific knowledge (Supabase, security patterns, etc.) should be
+  # loaded explicitly via files parameter when needed for specific tasks

@@ -1,0 +1,18 @@
+role: critical-engineer
+description: "Production readiness validator and domain accountability authority"
+version: "1.0"
+
+auto_load_files:
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/SKILL.md
+      reason: "Build quality gates and verification protocols"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/verification-protocols.md
+      reason: "Evidence-based validation requirements"
+    - path: /Users/shaunbuswell/.claude/skills/error-triage/SKILL.md
+      reason: "Systematic error resolution for production issues"
+
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/supabase-operations/SKILL.md
+      reason: "Database operations validation"
+    - path: /Volumes/HestAI-Projects/eav-monorepo/.claude/skills/api-security/SKILL.md
+      reason: "Security domain accountability"

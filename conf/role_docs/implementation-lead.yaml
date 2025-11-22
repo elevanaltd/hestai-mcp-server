@@ -1,0 +1,24 @@
+role: implementation-lead
+description: "Build execution specialist with TDD discipline and systematic implementation"
+version: "1.0"
+
+# Supporting documentation auto-loaded with this role
+auto_load_files:
+  # Always loaded - core build execution knowledge
+  mandatory:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/SKILL.md
+      reason: "Core build execution protocol and workflow"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/tdd-discipline.md
+      reason: "RED→GREEN→REFACTOR discipline enforcement"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/build-philosophy.md
+      reason: "Minimal Intervention Principle and system awareness"
+
+  # Optional - loaded only if user explicitly requests via files parameter
+  # These are available for reference but add significant token cost
+  optional:
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/verification-protocols.md
+      reason: "Deep dive verification for complex builds"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/anti-patterns.md
+      reason: "Reference for validation theater detection"
+    - path: /Users/shaunbuswell/.claude/skills/build-execution/mcp-tools.md
+      reason: "MCP-specific tool usage patterns"
