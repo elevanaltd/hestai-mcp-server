@@ -199,7 +199,9 @@ class CLinkTool(SimpleTool):
 
         self._model_context = arguments.get("_model_context")
 
-        # Store client name for prompt preparation
+        # Store merged files and client name for prompt preparation
+        # This ensures agent is aware of auto-loaded files
+        self._merged_files = files
         self._current_client_name = client_config.name
 
         # For Claude CLI, extract system prompt before prepare_prompt clears it
@@ -311,7 +313,9 @@ class CLinkTool(SimpleTool):
             client_name = getattr(self, "_current_client_name", "").lower()
 
             guidance = self._agent_capabilities_guidance(client_name)
-            file_section = self._format_file_references(self.get_request_files(request))
+            # Use merged files (auto-loaded + explicit) so agent knows about all files
+            merged_files = getattr(self, "_merged_files", self.get_request_files(request))
+            file_section = self._format_file_references(merged_files)
 
             sections: list[str] = []
             active_prompt = self.get_system_prompt().strip()
@@ -368,6 +372,7 @@ class CLinkTool(SimpleTool):
             return final_prompt
         finally:
             self._active_system_prompt = ""
+            self._merged_files = None  # Clean up instance state
 
     def _build_success_metadata(
         self,
