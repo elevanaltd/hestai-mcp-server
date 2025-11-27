@@ -317,7 +317,7 @@ class TestAutoModeProviderSelection:
             # Test that providers resolve aliases correctly
             test_cases = [
                 ("flash", ProviderType.GOOGLE, "gemini-2.5-flash"),
-                ("pro", ProviderType.GOOGLE, "gemini-2.5-pro"),
+                ("pro", ProviderType.GOOGLE, "gemini-3-pro-preview"),  # Updated: pro now maps to Gemini 3.0
                 ("mini", ProviderType.OPENAI, "o4-mini"),
                 ("o3mini", ProviderType.OPENAI, "o3-mini"),
                 ("grok", ProviderType.XAI, "grok-3"),

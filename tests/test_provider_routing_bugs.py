@@ -287,25 +287,26 @@ class TestOpenRouterAliasRestrictions:
 
             # Expected aliases that should resolve to models:
             # o3-mini -> openai/o3-mini
-            # pro -> google/gemini-2.5-pro
+            # pro -> google/gemini-3-pro-preview (updated: pro now maps to Gemini 3.0)
             # flash -> google/gemini-2.5-flash
             # o4-mini -> openai/o4-mini
             # o3 -> openai/o3
-            # gpt4.1 -> should not exist (expected to be filtered out)
+            # gpt4.1 -> gpt-4.1-2025-04-14
 
             expected_models = {
                 "openai/o3-mini",
-                "google/gemini-2.5-pro",
+                "google/gemini-3-pro-preview",  # Updated: pro now maps to Gemini 3.0
                 "google/gemini-2.5-flash",
                 "openai/o4-mini",
                 "openai/o3",
+                "gpt-4.1-2025-04-14",  # gpt4.1 alias resolves to this
             }
 
             available_model_names = set(available_models.keys())
 
-            # Should have at least the resolvable aliases (5 out of 6)
-            assert len(available_model_names) >= 5, (
-                f"Expected at least 5 models from alias restrictions, got {len(available_model_names)}: "
+            # Should have at least the resolvable aliases (6 models)
+            assert len(available_model_names) >= 6, (
+                f"Expected at least 6 models from alias restrictions, got {len(available_model_names)}: "
                 f"{available_model_names}"
             )
 
