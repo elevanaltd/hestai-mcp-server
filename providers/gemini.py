@@ -91,8 +91,27 @@ class GeminiModelProvider(ModelProvider):
             supports_temperature=True,
             temperature_constraint=create_temperature_constraint("range"),
             max_thinking_tokens=32768,  # Max thinking tokens for Pro model
+            description="Older model - Deep reasoning + thinking mode (1M context) - Complex problems, architecture, deep analysis",
+            aliases=["gemini-pro-2.5"],
+        ),
+        "gemini-3-pro-preview": ModelCapabilities(
+            provider=ProviderType.GOOGLE,
+            model_name="gemini-3-pro-preview",
+            friendly_name="Gemini Pro 3.0 Preview",
+            context_window=1_048_576,  # 1M tokens
+            max_output_tokens=65_536,
+            supports_extended_thinking=True,
+            supports_system_prompts=True,
+            supports_streaming=True,
+            supports_function_calling=True,
+            supports_json_mode=True,
+            supports_images=True,  # Vision capability
+            max_image_size_mb=32.0,  # Higher limit for Pro model
+            supports_temperature=True,
+            temperature_constraint=create_temperature_constraint("range"),
+            max_thinking_tokens=32768,  # Max thinking tokens for Pro model
             description="Deep reasoning + thinking mode (1M context) - Complex problems, architecture, deep analysis",
-            aliases=["pro", "gemini pro", "gemini-pro"],
+            aliases=["pro", "gemini3", "gemini-pro"],
         ),
     }
 
@@ -112,6 +131,7 @@ class GeminiModelProvider(ModelProvider):
         "gemini-2.0-flash-lite": 0,  # No thinking support
         "gemini-2.5-flash": 24576,  # Flash 2.5 thinking budget limit
         "gemini-2.5-pro": 32768,  # Pro 2.5 thinking budget limit
+        "gemini-3-pro-preview": 32768,  # Pro 3.0 thinking budget limit
     }
 
     def __init__(self, api_key: str, **kwargs):
@@ -190,6 +210,15 @@ class GeminiModelProvider(ModelProvider):
         # Create contents structure
         contents = [{"parts": parts}]
 
+        # Gemini 3 Pro Preview currently rejects medium thinking budgets; bump to high.
+        effective_thinking_mode = thinking_mode
+        if resolved_name == "gemini-3-pro-preview" and thinking_mode == "medium":
+            logger.debug(
+                "Overriding thinking mode 'medium' with 'high' for %s due to launch limitation",
+                resolved_name,
+            )
+            effective_thinking_mode = "high"
+
         # Get capabilities first
         capabilities = self.get_capabilities(model_name)
 
@@ -203,8 +232,8 @@ class GeminiModelProvider(ModelProvider):
         # Add thinking configuration for models that support it
         # Note: The new API doesn't support thinking_config yet
         # TODO: Update when API adds thinking mode support
-        if capabilities.supports_extended_thinking and thinking_mode in self.THINKING_BUDGETS:
-            logger.debug(f"Thinking mode '{thinking_mode}' requested but not yet supported in current API")
+        if capabilities.supports_extended_thinking and effective_thinking_mode in self.THINKING_BUDGETS:
+            logger.debug(f"Thinking mode '{effective_thinking_mode}' requested but not yet supported in current API")
 
         # Retry logic with progressive delays
         max_retries = 4  # Total of 4 attempts
@@ -237,7 +266,7 @@ class GeminiModelProvider(ModelProvider):
                     friendly_name="Gemini",
                     provider=ProviderType.GOOGLE,
                     metadata={
-                        "thinking_mode": thinking_mode if capabilities.supports_extended_thinking else None,
+                        "thinking_mode": effective_thinking_mode if capabilities.supports_extended_thinking else None,
                         "finish_reason": (
                             getattr(response.candidates[0], "finish_reason", "STOP") if response.candidates else "STOP"
                         ),
@@ -356,11 +385,12 @@ class GeminiModelProvider(ModelProvider):
 
     def _supports_vision(self, model_name: str) -> bool:
         """Check if the model supports vision (image processing)."""
-        # Gemini 2.5 models support vision
+        # Gemini models with vision support
         vision_models = {
             "gemini-2.5-flash",
             "gemini-2.5-pro",
             "gemini-2.0-flash",
+            "gemini-3-pro-preview",
             "gemini-1.5-pro",
             "gemini-1.5-flash",
         }

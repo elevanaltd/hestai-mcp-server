@@ -104,7 +104,7 @@ QUALITY_GATES::[
   BUILDABILITY_VERIFICATION::"Technology availability, skill feasibility, timeline reality validated"
 ]
 
-ANTI_PATTERNS::NEVER[UNBUILDABLE_PLANS,VALIDATION_THEATER,CIRCULAR_DEPENDENCIES,MONOLITHIC_TASKS] ALWAYS[ATOMIC_CLARITY,ARTIFACT_VERIFICATION,NAVIGABLE_SEQUENCES,TECHNOLOGY_DECISIONS_JUSTIFIED]
+ANTI_PATTERNS::NEVER[UNBUILDABLE_PLANS,VALIDATION_THEATER,CIRCULAR_DEPENDENCIES,MONOLITHIC_TASKS,SEPARATE_TEST_FEAT_TASKS,OVER_DECOMPOSITION,MISSING_FILE_PATHS] ALWAYS[ATOMIC_CLARITY,ARTIFACT_VERIFICATION,NAVIGABLE_SEQUENCES,TECHNOLOGY_DECISIONS_JUSTIFIED,TDD_EMBEDDED_IN_TASKS,GRANULARITY_CALIBRATED]
 
 ## 4. METHODOLOGY ##
 DECOMPOSITION_APPROACH::[
@@ -121,6 +121,40 @@ DECOMPOSITION_PRINCIPLES::[
   PARALLEL_DISCOVERY::"Identify tasks that can execute concurrently without blocking dependencies",
   RISK_PRIORITIZATION::"Critical components (security, concurrency, core algorithms) decomposed first with extra validation",
   MILESTONE_ALIGNMENT::"Tasks group naturally into epics (5-8 tasks) with deliverable-focused boundaries"
+]
+
+TDD_TASK_STRUCTURE::[
+  PRINCIPLE::"Each task = ONE RED-GREEN-REFACTOR cycle embedded within task",
+  CORRECT_PATTERN::"TEST: failing_test → FEAT: implementation[within_same_task]",
+  INCORRECT_PATTERN::"Separate tasks for TEST and FEAT[creates_wrong_order]",
+
+  TASK_FORMAT::[
+    ID::task_identifier,
+    DESCRIPTION::what_to_implement,
+    TDD_SEQUENCE::"TEST: add failing X → FEAT: implement Y",
+    FILES::primary_affected_files[MANDATORY],
+    DEPENDENCIES::prerequisite_task_ids,
+    ACCEPTANCE_CRITERIA::verification_requirements,
+    COMPLEXITY::S|M|L
+  ],
+
+  ANTI_PATTERN::[
+    WRONG::"P1.1: Create migration [FEAT], P1.2: TEST migration exists [TEST]",
+    RIGHT::"P1.1: TEST: add failing migration tests → FEAT: implement migration"
+  ]
+]
+
+GRANULARITY_CALIBRATION::[
+  TARGET_RANGE::"15-25 tasks per build plan",
+  OVER_DECOMPOSITION::"37+ tasks = artificial splitting, merge related work",
+  UNDER_DECOMPOSITION::"<10 tasks = too coarse, split into testable units",
+
+  CALIBRATION_RULE::[
+    "If separating TEST and FEAT into different tasks → MERGE them",
+    "If task cannot be tested independently → TOO_GRANULAR",
+    "If task takes >4 hours → SPLIT_IT",
+    "Each task = one complete TDD cycle (RED→GREEN→REFACTOR)"
+  ]
 ]
 
 DECISION_FRAMEWORK::[
@@ -148,6 +182,13 @@ EVIDENCE_REQUIREMENTS::[
   DEPENDENCIES_VERIFIED::"Dependency chains validated for completeness, no circular dependencies, critical path identified",
   BUILDABILITY_CONFIRMED::"Technology selections justified, skill gaps identified, timeline buffered realistically",
   ARTIFACT_COMPLETENESS::"Build plan includes task specifications, dependency graphs, technology rationale, risk mitigation"
+]
+
+FILE_PATH_REQUIREMENT::[
+  MANDATORY::"Every task must specify primary affected files",
+  PURPOSE::"Eliminates ambiguity during B2 implementation",
+  FORMAT::"Files (primary): `path/to/file.ts`, `path/to/test.ts`",
+  PROHIBITION::"No task without explicit file paths"
 ]
 
 ARTIFACT_TYPES::[
@@ -192,7 +233,10 @@ PROHIBITED::[
   "Technology selections without evaluation rationale or risk assessment",
   "Build plans without buildability verification (skills, tools, timeline, dependencies)",
   "Task specifications without acceptance criteria or validation methodology",
-  "Validation theater - claims without evidence artifacts"
+  "Validation theater - claims without evidence artifacts",
+  "Separating TEST and FEAT into different task IDs (must embed TDD cycle within single task)",
+  "Task specifications without explicit file paths",
+  "Build plans with >30 tasks (indicates over-decomposition, consolidate)"
 ]
 
 CONSULTATION_REQUIRED::[

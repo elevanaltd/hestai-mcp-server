@@ -20,7 +20,9 @@ class TestSupportedModelsAliases:
 
         # Test specific aliases
         assert "flash" in provider.SUPPORTED_MODELS["gemini-2.5-flash"].aliases
-        assert "pro" in provider.SUPPORTED_MODELS["gemini-2.5-pro"].aliases
+        assert "pro" in provider.SUPPORTED_MODELS["gemini-3-pro-preview"].aliases  # Pro now maps to 3.0
+        assert "gemini3" in provider.SUPPORTED_MODELS["gemini-3-pro-preview"].aliases
+        assert "gemini-pro-2.5" in provider.SUPPORTED_MODELS["gemini-2.5-pro"].aliases  # 2.5 has explicit alias
         assert "flash-2.0" in provider.SUPPORTED_MODELS["gemini-2.0-flash"].aliases
         assert "flash2" in provider.SUPPORTED_MODELS["gemini-2.0-flash"].aliases
         assert "flashlite" in provider.SUPPORTED_MODELS["gemini-2.0-flash-lite"].aliases
@@ -28,14 +30,16 @@ class TestSupportedModelsAliases:
 
         # Test alias resolution
         assert provider._resolve_model_name("flash") == "gemini-2.5-flash"
-        assert provider._resolve_model_name("pro") == "gemini-2.5-pro"
+        assert provider._resolve_model_name("pro") == "gemini-3-pro-preview"  # Pro now maps to 3.0
+        assert provider._resolve_model_name("gemini3") == "gemini-3-pro-preview"
+        assert provider._resolve_model_name("gemini-pro-2.5") == "gemini-2.5-pro"
         assert provider._resolve_model_name("flash-2.0") == "gemini-2.0-flash"
         assert provider._resolve_model_name("flash2") == "gemini-2.0-flash"
         assert provider._resolve_model_name("flashlite") == "gemini-2.0-flash-lite"
 
         # Test case insensitive resolution
         assert provider._resolve_model_name("Flash") == "gemini-2.5-flash"
-        assert provider._resolve_model_name("PRO") == "gemini-2.5-pro"
+        assert provider._resolve_model_name("PRO") == "gemini-3-pro-preview"  # Pro now maps to 3.0
 
     def test_openai_provider_aliases(self):
         """Test OpenAI provider's alias structure."""
@@ -123,8 +127,8 @@ class TestSupportedModelsAliases:
         gemini_models = gemini_provider.list_models(respect_restrictions=False)
         assert "gemini-2.5-flash" in gemini_models
         assert "flash" in gemini_models
-        assert "gemini-2.5-pro" in gemini_models
-        assert "pro" in gemini_models
+        assert "gemini-3-pro-preview" in gemini_models
+        assert "pro" in gemini_models  # Pro alias exists (now maps to 3.0)
 
         # Test OpenAI
         openai_provider = OpenAIModelProvider("test-key")
@@ -155,8 +159,8 @@ class TestSupportedModelsAliases:
         gemini_all = gemini_provider.list_all_known_models()
         assert "gemini-2.5-flash" in gemini_all
         assert "flash" in gemini_all
-        assert "gemini-2.5-pro" in gemini_all
-        assert "pro" in gemini_all
+        assert "gemini-3-pro-preview" in gemini_all
+        assert "pro" in gemini_all  # Pro alias exists (now maps to 3.0)
         # All should be lowercase
         assert all(model == model.lower() for model in gemini_all)
 

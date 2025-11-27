@@ -6,6 +6,8 @@ import asyncio
 import logging
 import os
 import shlex
+import signal
+import sys
 import tempfile
 import time
 from collections.abc import Sequence
@@ -17,6 +19,9 @@ from clink.models import ResolvedCLIClient, ResolvedCLIRole
 from clink.parsers import BaseParser, ParsedCLIResponse, ParserError, get_parser
 
 logger = logging.getLogger("clink.agent")
+
+# Timeout for cleanup operations after killing a process (seconds)
+CLEANUP_TIMEOUT_SECONDS = 30
 
 
 @dataclass
@@ -95,7 +100,12 @@ class BaseCLIAgent:
         if cwd:
             self._logger.debug("Working directory: %s", cwd)
 
+        # Determine if we can use process groups (POSIX only)
+        use_process_group = sys.platform != "win32"
+
         try:
+            # On POSIX systems, use start_new_session=True to create a new process group.
+            # This allows us to kill all child processes (including grandchildren) on timeout.
             process = await asyncio.create_subprocess_exec(
                 *command_with_output_flag,
                 stdin=asyncio.subprocess.PIPE,
@@ -104,22 +114,78 @@ class BaseCLIAgent:
                 cwd=cwd,
                 limit=limit,
                 env=env,
+                start_new_session=use_process_group,
             )
         except FileNotFoundError as exc:
             raise CLIAgentError(f"Executable not found for CLI '{self.client.name}': {exc}") from exc
 
+        pid = process.pid
+        timeout_seconds = self.client.timeout_seconds
+
+        self._logger.info(
+            "[SUBPROCESS] Started CLI '%s' (PID=%d, process_group=%s, timeout=%ds)",
+            self.client.name,
+            pid,
+            use_process_group,
+            timeout_seconds,
+        )
+
+        # Use two-stage timeout pattern to avoid hanging on cleanup
+        communicate_task = asyncio.create_task(process.communicate(prompt.encode("utf-8")))
+
         try:
-            stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                process.communicate(prompt.encode("utf-8")),
-                timeout=self.client.timeout_seconds,
+            # Wait for subprocess to complete with timeout
+            done, pending = await asyncio.wait({communicate_task}, timeout=timeout_seconds)
+
+            if communicate_task in done:
+                # Normal completion
+                stdout_bytes, stderr_bytes = communicate_task.result()
+                duration = time.monotonic() - start_time
+                self._logger.info(
+                    "[SUBPROCESS] CLI '%s' (PID=%d) completed normally in %.1fs",
+                    self.client.name,
+                    pid,
+                    duration,
+                )
+            else:
+                # Timeout occurred - need to kill process and cleanup
+                duration = time.monotonic() - start_time
+                self._logger.error(
+                    "[SUBPROCESS] TIMEOUT after %.1fs for CLI '%s' (PID=%d) - initiating kill sequence",
+                    duration,
+                    self.client.name,
+                    pid,
+                )
+
+                # Cancel the communicate task first
+                communicate_task.cancel()
+                try:
+                    await communicate_task
+                except asyncio.CancelledError:
+                    pass
+
+                # Kill the process (and entire process group on POSIX)
+                await self._kill_process_tree(process, use_process_group)
+
+                raise CLIAgentError(
+                    f"CLI '{self.client.name}' timed out after {timeout_seconds} seconds (PID={pid})",
+                    returncode=None,
+                )
+
+        except asyncio.CancelledError:
+            # Task was cancelled externally - still need to cleanup
+            self._logger.warning(
+                "[SUBPROCESS] Task cancelled for CLI '%s' (PID=%d) - cleaning up",
+                self.client.name,
+                pid,
             )
-        except asyncio.TimeoutError as exc:
-            process.kill()
-            await process.communicate()
-            raise CLIAgentError(
-                f"CLI '{self.client.name}' timed out after {self.client.timeout_seconds} seconds",
-                returncode=None,
-            ) from exc
+            communicate_task.cancel()
+            try:
+                await communicate_task
+            except asyncio.CancelledError:
+                pass
+            await self._kill_process_tree(process, use_process_group)
+            raise
 
         duration = time.monotonic() - start_time
         return_code = process.returncode
@@ -177,6 +243,71 @@ class BaseCLIAgent:
             parser_name=self._parser.name,
             output_file_content=output_file_content,
         )
+
+    async def _kill_process_tree(self, process: asyncio.subprocess.Process, use_process_group: bool) -> None:
+        """Kill the process and all its children, with robust cleanup.
+
+        On POSIX systems with process groups enabled, kills the entire process group.
+        Falls back to killing just the process on Windows or if process group kill fails.
+        """
+        pid = process.pid
+
+        if use_process_group:
+            # Try to kill the entire process group (SIGKILL to all children)
+            try:
+                self._logger.info("[SUBPROCESS] Killing process group for PID=%d", pid)
+                os.killpg(pid, signal.SIGKILL)
+                self._logger.info("[SUBPROCESS] Process group kill signal sent for PID=%d", pid)
+            except (ProcessLookupError, PermissionError) as e:
+                # Process group may already be dead or we don't have permission
+                self._logger.warning(
+                    "[SUBPROCESS] Process group kill failed for PID=%d: %s - falling back to direct kill",
+                    pid,
+                    e,
+                )
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass  # Already dead
+        else:
+            # Windows or fallback: just kill the direct process
+            self._logger.info("[SUBPROCESS] Killing process PID=%d (no process group)", pid)
+            try:
+                process.kill()
+            except ProcessLookupError:
+                pass  # Already dead
+
+        # Close the pipes explicitly to prevent hanging on grandchild processes
+        # that may have inherited the file descriptors
+        self._logger.debug("[SUBPROCESS] Closing pipes for PID=%d", pid)
+        if process.stdin:
+            try:
+                process.stdin.close()
+            except Exception:
+                pass
+        if process.stdout:
+            try:
+                process.stdout.feed_eof()
+            except Exception:
+                pass
+        if process.stderr:
+            try:
+                process.stderr.feed_eof()
+            except Exception:
+                pass
+
+        # Wait for process to actually terminate with a timeout
+        # Don't use communicate() here as it can hang if grandchildren hold pipes
+        self._logger.debug("[SUBPROCESS] Waiting for process PID=%d to terminate", pid)
+        try:
+            await asyncio.wait_for(process.wait(), timeout=CLEANUP_TIMEOUT_SECONDS)
+            self._logger.info("[SUBPROCESS] Process PID=%d terminated with code %s", pid, process.returncode)
+        except asyncio.TimeoutError:
+            self._logger.error(
+                "[SUBPROCESS] Process PID=%d did not terminate within %ds after kill - possible zombie",
+                pid,
+                CLEANUP_TIMEOUT_SECONDS,
+            )
 
     def _build_command(self, *, role: ResolvedCLIRole, system_prompt: str | None) -> list[str]:
         base = list(self.client.executable)
