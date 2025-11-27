@@ -32,7 +32,9 @@ class TestModelResolutionBug:
 
         # Test that it also works with 'pro' alias
         resolved_pro = provider._resolve_model_name("pro")
-        assert resolved_pro == "google/gemini-3-pro-preview", f"Expected 'google/gemini-3-pro-preview', got '{resolved_pro}'"
+        assert (
+            resolved_pro == "google/gemini-3-pro-preview"
+        ), f"Expected 'google/gemini-3-pro-preview', got '{resolved_pro}'"
 
     # DELETED: test_provider_registry_returns_openrouter_for_gemini
     # This test had a flawed mock setup - it mocked get_provider() but called get_provider_for_model().
