@@ -32,23 +32,31 @@
     },
     "critical-engineer": {
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": ["--model", "gpt-5.1-codex-max"]
+      "role_args": []
     },
     "ho-liaison": {
       "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": ["--model", "gpt-5.1-codex-max"]
+      "role_args": []
     },
     "holistic-orchestrator": {
       "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-      "role_args": ["--model", "gpt-5.1-codex-max"]
+      "role_args": []
     },
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": ["--model", "gpt-5.1-codex-max"]
+      "role_args": []
+    },
+    "task-decomposer": {
+      "prompt_path": "systemprompts/clink/task-decomposer.txt",
+      "role_args": []
+    },
+    "task-decomposer-validator": {
+      "prompt_path": "systemprompts/clink/task-decomposer-validator.txt",
+      "role_args": []
     },
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
-      "role_args": ["--model", "gpt-5.1-codex-max"]
+      "role_args": []
     },
     "validator": {
       "prompt_path": "systemprompts/clink/validator.txt",
