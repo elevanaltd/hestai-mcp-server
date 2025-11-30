@@ -27,7 +27,7 @@ class TestCriticalEngineerTool:
     def test_tool_configuration(self):
         """Test tool configuration and requirements"""
         assert self.tool.requires_model() is True
-        assert self.tool.get_default_temperature() == 0.2  # TEMPERATURE_ANALYTICAL
+        assert self.tool.get_default_temperature() == 1.0  # TEMPERATURE_ANALYTICAL
         assert self.tool.get_default_model() == "google/gemini-2.5-pro"
 
     def test_model_category(self):
@@ -263,7 +263,7 @@ class TestCriticalEngineerIntegration:
     def test_technical_validator_behavior_simulation(self):
         """Test that tool behaves as expected technical validator"""
         # Should be configured for analytical, experienced responses
-        assert self.tool.get_default_temperature() == 0.2  # Low temperature for consistency
+        assert self.tool.get_default_temperature() == 1.0  # Low temperature for consistency
         assert self.tool.requires_model() is True  # Needs AI for expert analysis
 
         # Should use high-quality models for reliable validation

@@ -32,7 +32,7 @@ class TestTestGuardTool:
     def test_tool_configuration(self):
         """Test tool configuration and requirements"""
         assert self.tool.requires_model() is True
-        assert self.tool.get_default_temperature() == 0.2  # TEMPERATURE_ANALYTICAL
+        assert self.tool.get_default_temperature() == 1.0  # TEMPERATURE_ANALYTICAL
         assert self.tool.get_default_model() == "google/gemini-2.5-pro"
 
     def test_model_category(self):
@@ -292,7 +292,7 @@ class TestTestGuardIntegration:
     def test_quality_gate_behavior_simulation(self):
         """Test that tool behaves as expected quality gate"""
         # Should be configured for immediate, authoritative responses
-        assert self.tool.get_default_temperature() == 0.2  # Low temperature for consistency
+        assert self.tool.get_default_temperature() == 1.0  # Low temperature for consistency
         assert self.tool.requires_model() is True  # Needs AI for pattern detection
 
         # Should use high-quality models for reliable analysis

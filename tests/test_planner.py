@@ -19,7 +19,7 @@ class TestPlannerTool:
 
         assert tool.get_name() == "planner"
         assert "SEQUENTIAL PLANNER" in tool.get_description()
-        assert tool.get_default_temperature() == 0.5  # TEMPERATURE_BALANCED
+        assert tool.get_default_temperature() == 1.0  # TEMPERATURE_BALANCED
         assert tool.get_model_category() == ToolModelCategory.EXTENDED_REASONING
         assert tool.get_default_thinking_mode() == "medium"
 

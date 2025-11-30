@@ -34,7 +34,7 @@ class TestConfig:
         assert DEFAULT_MODEL == "gemini-2.5-flash"
 
     def test_temperature_defaults(self):
-        """Test temperature constants"""
-        assert TEMPERATURE_ANALYTICAL == 0.2
-        assert TEMPERATURE_BALANCED == 0.5
-        assert TEMPERATURE_CREATIVE == 0.7
+        """Test temperature constants - all set to 1.0 per Gemini 3.0 Pro guidance"""
+        assert TEMPERATURE_ANALYTICAL == 1.0
+        assert TEMPERATURE_BALANCED == 1.0
+        assert TEMPERATURE_CREATIVE == 1.0

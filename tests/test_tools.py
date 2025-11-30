@@ -20,7 +20,7 @@ class TestThinkDeepTool:
         """Test tool metadata"""
         assert tool.get_name() == "thinkdeep"
         assert "COMPREHENSIVE INVESTIGATION & REASONING" in tool.get_description()
-        assert tool.get_default_temperature() == 0.7
+        assert tool.get_default_temperature() == 1.0
 
         schema = tool.get_input_schema()
         # ThinkDeep is now a workflow tool with step-based fields
@@ -121,7 +121,7 @@ class TestCodeReviewTool:
         """Test tool metadata"""
         assert tool.get_name() == "codereview"
         assert "COMPREHENSIVE CODE REVIEW" in tool.get_description()
-        assert tool.get_default_temperature() == 0.2
+        assert tool.get_default_temperature() == 1.0
 
         schema = tool.get_input_schema()
         assert "relevant_files" in schema["properties"]
@@ -214,7 +214,7 @@ class TestAnalyzeTool:
         """Test tool metadata"""
         assert tool.get_name() == "analyze"
         assert "COMPREHENSIVE ANALYSIS WORKFLOW" in tool.get_description()
-        assert tool.get_default_temperature() == 0.2
+        assert tool.get_default_temperature() == 1.0
 
         schema = tool.get_input_schema()
         # New workflow tool requires step-based fields
