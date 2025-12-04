@@ -6,28 +6,83 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    # Monthly full test run to catch edge cases
+    - cron: '0 2 1 * *'
 
 jobs:
-  test:
+  # FAST PATH: Detect change type to skip unnecessary work
+  detect-change-type:
+    runs-on: ubuntu-latest
+    outputs:
+      is_python_code: ${{ steps.detect.outputs.is_python_code }}
+      is_agent_update: ${{ steps.detect.outputs.is_agent_update }}
+      is_config_only: ${{ steps.detect.outputs.is_config_only }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Detect change type
+      id: detect
+      run: |
+        # Get changed files
+        if [ "${{ github.event_name }}" == "pull_request" ]; then
+          CHANGED=$(git diff --name-only origin/main HEAD)
+        else
+          CHANGED=$(git diff --name-only HEAD~1 HEAD)
+        fi
+
+        echo "Changed files:"
+        echo "$CHANGED"
+
+        # Check for Python code changes (excluding tests and config)
+        if echo "$CHANGED" | grep -E '\.py$' | grep -v '^tests/' | grep -qv 'config.py'; then
+          echo "is_python_code=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_python_code=false" >> $GITHUB_OUTPUT
+        fi
+
+        # Check for agent prompt updates
+        if echo "$CHANGED" | grep -q 'systemprompts/clink/'; then
+          echo "is_agent_update=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_agent_update=false" >> $GITHUB_OUTPUT
+        fi
+
+        # Check if ONLY config/docs changed (no .py files except config.py)
+        if echo "$CHANGED" | grep -E '\.py$' | grep -qv 'config.py'; then
+          echo "is_config_only=false" >> $GITHUB_OUTPUT
+        else
+          echo "is_config_only=true" >> $GITHUB_OUTPUT
+        fi
+
+  # CRITICAL PATH: Full test suite for Python code changes
+  test-full:
+    needs: detect-change-type
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-change-type.outputs.is_python_code == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    
+        cache: 'pip'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
-    
+
     - name: Run unit tests
       run: |
         # Run only unit tests (exclude simulation tests and integration tests)
@@ -38,24 +93,120 @@ jobs:
         GEMINI_API_KEY: ""
         OPENAI_API_KEY: ""
 
-  lint:
+  # FAST PATH: Agent prompt validation (lightweight)
+  validate-agents:
+    needs: detect-change-type
+    if: needs.detect-change-type.outputs.is_agent_update == 'true'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.11"
-    
+        cache: 'pip'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
-    
+
+    - name: Validate agent prompt files
+      run: |
+        echo "Validating agent prompt files..."
+        for file in systemprompts/clink/*.txt; do
+          if [ -f "$file" ]; then
+            # Check file is not empty
+            if [ ! -s "$file" ]; then
+              echo "❌ ERROR: Empty file $file"
+              exit 1
+            fi
+            echo "✓ $file ($(wc -l < "$file") lines)"
+          fi
+        done
+        echo "✓ All agent prompt files valid"
+
+    - name: Run agent-specific tests only
+      run: |
+        python -m pytest tests/test_role_manifest.py \
+                         tests/test_specialist_registry_integration.py \
+                         -v
+      env:
+        GEMINI_API_KEY: ""
+        OPENAI_API_KEY: ""
+
+  # CONFIG VALIDATION: Fast validation of config-only changes
+  validate-config:
+    needs: detect-change-type
+    if: needs.detect-change-type.outputs.is_config_only == 'true'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate JSON config files
+      run: |
+        echo "Validating JSON configuration files..."
+        for file in conf/*.json; do
+          if [ -f "$file" ]; then
+            python -m json.tool "$file" > /dev/null && echo "✓ $file" || exit 1
+          fi
+        done
+        echo "✓ All JSON config files valid"
+
+    - name: Summary
+      run: echo "Config-only changes validated successfully"
+
+  # LINT: Always run for code quality
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+
     - name: Run black formatter check
       run: black --check .
 
     - name: Run ruff linter
       run: ruff check .
+
+  # CI Status: Ensure at least one validation ran
+  ci-status:
+    if: always()
+    needs: [test-full, validate-agents, validate-config, lint]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check CI status
+      run: |
+        echo "CI Pipeline Status:"
+        echo "- Full tests: ${{ needs.test-full.result }}"
+        echo "- Agent validation: ${{ needs.validate-agents.result }}"
+        echo "- Config validation: ${{ needs.validate-config.result }}"
+        echo "- Lint: ${{ needs.lint.result }}"
+
+        # Determine overall status
+        FAILED=0
+        [ "${{ needs.lint.result }}" = "failure" ] && FAILED=1
+
+        # For other jobs, only fail if they ran and failed
+        [ "${{ needs.test-full.result }}" = "failure" ] && FAILED=1
+        [ "${{ needs.validate-agents.result }}" = "failure" ] && FAILED=1
+        [ "${{ needs.validate-config.result }}" = "failure" ] && FAILED=1
+
+        if [ $FAILED -eq 1 ]; then
+          echo "❌ CI pipeline failed"
+          exit 1
+        else
+          echo "✅ CI pipeline passed"
+        fi
 
