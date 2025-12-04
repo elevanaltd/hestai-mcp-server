@@ -40,6 +40,10 @@
       "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
       "role_args": []
     },
+    "ho-liaison": {
+      "prompt_path": "systemprompts/clink/ho-liaison.txt",
+      "role_args": []
+    },
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
       "role_args": []
