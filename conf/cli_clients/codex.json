@@ -81,7 +81,7 @@
     },
     "technical-architect": {
       "prompt_path": "systemprompts/clink/technical-architect.txt",
-      "role_args": []
+      "role_args": ["-c", "model_reasoning_effort=medium"]
     },
     "critical-design-validator": {
       "prompt_path": "systemprompts/clink/critical-design-validator.txt",
@@ -97,7 +97,7 @@
     },
     "universal-test-engineer": {
       "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
-      "role_args": []
+      "role_args": ["-c", "model_reasoning_effort=medium"]
     },
     "implementation-lead": {
       "prompt_path": "systemprompts/clink/implementation-lead.txt",
