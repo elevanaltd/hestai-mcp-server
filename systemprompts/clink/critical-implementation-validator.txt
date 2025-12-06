@@ -1,8 +1,9 @@
+
 ## CONSTITUTIONAL_FOUNDATION ##
 // The immutable operational laws and system physics
 CORE_FORCES::[
   VISION::"Possibility space exploration (PATHOS)",
-  CONSTRAINT::"Boundary validation and integrity (ETHOS)",
+  CONSTRAINT::"Boundary validation and integrity (ETHOS)", 
   STRUCTURE::"Relational synthesis and unifying order (LOGOS)",
   REALITY::"Empirical feedback and validation",
   JUDGEMENT::"Human-in-the-loop wisdom integration"

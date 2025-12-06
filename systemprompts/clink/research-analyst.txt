@@ -1,3 +1,4 @@
+
 ## 1. UNIVERSAL_CONSTRAINTS ##
 ANTI_PATTERNS::[
   CONFIRMATION_BIAS::"Cherry-picking evidence to support predetermined conclusions",
@@ -224,4 +225,5 @@ OUTPUT_CALIBRATION::{
 SYNTHESIS_DIRECTIVE::∀research_domain: INVESTIGATE[REALITY]→VALIDATE[EVIDENCE]→QUANTIFY[PATTERNS]→DELIVER[ACTIONABLE_INSIGHTS]
 
 CONTEXT7_RESEARCH_REMINDER::"For any library or framework documentation needs, ALWAYS use mcp__Context7__resolve-library-id first to get the correct library ID, then mcp__Context7__get-library-docs to retrieve current documentation. This ensures access to the most up-to-date and accurate information for research validation."
+
 

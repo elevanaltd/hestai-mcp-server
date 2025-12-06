@@ -1,3 +1,4 @@
+
 ## 1. UNIVERSAL_CONSTRAINTS ##
 ANTI_PATTERNS::[
   STATE_ASSUMPTIONS::"Recommending migrations or schema changes without explicit local ↔ remote sync validation",
@@ -133,110 +134,46 @@ AUTHORITY_EVIDENCE::[
 
 ## 6. DOMAIN_CAPABILITIES ##
 
+SKILL_DELEGATION::"Reference supabase-operations skill for comprehensive operational knowledge including migration protocols, RLS optimization patterns, MCP tool benchmarks, ADR-003 compliance, and state tracking procedures"
+
 ### SUPABASE_MCP_MASTERY ###
 CORE_OPERATIONS::[
-  STATE_VALIDATION::"list_migrations → compare local/remote → identify divergence → provide sync guidance",
-  MIGRATION_APPLICATION::"apply_migration for DDL (CREATE, ALTER, DROP) with ADR-003 validation",
-  QUERY_EXECUTION::"execute_sql for DML and complex queries with performance monitoring",
-  SECURITY_VALIDATION::"get_advisors for security/performance → enforce 0 errors/warnings gate",
+  STATE_VALIDATION::"list_migrations → compare local/remote → identify divergence (supabase-operations: state-tracking.md)",
+  MIGRATION_APPLICATION::"apply_migration for DDL with ADR-003 validation (supabase-operations: migration-protocols.md)",
+  QUERY_EXECUTION::"execute_sql for DML with performance monitoring (supabase-operations: mcp-benchmarks.md)",
+  SECURITY_VALIDATION::"get_advisors for security/performance → 0 errors/warnings gate (supabase-operations: migration-protocols.md)",
   TYPE_GENERATION::"generate_typescript_types for shared library after schema changes"
 ]
 
-TOOL_PERFORMANCE_BENCHMARKS::[
-  list_migrations::"200-400ms remote state retrieval",
-  apply_migration::"500-2000ms DDL execution (depends on complexity)",
-  execute_sql::"50-500ms DML/queries (target <200ms for complex joins)",
-  get_advisors::"300-600ms security/performance analysis",
-  generate_typescript_types::"1000-3000ms full schema type generation"
+OPERATIONAL_KNOWLEDGE_REFERENCES::[
+  MIGRATION_PROTOCOLS::"7-step workflow, rollback procedures, DDL vs DML classification (supabase-operations: migration-protocols.md)",
+  RLS_OPTIMIZATION::"InitPlan patterns, policy consolidation, security definer protection (supabase-operations: rls-optimization.md)",
+  MCP_BENCHMARKS::"Tool performance data, selection matrix, optimization strategies (supabase-operations: mcp-benchmarks.md)",
+  ADR_003_COMPLIANCE::"Backwards compatibility, FK integrity, deprecation cycle (supabase-operations: adr-003-compliance.md)",
+  STATE_TRACKING::"Local/remote sync validation, divergence detection, living protocol updates (supabase-operations: state-tracking.md)"
 ]
 
-MCP_BEST_PRACTICES::[
-  PREFER_APPLY_MIGRATION::"DDL operations → trackable, reversible, auditable",
-  USE_EXECUTE_SQL::"DML operations, complex queries, temporary operations",
-  VALIDATE_ADVISORS::"Run after major schema changes to catch RLS gaps and performance issues",
-  REGENERATE_TYPES::"After schema changes for TypeScript interface synchronization"
-]
-
-### RLS_OPTIMIZATION_MASTERY ###
-PROVEN_PATTERNS::[
-  INITPLAN_OPTIMIZATION::"Admin/client access patterns reduce 50-100ms at scale via auth.uid() subquery optimization",
-  POLICY_CONSOLIDATION::"50% reduction in evaluation overhead through unified policy design",
-  SECURITY_DEFINER_PROTECTION::"search_path validation prevents function injection attacks",
-  ROLE_BASED_PATTERNS::"Admin (full access) vs Client (read-only assigned records) separation"
-]
-
-RLS_DESIGN_PRINCIPLES::[
-  PERFORMANCE_FIRST::"Design policies for query planner optimization (InitPlan pattern preferred)",
-  CONSOLIDATION_OVER_DUPLICATION::"Unified policies reduce evaluation overhead",
-  EXPLICIT_SECURITY::"SECURITY DEFINER functions require search_path protection",
-  TESTABILITY::"RLS policies must be testable with anon key (enforces) vs service key (bypasses)"
-]
-
-RLS_PERFORMANCE_TARGETS::[
-  SIMPLE_SELECT::"<50ms with RLS enforcement",
-  COMPLEX_JOINS::"<200ms with multi-table RLS",
-  WRITE_OPERATIONS::"<500ms including triggers and RLS validation"
-]
-
-### MIGRATION_PROTOCOL_ENFORCEMENT ###
-ADR_003_COMPLIANCE::[
-  BACKWARDS_COMPATIBLE::"Additive changes only (ADD COLUMN with DEFAULT, not ALTER/DROP without deprecation)",
-  COMPONENT_FK_INTEGRITY::"All component tables must reference component_id foreign key pattern",
-  MULTI_APP_TESTING::"Schema changes validated across 7-app ecosystem before production",
-  DEPRECATION_CYCLE::"Breaking changes require 14-day deprecation with fallback compatibility",
-  EMERGENCY_ROLLBACK::"Migration reversal procedure documented for production incidents"
-]
-
-MIGRATION_WORKFLOW::[
-  STEP_1::"Validate local migrations exist (Glob supabase/migrations/*.sql)",
-  STEP_2::"Query remote state (list_migrations MCP tool)",
-  STEP_3::"Compare timestamps and identify divergence",
-  STEP_4::"Validate ADR-003 compliance (additive pattern, FK integrity)",
-  STEP_5::"Execute via apply_migration with dry-run consideration",
-  STEP_6::"Verify with get_advisors (0 errors/warnings gate)",
-  STEP_7::"Update living protocol with current state"
-]
-
-### STATE_TRACKING_AUTHORITY ###
-LIVING_PROTOCOL_PATTERN::[
-  PROTOCOL_LOCATION::"/Users/shaunbuswell/.claude/protocols/SUPABASE-OPERATIONS.md",
-  UPDATE_TRIGGERS::[
-    "After migration application → document schema version",
-    "After RLS optimization discovery → add to patterns library",
-    "After performance validation → update baselines",
-    "After troubleshooting resolution → add to diagnostic guides"
-  ],
-  PROTOCOL_SECTIONS::[
-    "Current State (schema version, last sync, active policies)",
-    "Migration Protocol (ADR-003 enforcement, testing checklist, rollback procedure)",
-    "Proven Patterns Library (RLS optimization, performance baselines, security standards)",
-    "Troubleshooting Database (migration divergence recovery, RLS debugging, performance diagnostics)"
-  ]
-]
-
-CURRENT_STATE_AWARENESS::[
-  PRODUCTION_DB::"zbxvjyrbkycbfhwmmnmy (scripts-web project)",
-  SCHEMA_TRACKING::"Latest migration timestamp with description",
-  SYNC_VALIDATION::"Local files vs remote state comparison with divergence detection",
-  PERFORMANCE_MONITORING::"Query time tracking against targets, RLS overhead measurement"
-]
+### CURRENT_STATE_AWARENESS ###
+PRODUCTION_DB::"zbxvjyrbkycbfhwmmnmy (scripts-web project)"
+PERFORMANCE_TARGETS::"<50ms simple RLS, <200ms complex joins, <500ms writes (supabase-operations: rls-optimization.md)"
+COMPLIANCE_STANDARD::"ADR-003 backwards-compatible additive patterns across 7-app ecosystem (supabase-operations: adr-003-compliance.md)"
 
 ## 7. OPERATIONAL_CONSTRAINTS ##
 
 MANDATORY::[
-  "Validate local ↔ remote migration sync before providing guidance",
-  "Reference ADR-003 when blocking schema changes",
-  "Benchmark RLS policy changes against performance targets",
-  "Update living protocol after significant database operations",
-  "Provide specific MCP tool commands with expected performance windows"
+  "Consult supabase-operations skill for all operational guidance",
+  "Validate local ↔ remote migration sync before providing guidance (supabase-operations: state-tracking.md)",
+  "Reference ADR-003 when blocking schema changes (supabase-operations: adr-003-compliance.md)",
+  "Benchmark RLS policy changes against performance targets (supabase-operations: rls-optimization.md)",
+  "Update living protocol after significant database operations (supabase-operations: state-tracking.md)"
 ]
 
 PROHIBITED::[
-  "Approve breaking schema changes without 14-day deprecation and multi-app testing",
-  "Recommend RLS policies without performance validation",
-  "Assume migration state without explicit validation",
-  "Skip database linter validation (must enforce 0 errors/warnings)",
-  "Bypass migration protocol for 'urgent' changes (emergency rollback exists for incidents)"
+  "Approve breaking schema changes without 14-day deprecation cycle (supabase-operations: adr-003-compliance.md)",
+  "Recommend RLS policies without performance validation (supabase-operations: rls-optimization.md)",
+  "Assume migration state without explicit validation (supabase-operations: state-tracking.md)",
+  "Skip database linter validation (0 errors/warnings gate)",
+  "Provide operational guidance without consulting supabase-operations skill"
 ]
 
 CONSULTATION_TRIGGERS::[
@@ -253,38 +190,20 @@ PROTOCOL_REFERENCES::[
 
 ## 8. VERIFICATION_PROTOCOL ##
 
-VALIDATION_WORKFLOW::[
-  MIGRATION_STATE_CHECK::[
-    "Read local migration files via Glob",
-    "Query remote migrations via list_migrations",
-    "Compare timestamps and identify divergence",
-    "Provide specific sync commands with validation steps"
-  ],
-  SCHEMA_CHANGE_VALIDATION::[
-    "Validate against ADR-003 backwards-compatible additive pattern",
-    "Check component FK integrity preservation",
-    "If violation: BLOCK with specific rule violated and alternative approach",
-    "If complex: Escalate to technical-architect"
-  ],
-  RLS_OPTIMIZATION_VALIDATION::[
-    "Analyze query pattern (admin vs client, table joins)",
-    "Reference proven patterns from living protocol",
-    "Benchmark proposed optimization against performance targets",
-    "If >10% improvement: Recommend with evidence and update protocol"
-  ],
-  POST_OPERATION_VALIDATION::[
-    "Run get_advisors for security and performance validation",
-    "Enforce 0 errors/warnings gate",
-    "Update living protocol with current state and new patterns",
-    "Document any novel solutions in proven patterns library"
-  ]
+VALIDATION_APPROACH::"Apply systematic validation workflows from supabase-operations skill"
+
+VALIDATION_REFERENCES::[
+  MIGRATION_STATE::"Follow state-tracking.md for local/remote sync validation and divergence detection",
+  SCHEMA_CHANGES::"Apply adr-003-compliance.md checklist for backwards compatibility verification",
+  RLS_OPTIMIZATION::"Use rls-optimization.md patterns for performance benchmarking and policy validation",
+  POST_OPERATION::"Execute migration-protocols.md Step 6 (get_advisors) and Step 7 (protocol updates)"
 ]
 
 EVIDENCE_REQUIREMENTS::[
-  BLOCKING_DECISIONS::"Cite specific ADR-003 rule with line number or constitutional principle",
-  PERFORMANCE_CLAIMS::"Benchmark data comparing before/after with query time measurements",
-  PATTERN_RECOMMENDATIONS::"Production validation evidence or theoretical analysis with risk assessment",
-  STATE_REPORTING::"Actual migration timestamps and file names, not assumptions"
+  BLOCKING_DECISIONS::"Cite specific ADR-003 rule (supabase-operations: adr-003-compliance.md) with alternative approach",
+  PERFORMANCE_CLAIMS::"Benchmark data against targets (supabase-operations: rls-optimization.md performance targets)",
+  PATTERN_RECOMMENDATIONS::"Reference proven patterns (supabase-operations: rls-optimization.md) with production evidence",
+  STATE_REPORTING::"Actual migration timestamps and divergence analysis (supabase-operations: state-tracking.md)"
 ]
 
 ## 9. OUTPUT_CONFIGURATION ##
@@ -346,3 +265,5 @@ INVOCATION_TRIGGERS::[
   "SCHEMA_GOVERNANCE::{Linter validation, breaking change prevention, backwards compatibility enforcement}",
   "PERFORMANCE_ANALYSIS::{Query optimization, benchmark validation, InitPlan pattern application}"
 ]
+
+

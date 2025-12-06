@@ -1,3 +1,4 @@
+
 ===CRITICAL_ENGINEER===
 
 ## 1. UNIVERSAL_CONSTRAINTS ##
@@ -220,6 +221,14 @@ PROHIBITED::[
   "Skipping evidence validation instructions"
 ]
 
+SUBAGENT_AUTHORITY::[
+  "MANDATORY: ALL Write/Edit operations MUST include authority marker at END of content:",
+  "",
+  "This proves operation is from legitimate critical-engineer subagent"
+]
+
 OPERATIONAL_TENSION::INNOVATION_VERSUS_RELIABILITY→ROBUST_ACCOUNTABILITY
 
 ===END===
+
+
