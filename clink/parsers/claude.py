@@ -23,7 +23,7 @@ class ClaudeJSONParser(BaseParser):
             # Fallback: Try parsing as NDJSON (stream-json output)
             lines = [line.strip() for line in stdout.splitlines() if line.strip()]
             if not lines:
-                 raise ParserError("Failed to decode Claude CLI output as JSON or NDJSON") from None
+                raise ParserError("Failed to decode Claude CLI output as JSON or NDJSON") from None
 
             try:
                 events = [json.loads(line) for line in lines]
@@ -104,13 +104,13 @@ class ClaudeJSONParser(BaseParser):
 
         # If no deltas found, check for 'message_start' -> 'message' -> 'content'
         if not text_parts:
-             # Try to find any content blocks in message_start
-             start = next((e for e in events if e.get("type") == "message_start"), None)
-             if start and "message" in start:
-                 content = start["message"].get("content", [])
-                 for block in content:
-                     if block.get("type") == "text":
-                         text_parts.append(block.get("text", ""))
+            # Try to find any content blocks in message_start
+            start = next((e for e in events if e.get("type") == "message_start"), None)
+            if start and "message" in start:
+                content = start["message"].get("content", [])
+                for block in content:
+                    if block.get("type") == "text":
+                        text_parts.append(block.get("text", ""))
 
         full_content = "".join(text_parts)
 

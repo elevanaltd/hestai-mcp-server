@@ -23,7 +23,7 @@ class GeminiJSONParser(BaseParser):
             # Fallback: Try parsing as NDJSON (stream-json output)
             lines = [line.strip() for line in stdout.splitlines() if line.strip()]
             if not lines:
-                 raise ParserError("Failed to decode Gemini CLI output as JSON or NDJSON") from None
+                raise ParserError("Failed to decode Gemini CLI output as JSON or NDJSON") from None
 
             try:
                 events = [json.loads(line) for line in lines]
@@ -96,11 +96,7 @@ class GeminiJSONParser(BaseParser):
         full_text = "".join(text_parts)
 
         # Construct synthetic payload
-        payload = {
-            "response": full_text,
-            "stats": final_stats,
-            "_raw_stream_events": events
-        }
+        payload = {"response": full_text, "stats": final_stats, "_raw_stream_events": events}
         return payload
 
     def _build_fallback_message(self, payload: dict[str, Any], stderr: str) -> tuple[str | None, dict[str, Any]]:
