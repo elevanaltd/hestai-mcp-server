@@ -19,8 +19,17 @@ class GeminiJSONParser(BaseParser):
 
         try:
             payload: dict[str, Any] = json.loads(stdout)
-        except json.JSONDecodeError as exc:  # pragma: no cover - defensive logging
-            raise ParserError(f"Failed to decode Gemini CLI JSON output: {exc}") from exc
+        except json.JSONDecodeError:
+            # Fallback: Try parsing as NDJSON (stream-json output)
+            lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+            if not lines:
+                 raise ParserError("Failed to decode Gemini CLI output as JSON or NDJSON") from None
+
+            try:
+                events = [json.loads(line) for line in lines]
+                payload = self._aggregate_ndjson(events)
+            except json.JSONDecodeError as exc:
+                raise ParserError(f"Failed to decode Gemini CLI JSON output: {exc}") from exc
 
         response = payload.get("response")
         response_text = response.strip() if isinstance(response, str) else ""
@@ -55,6 +64,44 @@ class GeminiJSONParser(BaseParser):
             return ParsedCLIResponse(content=fallback_message, metadata=metadata)
 
         raise ParserError("Gemini CLI response is missing a textual 'response' field")
+
+    def _aggregate_ndjson(self, events: list[dict[str, Any]]) -> dict[str, Any]:
+        """Aggregate a stream of Gemini JSON events."""
+        text_parts = []
+        final_stats = {}
+
+        for event in events:
+            # Format 1: Gemini CLI stream-json with type:"message" and role:"assistant"
+            if event.get("type") == "message" and event.get("role") == "assistant":
+                content = event.get("content", "")
+                if content:
+                    text_parts.append(content)
+
+            # Format 2: API-style candidates[0].content.parts[0].text
+            candidates = event.get("candidates", [])
+            if candidates and isinstance(candidates, list):
+                first_cand = candidates[0]
+                content = first_cand.get("content", {})
+                parts = content.get("parts", [])
+                if parts and isinstance(parts, list):
+                    text = parts[0].get("text", "")
+                    text_parts.append(text)
+
+            # Capture stats if present (usually in final chunk or result event)
+            if "stats" in event:
+                final_stats = event["stats"]
+            elif event.get("type") == "result" and "stats" in event:
+                final_stats = event["stats"]
+
+        full_text = "".join(text_parts)
+
+        # Construct synthetic payload
+        payload = {
+            "response": full_text,
+            "stats": final_stats,
+            "_raw_stream_events": events
+        }
+        return payload
 
     def _build_fallback_message(self, payload: dict[str, Any], stderr: str) -> tuple[str | None, dict[str, Any]]:
         """Derive a human friendly message when Gemini returns empty content."""

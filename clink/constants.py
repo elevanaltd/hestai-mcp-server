@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 DEFAULT_TIMEOUT_SECONDS = 1800
+DEFAULT_SILENCE_TIMEOUT_SECONDS = 180
 DEFAULT_STREAM_LIMIT = 10 * 1024 * 1024  # 10MB per stream
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -29,13 +30,13 @@ class CLIInternalDefaults:
 INTERNAL_DEFAULTS: dict[str, CLIInternalDefaults] = {
     "claude": CLIInternalDefaults(
         parser="claude_json",
-        additional_args=["--print", "--output-format", "json"],
+        additional_args=["--print", "--output-format", "stream-json", "--include-partial-messages"],
         default_role_prompt="systemprompts/clink/default.txt",
         runner="claude",
     ),
     "gemini": CLIInternalDefaults(
         parser="gemini_json",
-        additional_args=["-o", "json"],
+        additional_args=["-o", "stream-json"],
         default_role_prompt="systemprompts/clink/default.txt",
         runner="gemini",
     ),

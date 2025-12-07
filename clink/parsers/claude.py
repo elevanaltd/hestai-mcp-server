@@ -19,8 +19,17 @@ class ClaudeJSONParser(BaseParser):
 
         try:
             loaded = json.loads(stdout)
-        except json.JSONDecodeError as exc:  # pragma: no cover - defensive logging
-            raise ParserError(f"Failed to decode Claude CLI JSON output: {exc}") from exc
+        except json.JSONDecodeError:
+            # Fallback: Try parsing as NDJSON (stream-json output)
+            lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+            if not lines:
+                 raise ParserError("Failed to decode Claude CLI output as JSON or NDJSON") from None
+
+            try:
+                events = [json.loads(line) for line in lines]
+                loaded = self._aggregate_ndjson(events)
+            except json.JSONDecodeError as exc:
+                raise ParserError(f"Failed to decode Claude CLI JSON output: {exc}") from exc
 
         events: list[dict[str, Any]] | None = None
         assistant_entry: dict[str, Any] | None = None
@@ -75,6 +84,51 @@ class ClaudeJSONParser(BaseParser):
             )
 
         raise ParserError("Claude CLI response did not contain a textual result")
+
+    def _aggregate_ndjson(self, events: list[dict[str, Any]]) -> dict[str, Any]:
+        """Aggregate a stream of JSON events into a single result-like object."""
+        # Find the final result or valid message stop
+        final_event = next((e for e in reversed(events) if e.get("type") == "message_stop"), None)
+
+        # Accumulate text content from deltas
+        text_parts = []
+        for event in events:
+            # Handle text deltas
+            if event.get("type") == "content_block_delta":
+                delta = event.get("delta", {})
+                if delta.get("type") == "text_delta":
+                    text_parts.append(delta.get("text", ""))
+
+            # Handle legacy/alternative event structures if necessary
+            # (Claude CLI structure for stream-json needs to be robustly handled)
+
+        # If no deltas found, check for 'message_start' -> 'message' -> 'content'
+        if not text_parts:
+             # Try to find any content blocks in message_start
+             start = next((e for e in events if e.get("type") == "message_start"), None)
+             if start and "message" in start:
+                 content = start["message"].get("content", [])
+                 for block in content:
+                     if block.get("type") == "text":
+                         text_parts.append(block.get("text", ""))
+
+        full_content = "".join(text_parts)
+
+        # Construct a synthetic payload that mimics the non-streaming output
+        payload = final_event or (events[-1] if events else {})
+        # Ensure we have a structure that the rest of the parser recognizes
+        if "type" not in payload:
+            payload["type"] = "aggregated_stream"
+
+        # Inject the accumulated content as 'result' or inside 'message'
+        # The existing parser looks for payload["result"] or payload["message"]
+        # We'll inject it into a 'message' field which _extract_message looks for
+        payload["message"] = full_content
+
+        # Preserve all events for debugging
+        payload["_raw_stream_events"] = events
+
+        return payload
 
     def _build_metadata(self, payload: dict[str, Any], stderr: str) -> dict[str, Any]:
         metadata: dict[str, Any] = {
