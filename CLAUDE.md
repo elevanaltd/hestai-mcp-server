@@ -138,7 +138,7 @@ python communication_simulator_test.py --quick --verbose
 ```
 
 **Quick mode runs these 6 essential tests:**
-- `cross_tool_continuation` - Cross-tool conversation memory testing (chat, thinkdeep, codereview, analyze, debug)
+- `cross_tool_continuation` - Cross-tool conversation memory testing (chat, codereview, analyze, consensus)
 - `conversation_chain_validation` - Core conversation threading and memory validation
 - `consensus_workflow_accurate` - Consensus tool with flash model and stance testing
 - `codereview_validation` - CodeReview tool with flash model and multi-step workflows
@@ -221,8 +221,9 @@ python -m pytest tests/test_schema_source_parity.py -v
 
 **Current Validated Schemas:**
 - `consensus_schema.json` ↔ `ConsensusRequest`
-- `debug_schema.json` ↔ `DebugInvestigationRequest`
 - `critical_engineer_schema.json` ↔ `CriticalEngineerRequest`
+
+**Note:** `debug_schema.json` snapshot remains for legacy compatibility but corresponds to a deprecated tool (see Deprecated Tools section).
 
 **Adding New Schemas:**
 To add snapshot validation for a new tool, update `SCHEMA_MODEL_MAP` in `tests/test_schema_source_parity.py`:
@@ -506,5 +507,37 @@ CLI 'codex' execution failed: Not inside a trusted directory and --skip-git-repo
 - Framework version checks
 - Breaking change research
 - SDK signature validation
+
+---
+
+### Deprecated Tools (Replaced by HestAI Workflow)
+
+The following tools have been deprecated in favor of native HestAI workflow patterns:
+
+#### Thinkdeep → HestAI Phase Progression
+**Reason:** The D1-D2-B0 workflow provides superior structured investigation with RACI accountability.
+
+**Migration:**
+| Use Case | Instead of `thinkdeep` | Use HestAI Native |
+|----------|------------------------|-------------------|
+| Systematic investigation | thinkdeep step-by-step | D1_02: research-analyst |
+| Creative exploration | thinkdeep analysis | D2_01: ideator + edge-optimizer |
+| Unified synthesis | thinkdeep conclusion | D2_03: synthesizer |
+| Expert validation | thinkdeep expert review | B0_01: critical-design-validator |
+
+#### Debug → ERROR_HANDLING_TAXONOMY
+**Reason:** Domain-specific error routing to specialists is more effective than generic debugging.
+
+**Migration:**
+| Error Type | Instead of `debug` | Use HestAI Native |
+|------------|-------------------|-------------------|
+| Test failures, CI breaks | debug investigation | error-resolver-hermes (≤4h) |
+| Architectural violations | debug analysis | error-architect-zeus (>4h) |
+| North Star misalignment | debug root cause | requirements-steward |
+| Emergency incidents | debug systematic | critical-engineer (incident commander) |
+
+**Context Recovery:** Deprecating these tools frees ~4.4% of MCP context budget.
+
+---
 
 This guide provides everything needed to efficiently work with the HestAI MCP Server codebase using Claude. Always run quality checks before and after making changes to ensure code integrity.
