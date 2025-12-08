@@ -30,7 +30,7 @@ class CLIInternalDefaults:
 INTERNAL_DEFAULTS: dict[str, CLIInternalDefaults] = {
     "claude": CLIInternalDefaults(
         parser="claude_json",
-        additional_args=["--print", "--output-format", "stream-json", "--include-partial-messages"],
+        additional_args=["--print", "--verbose", "--output-format", "stream-json", "--include-partial-messages"],
         default_role_prompt="systemprompts/clink/default.txt",
         runner="claude",
     ),
