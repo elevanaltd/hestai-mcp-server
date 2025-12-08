@@ -733,3 +733,163 @@ class TestTranscriptPathResolution:
         result = clockout_tool._resolve_transcript_path(session_data, tmp_path)
 
         assert result == jsonl_path
+
+
+class TestContentFormatHandling:
+    """Test suite for handling different Claude JSONL content formats"""
+
+    def test_parse_messages_with_string_content_format(self, clockout_tool, tmp_path):
+        """Test parsing messages with string content format (not list)"""
+        # Create JSONL with string content format
+        jsonl_path = tmp_path / "string-format.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": "Hello, this is a string"},
+            },
+            {
+                "type": "assistant",
+                "message": {"role": "assistant", "content": "I understand the request"},
+            },
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Parse messages
+        messages = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Should successfully parse string content
+        assert len(messages) == 2
+        assert messages[0]["role"] == "user"
+        assert messages[0]["content"] == "Hello, this is a string"
+        assert messages[1]["role"] == "assistant"
+        assert messages[1]["content"] == "I understand the request"
+
+    def test_parse_messages_with_mixed_content_formats(self, clockout_tool, tmp_path):
+        """Test parsing messages with mixed string and list content formats"""
+        jsonl_path = tmp_path / "mixed-format.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": "String format message"},
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "List format response"}],
+                },
+            },
+            {
+                "type": "user",
+                "message": {"role": "user", "content": "Another string"},
+            },
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Parse messages
+        messages = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Should handle both formats
+        assert len(messages) == 3
+        assert messages[0]["content"] == "String format message"
+        assert messages[1]["content"] == "List format response"
+        assert messages[2]["content"] == "Another string"
+
+    def test_parse_messages_with_empty_string_content(self, clockout_tool, tmp_path):
+        """Test parsing messages with empty string content does not crash"""
+        jsonl_path = tmp_path / "empty-string.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": ""},
+            },
+            {
+                "type": "assistant",
+                "message": {"role": "assistant", "content": "Valid response"},
+            },
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Parse messages - should not crash
+        messages = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Empty string should be filtered out (if text:)
+        # Only valid response should remain
+        assert len(messages) == 1
+        assert messages[0]["content"] == "Valid response"
+
+    def test_parse_messages_ignores_non_text_content_blocks(self, clockout_tool, tmp_path):
+        """Test parsing messages ignores non-text content blocks in list format"""
+        jsonl_path = tmp_path / "non-text-blocks.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "source": "data:image/png;base64,abc123"},
+                        {"type": "text", "text": "What's in this image?"},
+                    ],
+                },
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "content": [
+                        {"type": "text", "text": "I see a diagram"},
+                        {"type": "tool_use", "id": "tool_1", "name": "analyze"},
+                    ],
+                },
+            },
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Parse messages
+        messages = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Should only extract text content, ignore image and tool_use
+        assert len(messages) == 2
+        assert messages[0]["content"] == "What's in this image?"
+        assert messages[1]["content"] == "I see a diagram"
+
+    def test_parse_messages_with_null_text_value(self, clockout_tool, tmp_path):
+        """Test parsing handles null text value without TypeError"""
+        jsonl_path = tmp_path / "null-text.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": [{"type": "text", "text": None}]},
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "Valid response"}],
+                },
+            },
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Should not raise TypeError, should skip null and keep valid
+        messages = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Null text should be coerced to empty string and filtered out (if text:)
+        # Only valid response should remain
+        assert len(messages) == 1
+        assert messages[0]["content"] == "Valid response"
