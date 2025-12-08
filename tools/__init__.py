@@ -4,6 +4,7 @@ Focused on complex, multi-step workflows requiring premium models
 """
 
 from .analyze import AnalyzeTool
+from .anchorsubmit import AnchorSubmitTool
 from .apilookup import LookupTool
 from .challenge import ChallengeTool
 from .chat import ChatTool
@@ -29,6 +30,7 @@ __all__ = [
     "ThinkDeepTool",
     "DebugIssueTool",
     "AnalyzeTool",
+    "AnchorSubmitTool",
     "ChatTool",
     "CLinkTool",
     "ClockInTool",
