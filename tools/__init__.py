@@ -9,6 +9,7 @@ from .challenge import ChallengeTool
 from .chat import ChatTool
 from .clink import CLinkTool
 from .clockin import ClockInTool
+from .clockout import ClockOutTool
 from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
 from .critical_engineer import CriticalEngineerTool
@@ -30,6 +31,7 @@ __all__ = [
     "ChatTool",
     "CLinkTool",
     "ClockInTool",
+    "ClockOutTool",
     "CodeReviewTool",
     "ConsensusTool",
     "CriticalEngineerTool",
