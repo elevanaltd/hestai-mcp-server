@@ -6,8 +6,6 @@ Tests session registration, conflict detection, and context path generation.
 
 import json
 import shutil
-from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -54,9 +52,7 @@ class TestClockInTool:
     def test_request_validation_success(self):
         """Test request validation with valid input"""
         request = ClockInRequest(
-            role="implementation-lead",
-            focus="b2-implementation",
-            working_dir="/Volumes/HestAI-Tools/test-project"
+            role="implementation-lead", focus="b2-implementation", working_dir="/Volumes/HestAI-Tools/test-project"
         )
         assert request.role == "implementation-lead"
         assert request.focus == "b2-implementation"
@@ -64,15 +60,14 @@ class TestClockInTool:
 
     def test_request_validation_default_focus(self):
         """Test request uses default focus if not provided"""
-        request = ClockInRequest(
-            role="critical-engineer",
-            working_dir="/Volumes/HestAI"
-        )
+        request = ClockInRequest(role="critical-engineer", working_dir="/Volumes/HestAI")
         assert request.focus == "general"
 
     def test_request_validation_missing_required_fields(self):
         """Test request validation fails with missing required fields"""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
             ClockInRequest(role="test-role")  # missing working_dir
 
     @pytest.mark.asyncio
@@ -84,7 +79,7 @@ class TestClockInTool:
             "role": "implementation-lead",
             "focus": "b2-testing",
             "working_dir": str(working_dir),
-            "_session_context": type('obj', (object,), {'project_root': working_dir})()
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
         result = await clockin_tool.execute(arguments)
@@ -94,9 +89,11 @@ class TestClockInTool:
         output = json.loads(result_text)
 
         assert output["status"] == "success"
-        assert "session_id" in output["content"]
 
-        content = output["content"]
+        # Content is JSON-encoded, need to parse it
+        content = json.loads(output["content"])
+        assert "session_id" in content
+
         session_id = content["session_id"]
 
         # Verify session directory was created
@@ -126,7 +123,7 @@ class TestClockInTool:
             "session_id": "existing-123",
             "role": "critical-engineer",
             "focus": "b2-validation",
-            "started_at": "2025-12-08T10:00:00"
+            "started_at": "2025-12-08T10:00:00",
         }
         (existing_session_dir / "session.json").write_text(json.dumps(existing_session_data))
 
@@ -135,7 +132,7 @@ class TestClockInTool:
             "role": "implementation-lead",
             "focus": "b2-validation",
             "working_dir": str(working_dir),
-            "_session_context": type('obj', (object,), {'project_root': working_dir})()
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
         result = await clockin_tool.execute(arguments)
@@ -145,7 +142,9 @@ class TestClockInTool:
         output = json.loads(result_text)
 
         assert output["status"] == "success"
-        content = output["content"]
+
+        # Content is JSON-encoded, need to parse it
+        content = json.loads(output["content"])
 
         # Should have conflict warning
         assert content["conflict"] is not None
@@ -162,7 +161,7 @@ class TestClockInTool:
             "role": "implementation-lead",
             "focus": "general",
             "working_dir": str(working_dir),
-            "_session_context": type('obj', (object,), {'project_root': working_dir})()
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
         result = await clockin_tool.execute(arguments)
@@ -172,7 +171,9 @@ class TestClockInTool:
         output = json.loads(result_text)
 
         assert output["status"] == "success"
-        content = output["content"]
+
+        # Content is JSON-encoded, need to parse it
+        content = json.loads(output["content"])
 
         # Verify context paths
         assert "context_paths" in content
@@ -195,7 +196,7 @@ class TestClockInTool:
             "role": "implementation-lead",
             "focus": "setup",
             "working_dir": str(working_dir),
-            "_session_context": type('obj', (object,), {'project_root': working_dir})()
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
         result = await clockin_tool.execute(arguments)
@@ -220,7 +221,7 @@ class TestClockInTool:
             "role": "implementation-lead",
             "focus": "general",
             "working_dir": str(working_dir),
-            "_session_context": type('obj', (object,), {'project_root': working_dir})()
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
         result = await clockin_tool.execute(arguments)
@@ -230,7 +231,9 @@ class TestClockInTool:
         output = json.loads(result_text)
 
         assert output["status"] == "success"
-        content = output["content"]
+
+        # Content is JSON-encoded, need to parse it
+        content = json.loads(output["content"])
 
         # Verify instruction is present
         assert "instruction" in content

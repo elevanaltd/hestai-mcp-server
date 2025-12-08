@@ -8,6 +8,7 @@ from .apilookup import LookupTool
 from .challenge import ChallengeTool
 from .chat import ChatTool
 from .clink import CLinkTool
+from .clockin import ClockInTool
 from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
 from .critical_engineer import CriticalEngineerTool
@@ -28,6 +29,7 @@ __all__ = [
     "AnalyzeTool",
     "ChatTool",
     "CLinkTool",
+    "ClockInTool",
     "CodeReviewTool",
     "ConsensusTool",
     "CriticalEngineerTool",
