@@ -322,3 +322,92 @@ class TestClockOutTool:
 
         with pytest.raises(ValidationError, match="Session ID cannot be empty"):
             ClockOutRequest(session_id="   ")
+
+    @pytest.mark.asyncio
+    async def test_clockout_uses_transcript_path_from_session(self, clockout_tool, temp_hestai_dir):
+        """Test clock_out prefers transcript_path from session.json when available"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Create a real transcript file at the path stored in session.json
+        test_transcript_path = working_dir / "test-transcript.jsonl"
+
+        # Create sample JSONL content
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": [{"type": "text", "text": "Test message"}]},
+            },
+            {
+                "type": "assistant",
+                "message": {
+                    "role": "assistant",
+                    "content": [{"type": "text", "text": "Test response"}],
+                },
+            },
+        ]
+
+        # Write JSONL file
+        with open(test_transcript_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Update session.json to include transcript_path
+        session_dir = hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+        session_data["transcript_path"] = str(test_transcript_path)
+        session_file.write_text(json.dumps(session_data))
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test transcript_path usage",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        assert content["message_count"] == 2  # Should have found the messages
+
+        # Cleanup
+        test_transcript_path.unlink()
+
+    @pytest.mark.asyncio
+    async def test_clockout_falls_back_to_discovery_when_path_missing(self, clockout_tool, temp_hestai_dir, temp_claude_session):
+        """Test clock_out falls back to path discovery when transcript_path is missing or invalid"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Update session.json with an invalid transcript_path
+        session_dir = hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+        session_data["transcript_path"] = "/nonexistent/path/to/transcript.jsonl"
+        session_file.write_text(json.dumps(session_data))
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test fallback to discovery",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        # Should have fallen back to discovery and found the temp_claude_session JSONL
+        assert content["message_count"] > 0

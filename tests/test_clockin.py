@@ -240,3 +240,81 @@ class TestClockInTool:
         assert "context_paths" in content["instruction"].lower()
         assert "raph" in content["instruction"].lower()
         assert "anchor" in content["instruction"].lower()
+
+    @pytest.mark.asyncio
+    async def test_clockin_stores_transcript_path_when_available(self, clockin_tool, temp_hestai_dir):
+        """Test clock_in stores transcript_path in session.json when available from context"""
+        from pathlib import Path
+
+        working_dir = temp_hestai_dir.parent
+        test_transcript_path = "/Users/test/.claude/projects/test-project/session-123.jsonl"
+
+        # Create mock context with transcript_path
+        mock_context = type("obj", (object,), {
+            "project_root": working_dir,
+            "transcript_path": test_transcript_path
+        })()
+
+        arguments = {
+            "role": "implementation-lead",
+            "focus": "general",
+            "working_dir": str(working_dir),
+            "_session_context": mock_context,
+        }
+
+        result = await clockin_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        session_id = content["session_id"]
+
+        # Verify session.json contains transcript_path
+        session_dir = temp_hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+
+        assert "transcript_path" in session_data
+        assert session_data["transcript_path"] == test_transcript_path
+
+    @pytest.mark.asyncio
+    async def test_clockin_stores_null_transcript_path_when_unavailable(self, clockin_tool, temp_hestai_dir):
+        """Test clock_in stores None for transcript_path when not available in context"""
+        working_dir = temp_hestai_dir.parent
+
+        # Create mock context WITHOUT transcript_path
+        mock_context = type("obj", (object,), {
+            "project_root": working_dir
+        })()
+
+        arguments = {
+            "role": "implementation-lead",
+            "focus": "general",
+            "working_dir": str(working_dir),
+            "_session_context": mock_context,
+        }
+
+        result = await clockin_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        session_id = content["session_id"]
+
+        # Verify session.json contains transcript_path as None
+        session_dir = temp_hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+
+        assert "transcript_path" in session_data
+        assert session_data["transcript_path"] is None
