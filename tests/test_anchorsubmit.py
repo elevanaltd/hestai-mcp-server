@@ -362,9 +362,7 @@ class TestAnchorSubmitTool:
 
         # Path traversal attempts should be rejected
         with pytest.raises(ValidationError, match="Invalid session_id"):
-            AnchorSubmitRequest(
-                session_id="../../../etc/passwd", working_dir="/tmp/test", anchor=valid_anchor
-            )
+            AnchorSubmitRequest(session_id="../../../etc/passwd", working_dir="/tmp/test", anchor=valid_anchor)
 
     def test_anchorsubmit_rejects_session_id_with_forward_slash(self):
         """Test session_id with forward slash is rejected"""

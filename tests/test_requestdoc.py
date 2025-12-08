@@ -6,7 +6,6 @@ Tests documentation routing, visibility rules, and format application.
 
 import json
 import shutil
-from pathlib import Path
 
 import pytest
 

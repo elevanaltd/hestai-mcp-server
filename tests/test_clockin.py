@@ -244,16 +244,12 @@ class TestClockInTool:
     @pytest.mark.asyncio
     async def test_clockin_stores_transcript_path_when_available(self, clockin_tool, temp_hestai_dir):
         """Test clock_in stores transcript_path in session.json when available from context"""
-        from pathlib import Path
 
         working_dir = temp_hestai_dir.parent
         test_transcript_path = "/Users/test/.claude/projects/test-project/session-123.jsonl"
 
         # Create mock context with transcript_path
-        mock_context = type("obj", (object,), {
-            "project_root": working_dir,
-            "transcript_path": test_transcript_path
-        })()
+        mock_context = type("obj", (object,), {"project_root": working_dir, "transcript_path": test_transcript_path})()
 
         arguments = {
             "role": "implementation-lead",
@@ -288,9 +284,7 @@ class TestClockInTool:
         working_dir = temp_hestai_dir.parent
 
         # Create mock context WITHOUT transcript_path
-        mock_context = type("obj", (object,), {
-            "project_root": working_dir
-        })()
+        mock_context = type("obj", (object,), {"project_root": working_dir})()
 
         arguments = {
             "role": "implementation-lead",

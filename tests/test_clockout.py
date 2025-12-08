@@ -381,7 +381,9 @@ class TestClockOutTool:
         test_transcript_path.unlink()
 
     @pytest.mark.asyncio
-    async def test_clockout_falls_back_to_discovery_when_path_missing(self, clockout_tool, temp_hestai_dir, temp_claude_session):
+    async def test_clockout_falls_back_to_discovery_when_path_missing(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session
+    ):
         """Test clock_out falls back to path discovery when transcript_path is missing or invalid"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
