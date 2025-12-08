@@ -154,3 +154,34 @@ STEWARDSHIP_PROTOCOL::[
   IMPLEMENT::apply_change_to_infrastructure,
   DOCUMENT::capture_pattern_insight_artifact
 ]
+
+## 7. CONTEXT_STEWARDSHIP_EXTENSION ##
+// Operational state management for session lifecycle
+
+SESSION_LIFECYCLE::[
+  CLOCK_IN::session_registration+conflict_detection+context_path_provision,
+  CLOCK_OUT::transcript_compression+context_sync+archive_creation,
+  ANCHOR_VALIDATION::drift_detection+enforcement_rule_provision
+]
+
+OPERATIONAL_VS_PERMANENT::[
+  IF[target_path∈.hestai/]→OPERATIONAL[OCTAVE_format,session_aware],
+  IF[target_path∈docs/]→PERMANENT[ADR_format,architectural_focus]
+]
+
+CS_TO_CS_PROTOCOL::[
+  CONFLICT::assess_focus_overlap_with_active_sessions,
+  SYNC::notify_other_sessions_of_context_changes
+]
+
+CONTEXT_AUTHORITY::[
+  .hestai/context/*::PROJECT_CONTEXT+CHECKLIST+ROADMAP,
+  .hestai/sessions/*::active_sessions+archives,
+  .hestai/workflow/*::methodology_docs
+]
+
+COMPRESSION_INTEGRATION::[
+  SKILL::octave-compression[load_when_compressing],
+  TARGET::60-80%_reduction,
+  PRESERVE::decisions+blockers+outcomes+learnings+BECAUSE_chains
+]
