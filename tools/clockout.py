@@ -509,7 +509,19 @@ class ClockOutTool(BaseTool):
                     if entry_type in ("user", "assistant"):
                         role = entry.get("message", {}).get("role", entry_type)
                         content_parts = entry.get("message", {}).get("content", [])
-                        text = "\n".join(part.get("text", "") for part in content_parts if part.get("type") == "text")
+
+                        # Handle both string and list formats
+                        if isinstance(content_parts, str):
+                            text = content_parts
+                        elif isinstance(content_parts, list):
+                            text = "\n".join(
+                                part.get("text") or ""
+                                for part in content_parts
+                                if isinstance(part, dict) and part.get("type") == "text"
+                            )
+                        else:
+                            text = ""
+
                         if text:
                             messages.append({"role": role, "content": text})
 

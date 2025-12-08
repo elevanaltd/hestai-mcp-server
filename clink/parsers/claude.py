@@ -115,7 +115,10 @@ class ClaudeJSONParser(BaseParser):
         full_content = "".join(text_parts)
 
         # Construct a synthetic payload that mimics the non-streaming output
-        payload = final_event or (events[-1] if events else {})
+        # Use shallow copy to avoid circular reference when mutating payload
+        base_event = final_event or (events[-1] if events else {})
+        payload = dict(base_event)
+
         # Ensure we have a structure that the rest of the parser recognizes
         if "type" not in payload:
             payload["type"] = "aggregated_stream"
