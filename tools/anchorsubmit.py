@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from mcp.types import TextContent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
@@ -39,6 +39,17 @@ class AnchorSubmitRequest(BaseModel):
     session_id: str = Field(..., description="Session ID from clock_in")
     working_dir: str = Field(..., description="Project root path")
     anchor: dict = Field(..., description="SHANK + ARM + FLUKE structure")
+
+    @field_validator("session_id")
+    @classmethod
+    def validate_session_id(cls, v: str) -> str:
+        """Validate session_id to prevent path traversal attacks"""
+        if not v or not v.strip():
+            raise ValueError("Session ID cannot be empty")
+        # Path traversal prevention
+        if ".." in v or "/" in v or "\\" in v:
+            raise ValueError("Invalid session_id format - path separators not allowed")
+        return v.strip()
 
 
 class AnchorSubmitTool(BaseTool):

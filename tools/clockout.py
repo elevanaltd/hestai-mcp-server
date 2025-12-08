@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from mcp.types import TextContent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
@@ -28,6 +28,17 @@ class ClockOutRequest(BaseModel):
 
     session_id: str = Field(..., description="Session ID from clock_in")
     description: str = Field("", description="Optional session summary/description")
+
+    @field_validator("session_id")
+    @classmethod
+    def validate_session_id(cls, v: str) -> str:
+        """Validate session_id to prevent path traversal attacks"""
+        if not v or not v.strip():
+            raise ValueError("Session ID cannot be empty")
+        # Path traversal prevention
+        if ".." in v or "/" in v or "\\" in v:
+            raise ValueError("Invalid session_id format - path separators not allowed")
+        return v.strip()
 
 
 class ClockOutTool(BaseTool):
@@ -176,9 +187,7 @@ class ClockOutTool(BaseTool):
 
         except Exception as e:
             logger.error(f"Error in clock_out: {str(e)}")
-            error_output = ToolOutput(
-                status="error", content=f"Error archiving session: {str(e)}", content_type="text"
-            )
+            error_output = ToolOutput(status="error", content=f"Error archiving session: {str(e)}", content_type="text")
             return [TextContent(type="text", text=error_output.model_dump_json())]
 
     def _find_session_jsonl(self, project_root: Path) -> Path:
@@ -235,9 +244,7 @@ class ClockOutTool(BaseTool):
                     if entry_type in ("user", "assistant"):
                         role = entry.get("message", {}).get("role", entry_type)
                         content_parts = entry.get("message", {}).get("content", [])
-                        text = "\n".join(
-                            part.get("text", "") for part in content_parts if part.get("type") == "text"
-                        )
+                        text = "\n".join(part.get("text", "") for part in content_parts if part.get("type") == "text")
                         if text:
                             messages.append({"role": role, "content": text})
 
