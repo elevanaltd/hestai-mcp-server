@@ -366,17 +366,20 @@ class ClockOutTool(BaseTool):
         if not transcript_dir:
             raise FileNotFoundError("CLAUDE_TRANSCRIPT_DIR environment variable not set")
 
-        transcript_path = Path(transcript_dir).expanduser().resolve()
+        # The env var IS the allowed root (escape hatch for custom locations)
+        custom_root = Path(transcript_dir).expanduser().resolve()
 
-        # Validate path containment
-        transcript_path = self._validate_path_containment(transcript_path)
-
-        if not transcript_path.exists():
-            raise FileNotFoundError(f"CLAUDE_TRANSCRIPT_DIR does not exist: {transcript_path}")
+        if not custom_root.exists():
+            raise FileNotFoundError(f"CLAUDE_TRANSCRIPT_DIR does not exist: {custom_root}")
 
         # Find JSONL file containing session_id
-        for jsonl_file in transcript_path.glob("*.jsonl"):
+        for jsonl_file in custom_root.rglob("*.jsonl"):
             try:
+                # Validate that found file is within the custom root (not outside via symlink)
+                if not jsonl_file.resolve().is_relative_to(custom_root):
+                    logger.warning(f"Skipping {jsonl_file} - outside custom root")
+                    continue
+
                 with open(jsonl_file) as f:
                     for line in f:
                         if session_id in line:
@@ -386,7 +389,7 @@ class ClockOutTool(BaseTool):
                 logger.warning(f"Error reading {jsonl_file}: {e}")
                 continue
 
-        raise FileNotFoundError(f"No JSONL file containing session_id {session_id} in {transcript_path}")
+        raise FileNotFoundError(f"No JSONL file containing session_id {session_id} in {custom_root}")
 
     def _resolve_transcript_path(self, session_data: dict, project_root: Path) -> Path:
         """
@@ -415,9 +418,15 @@ class ClockOutTool(BaseTool):
         if session_data.get("transcript_path"):
             provided = Path(session_data["transcript_path"])
             if provided.exists():
-                logger.debug("Using hook-provided transcript path")
-                return provided
-            logger.warning("Hook path missing, falling back to discovery")
+                try:
+                    # Security: validate hook-provided path is within allowed sandbox
+                    validated = self._validate_path_containment(provided)
+                    logger.debug("Using hook-provided transcript path")
+                    return validated
+                except ValueError as e:
+                    logger.warning(f"Hook path failed containment check ({e}), falling back to discovery")
+            else:
+                logger.warning("Hook path missing, falling back to discovery")
 
         # Layer 1: Temporal beacon (efficient for recent sessions)
         if session_id:
