@@ -644,10 +644,7 @@ class TestTranscriptPathResolution:
                 f.write(json.dumps(entry) + "\n")
 
         # Session data with transcript_path pointing to malicious file
-        session_data = {
-            "session_id": "test-session",
-            "transcript_path": str(malicious_transcript)
-        }
+        session_data = {"session_id": "test-session", "transcript_path": str(malicious_transcript)}
 
         # Mock all fallback methods to fail, forcing the error to surface
         def mock_temporal_beacon(*args, **kwargs):
@@ -689,7 +686,7 @@ class TestTranscriptPathResolution:
             {
                 "type": "user",
                 "message": {"role": "user", "content": [{"type": "text", "text": "Custom location test"}]},
-            }
+            },
         ]
 
         with open(jsonl_path, "w") as f:
