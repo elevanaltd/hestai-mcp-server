@@ -98,9 +98,7 @@ class TestAnchorSubmitTool:
             AnchorSubmitRequest(session_id="test-1234")  # missing working_dir and anchor
 
     @pytest.mark.asyncio
-    async def test_anchorsubmit_validates_complete_structure(
-        self, anchorsubmit_tool, temp_hestai_dir, valid_anchor
-    ):
+    async def test_anchorsubmit_validates_complete_structure(self, anchorsubmit_tool, temp_hestai_dir, valid_anchor):
         """Test anchor_submit validates complete SHANK+ARM+FLUKE structure"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -243,9 +241,7 @@ class TestAnchorSubmitTool:
         assert anchor_data["FLUKE"] == valid_anchor["FLUKE"]
 
     @pytest.mark.asyncio
-    async def test_anchorsubmit_returns_ho_blocked_paths(
-        self, anchorsubmit_tool, temp_hestai_dir, valid_anchor
-    ):
+    async def test_anchorsubmit_returns_ho_blocked_paths(self, anchorsubmit_tool, temp_hestai_dir, valid_anchor):
         """Test anchor_submit returns blocked paths for holistic-orchestrator"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -289,9 +285,7 @@ class TestAnchorSubmitTool:
         assert "implementation-lead" in enforcement["delegation_required"]
 
     @pytest.mark.asyncio
-    async def test_anchorsubmit_returns_empty_blocked_for_il(
-        self, anchorsubmit_tool, temp_hestai_dir, valid_anchor
-    ):
+    async def test_anchorsubmit_returns_empty_blocked_for_il(self, anchorsubmit_tool, temp_hestai_dir, valid_anchor):
         """Test anchor_submit returns empty blocked paths for implementation-lead"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -355,3 +349,71 @@ class TestAnchorSubmitTool:
         enforcement = content["enforcement"]
         assert "blocked_paths" in enforcement
         assert "delegation_required" in enforcement
+
+    def test_anchorsubmit_rejects_path_traversal_session_id(self):
+        """Test session_id with ../ is rejected to prevent path traversal"""
+        from pydantic import ValidationError
+
+        valid_anchor = {
+            "SHANK": {"role": "test", "cognition": "LOGOS", "archetypes": [], "key_constraints": []},
+            "ARM": {"phase_context": "B2", "current_focus": "test", "blockers": []},
+            "FLUKE": {"skills_loaded": [], "patterns_active": []},
+        }
+
+        # Path traversal attempts should be rejected
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            AnchorSubmitRequest(
+                session_id="../../../etc/passwd", working_dir="/tmp/test", anchor=valid_anchor
+            )
+
+    def test_anchorsubmit_rejects_session_id_with_forward_slash(self):
+        """Test session_id with forward slash is rejected"""
+        from pydantic import ValidationError
+
+        valid_anchor = {
+            "SHANK": {"role": "test", "cognition": "LOGOS", "archetypes": [], "key_constraints": []},
+            "ARM": {"phase_context": "B2", "current_focus": "test", "blockers": []},
+            "FLUKE": {"skills_loaded": [], "patterns_active": []},
+        }
+
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            AnchorSubmitRequest(session_id="test/session", working_dir="/tmp/test", anchor=valid_anchor)
+
+    def test_anchorsubmit_rejects_session_id_with_backslash(self):
+        """Test session_id with backslash is rejected"""
+        from pydantic import ValidationError
+
+        valid_anchor = {
+            "SHANK": {"role": "test", "cognition": "LOGOS", "archetypes": [], "key_constraints": []},
+            "ARM": {"phase_context": "B2", "current_focus": "test", "blockers": []},
+            "FLUKE": {"skills_loaded": [], "patterns_active": []},
+        }
+
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            AnchorSubmitRequest(session_id="test\\session", working_dir="/tmp/test", anchor=valid_anchor)
+
+    def test_anchorsubmit_rejects_empty_session_id(self):
+        """Test empty session_id is rejected"""
+        from pydantic import ValidationError
+
+        valid_anchor = {
+            "SHANK": {"role": "test", "cognition": "LOGOS", "archetypes": [], "key_constraints": []},
+            "ARM": {"phase_context": "B2", "current_focus": "test", "blockers": []},
+            "FLUKE": {"skills_loaded": [], "patterns_active": []},
+        }
+
+        with pytest.raises(ValidationError, match="Session ID cannot be empty"):
+            AnchorSubmitRequest(session_id="", working_dir="/tmp/test", anchor=valid_anchor)
+
+    def test_anchorsubmit_rejects_whitespace_session_id(self):
+        """Test whitespace-only session_id is rejected"""
+        from pydantic import ValidationError
+
+        valid_anchor = {
+            "SHANK": {"role": "test", "cognition": "LOGOS", "archetypes": [], "key_constraints": []},
+            "ARM": {"phase_context": "B2", "current_focus": "test", "blockers": []},
+            "FLUKE": {"skills_loaded": [], "patterns_active": []},
+        }
+
+        with pytest.raises(ValidationError, match="Session ID cannot be empty"):
+            AnchorSubmitRequest(session_id="   ", working_dir="/tmp/test", anchor=valid_anchor)

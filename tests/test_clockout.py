@@ -7,7 +7,6 @@ Tests JSONL extraction, OCTAVE compression, and session archival.
 import json
 import shutil
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -155,9 +154,7 @@ class TestClockOutTool:
         assert content["message_count"] > 0
 
     @pytest.mark.asyncio
-    async def test_clockout_parses_messages_correctly(
-        self, clockout_tool, temp_hestai_dir, temp_claude_session
-    ):
+    async def test_clockout_parses_messages_correctly(self, clockout_tool, temp_hestai_dir, temp_claude_session):
         """Test clock_out correctly parses user/assistant messages"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -181,9 +178,7 @@ class TestClockOutTool:
         assert content["message_count"] == 4  # 2 user + 2 assistant messages (thinking excluded by default)
 
     @pytest.mark.asyncio
-    async def test_clockout_archives_to_correct_location(
-        self, clockout_tool, temp_hestai_dir, temp_claude_session
-    ):
+    async def test_clockout_archives_to_correct_location(self, clockout_tool, temp_hestai_dir, temp_claude_session):
         """Test clock_out archives session to correct directory"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -262,9 +257,7 @@ class TestClockOutTool:
         assert len(content["summary"]) > 0
 
     @pytest.mark.asyncio
-    async def test_clockout_excludes_thinking_by_default(
-        self, clockout_tool, temp_hestai_dir, temp_claude_session
-    ):
+    async def test_clockout_excludes_thinking_by_default(self, clockout_tool, temp_hestai_dir, temp_claude_session):
         """Test clock_out excludes thinking messages by default"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -293,3 +286,39 @@ class TestClockOutTool:
         # Thinking messages should not appear
         assert "[thinking]" not in archived_content
         assert "Let me think about" not in archived_content
+
+    def test_clockout_rejects_path_traversal_session_id(self):
+        """Test session_id with ../ is rejected to prevent path traversal"""
+        from pydantic import ValidationError
+
+        # Path traversal attempts should be rejected
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            ClockOutRequest(session_id="../../../etc/passwd")
+
+    def test_clockout_rejects_session_id_with_forward_slash(self):
+        """Test session_id with forward slash is rejected"""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            ClockOutRequest(session_id="test/session")
+
+    def test_clockout_rejects_session_id_with_backslash(self):
+        """Test session_id with backslash is rejected"""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Invalid session_id"):
+            ClockOutRequest(session_id="test\\session")
+
+    def test_clockout_rejects_empty_session_id(self):
+        """Test empty session_id is rejected"""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Session ID cannot be empty"):
+            ClockOutRequest(session_id="")
+
+    def test_clockout_rejects_whitespace_session_id(self):
+        """Test whitespace-only session_id is rejected"""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="Session ID cannot be empty"):
+            ClockOutRequest(session_id="   ")
