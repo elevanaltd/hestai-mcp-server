@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from tools.clink import CLinkTool
-from tools.context_steward.xml_utils import parse_context_steward_response
+from tools.context_steward.octave_utils import parse_context_steward_response
 
 logger = logging.getLogger(__name__)
 
@@ -247,9 +247,9 @@ class ContextStewardAI:
                     "error": f"Clink execution failed: {response_data.get('content', 'Unknown error')}",
                 }
 
-            # Parse XML from clink content
-            xml_content = response_data.get("content", "")
-            parsed = parse_context_steward_response(xml_content)
+            # Parse OCTAVE response from clink content
+            octave_content = response_data.get("content", "")
+            parsed = parse_context_steward_response(octave_content)
 
             logger.info(f"Task '{task_key}' completed with status: {parsed.get('status')}")
             return parsed

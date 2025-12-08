@@ -10,20 +10,25 @@ Session Summary:
 
 Intent: {{intent}}
 
-Output your response in this exact XML format:
+Output your response in this exact OCTAVE format:
 
-<?xml version="1.0" encoding="UTF-8"?>
-<context-steward-response version="1.0">
-  <task-id>project_context_update</task-id>
-  <status>success|partial|failure</status>
-  <summary>What was updated</summary>
-  <artifacts>
-    <artifact type="context-update" label="full"><![CDATA[
-# PROJECT-CONTEXT: {project_name}
+RESPONSE::[
+  STATUS::success|partial|failure,
+  SUMMARY::"Brief description of what was updated",
+  FILES_ANALYZED::[
+    ".hestai/context/PROJECT-CONTEXT.md"
+  ],
+  CHANGES::[
+    "Specific change 1",
+    "Specific change 2"
+  ],
+  ARTIFACTS::[
+    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged}
+  ]
+]
 
-{updated content preserving structure}
-    ]]></artifact>
-  </artifacts>
-  <risks></risks>
-  <next-actions></next-actions>
-</context-steward-response>
+Guidelines:
+- STATUS must be one of: success, partial, failure
+- SUMMARY should briefly describe what was updated (max 200 chars)
+- CHANGES should list specific modifications made to the context
+- Do not include conversational text outside the RESPONSE block

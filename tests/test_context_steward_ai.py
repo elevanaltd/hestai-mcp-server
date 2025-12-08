@@ -278,22 +278,22 @@ class TestContextStewardAIRunTask:
         }
         config_file.write_text(json.dumps(config_data))
 
-        # Mock clink execution
-        mock_xml_response = """<?xml version="1.0" encoding="UTF-8"?>
-<context-steward-response version="1.0">
-  <task-id>session_compression</task-id>
-  <status>success</status>
-  <summary>Session compressed successfully</summary>
-  <artifacts>
-    <artifact type="octave-compression" label="primary"><![CDATA[
-## SESSION: abc123
-DECISIONS::[decision1::BECAUSE[reason]→outcome]
-    ]]></artifact>
-  </artifacts>
-</context-steward-response>"""
+        # Mock clink execution with OCTAVE response
+        mock_octave_response = """RESPONSE::[
+  STATUS::success,
+  SUMMARY::"Session compressed successfully",
+  FILES_ANALYZED::["transcript.jsonl"],
+  CHANGES::[
+    "Compressed session into OCTAVE format",
+    "Extracted 1 decision"
+  ],
+  ARTIFACTS::[
+    {type::session_compression, path::".hestai/sessions/archive/abc123-octave.oct.md", action::created}
+  ]
+]"""
 
         mock_clink = AsyncMock()
-        mock_clink.execute.return_value = [Mock(text=json.dumps({"status": "success", "content": mock_xml_response}))]
+        mock_clink.execute.return_value = [Mock(text=json.dumps({"status": "success", "content": mock_octave_response}))]
 
         # Act
         with patch("tools.context_steward.ai.CONFIG_FILE", config_file):
@@ -303,8 +303,9 @@ DECISIONS::[decision1::BECAUSE[reason]→outcome]
 
         # Assert
         assert result["status"] == "success"
-        assert "session_compression" in result["task_id"]
+        assert result["summary"] == "Session compressed successfully"
         assert len(result["artifacts"]) > 0
+        assert result["artifacts"][0]["type"] == "session_compression"
 
     @pytest.mark.asyncio
     async def test_run_task_disabled(self, tmp_path):
