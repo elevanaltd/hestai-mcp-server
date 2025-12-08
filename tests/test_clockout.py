@@ -326,7 +326,7 @@ class TestClockOutTool:
             ClockOutRequest(session_id="   ")
 
     @pytest.mark.asyncio
-    async def test_clockout_uses_transcript_path_from_session(self, clockout_tool, temp_hestai_dir):
+    async def test_clockout_uses_transcript_path_from_session(self, clockout_tool, temp_hestai_dir, monkeypatch):
         """Test clock_out prefers transcript_path from session.json when available"""
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
@@ -360,6 +360,12 @@ class TestClockOutTool:
         session_data = json.loads(session_file.read_text())
         session_data["transcript_path"] = str(test_transcript_path)
         session_file.write_text(json.dumps(session_data))
+
+        # Mock validation to allow test path (simulates valid hook-provided path)
+        def mock_validate(path, allowed_root=None):
+            return path.resolve() if isinstance(path, Path) else Path(path).resolve()
+
+        monkeypatch.setattr(clockout_tool, "_validate_path_containment", mock_validate)
 
         arguments = {
             "session_id": session_id,
@@ -618,3 +624,83 @@ class TestTranscriptPathResolution:
 
         with pytest.raises(Exception, match="Path traversal"):
             clockout_tool._validate_path_containment(symlink_path, allowed_root)
+
+    def test_hook_path_outside_sandbox_rejected(self, clockout_tool, tmp_path, monkeypatch):
+        """Test hook-provided transcript_path pointing outside sandbox is rejected and falls back"""
+        # Create malicious transcript outside allowed area
+        malicious_dir = tmp_path / "evil"
+        malicious_dir.mkdir()
+        malicious_transcript = malicious_dir / "evil.jsonl"
+
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": [{"type": "text", "text": "Malicious content"}]},
+            }
+        ]
+
+        with open(malicious_transcript, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Session data with transcript_path pointing to malicious file
+        session_data = {
+            "session_id": "test-session",
+            "transcript_path": str(malicious_transcript)
+        }
+
+        # Mock all fallback methods to fail, forcing the error to surface
+        def mock_temporal_beacon(*args, **kwargs):
+            raise FileNotFoundError("Temporal beacon failed")
+
+        def mock_metadata_inversion(*args, **kwargs):
+            raise FileNotFoundError("Metadata inversion failed")
+
+        def mock_explicit_config(*args, **kwargs):
+            raise FileNotFoundError("Explicit config failed")
+
+        def mock_legacy_fallback(*args, **kwargs):
+            raise FileNotFoundError("Legacy fallback failed")
+
+        monkeypatch.setattr(clockout_tool, "_find_by_temporal_beacon", mock_temporal_beacon)
+        monkeypatch.setattr(clockout_tool, "_find_by_metadata_inversion", mock_metadata_inversion)
+        monkeypatch.setattr(clockout_tool, "_find_by_explicit_config", mock_explicit_config)
+        monkeypatch.setattr(clockout_tool, "_find_session_jsonl", mock_legacy_fallback)
+
+        # Should raise FileNotFoundError because malicious path was rejected and all fallbacks failed
+        # This proves the security check is working - malicious path is NOT used
+        with pytest.raises(FileNotFoundError):
+            result = clockout_tool._resolve_transcript_path(session_data, tmp_path)
+            # If we get here without error, malicious path was used - that's a security failure
+            if result == malicious_transcript:
+                pytest.fail("SECURITY FAILURE: Malicious path was used despite being outside sandbox")
+
+    def test_explicit_config_with_custom_root_works(self, clockout_tool, tmp_path, monkeypatch):
+        """Test CLAUDE_TRANSCRIPT_DIR escape hatch works with custom root outside default"""
+        # Create custom transcript directory OUTSIDE ~/.claude/projects
+        custom_dir = tmp_path / "custom-transcripts"
+        custom_dir.mkdir()
+
+        session_id = "custom-root-session"
+        jsonl_path = custom_dir / "custom-session.jsonl"
+
+        jsonl_content = [
+            {"type": "session_start", "session_id": session_id},
+            {
+                "type": "user",
+                "message": {"role": "user", "content": [{"type": "text", "text": "Custom location test"}]},
+            }
+        ]
+
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Set environment variable to custom location
+        monkeypatch.setenv("CLAUDE_TRANSCRIPT_DIR", str(custom_dir))
+
+        # Should find the file successfully
+        found_path = clockout_tool._find_by_explicit_config(session_id)
+
+        assert found_path == jsonl_path
+        assert found_path.exists()
