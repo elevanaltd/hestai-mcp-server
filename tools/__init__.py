@@ -18,6 +18,7 @@ from .listmodels import ListModelsTool
 from .planner import PlannerTool
 from .precommit import PrecommitTool
 from .refactor import RefactorTool
+from .requestdoc import RequestDocTool
 from .secaudit import SecauditTool
 from .testguard import RequirementsTool
 from .thinkdeep import ThinkDeepTool
@@ -40,6 +41,7 @@ __all__ = [
     "PlannerTool",
     "PrecommitTool",
     "RefactorTool",
+    "RequestDocTool",
     "ChallengeTool",
     "RequirementsTool",
     "SecauditTool",
