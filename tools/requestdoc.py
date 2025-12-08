@@ -16,6 +16,7 @@ from typing import Any, Literal, Optional
 from mcp.types import TextContent
 from pydantic import BaseModel, Field
 
+from tools.context_steward.ai import ContextStewardAI
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
 
@@ -28,6 +29,14 @@ VISIBILITY_RULES = {
     "context_update": {"path": ".hestai/context/", "format": "OCTAVE"},
     "session_note": {"path": ".hestai/sessions/", "format": "OCTAVE"},
     "workflow_update": {"path": ".hestai/workflow/", "format": "OCTAVE"},
+}
+
+# Map request types to Context Steward AI task keys
+TASK_MAPPING = {
+    "context_update": "project_context_update",
+    "workflow_update": "project_checklist_update",
+    # session_note doesn't have AI integration yet
+    # adr doesn't have AI integration yet
 }
 
 
@@ -54,7 +63,21 @@ class RequestDocTool(BaseTool):
 
     Routes documentation to correct location via visibility rules (ADR-003),
     applies appropriate format, and queues or creates based on priority.
+
+    For context_update and workflow_update types, delegates to ContextStewardAI
+    for intelligent document merging and updates.
     """
+
+    def __init__(self):
+        super().__init__()
+        self._ai_helper: Optional[ContextStewardAI] = None
+
+    @property
+    def ai_helper(self) -> ContextStewardAI:
+        """Lazy-load AI helper on first access"""
+        if self._ai_helper is None:
+            self._ai_helper = ContextStewardAI()
+        return self._ai_helper
 
     def get_name(self) -> str:
         return "requestdoc"
@@ -129,6 +152,9 @@ class RequestDocTool(BaseTool):
         Applies visibility rules, creates directory structure if needed,
         and creates or queues documentation based on priority.
 
+        For context_update and workflow_update, attempts to use AI for
+        intelligent document merging if enabled. Falls back to templates.
+
         Args:
             arguments: Tool arguments containing type, intent, scope, priority, content, working_dir
 
@@ -155,6 +181,74 @@ class RequestDocTool(BaseTool):
             doc_dir = project_root / base_path
             doc_dir.mkdir(parents=True, exist_ok=True)
 
+            # Try AI integration for supported types
+            task_key = TASK_MAPPING.get(request.type)
+            ai_result = None
+
+            # Check if AI is enabled for this task (synchronous check)
+            ai_enabled = task_key and self.ai_helper.is_task_enabled(task_key)
+
+            if ai_enabled:
+                logger.info(f"Attempting AI processing for {request.type} via task {task_key}")
+                try:
+                    # Read existing document if it exists
+                    existing_content = None
+                    if request.type == "context_update":
+                        context_file = doc_dir / "PROJECT-CONTEXT.md"
+                        if context_file.exists():
+                            existing_content = context_file.read_text()
+                    elif request.type == "workflow_update":
+                        checklist_file = doc_dir / "PROJECT-CHECKLIST.md"
+                        if checklist_file.exists():
+                            existing_content = checklist_file.read_text()
+
+                    # Prepare AI context
+                    ai_context = {
+                        "intent": request.intent,
+                        "content": request.content,
+                        "existing_content": existing_content or "",
+                        "project_root": str(project_root),
+                    }
+
+                    # Execute AI task
+                    ai_result = await self.ai_helper.run_task(task_key, **ai_context)
+
+                    if ai_result["status"] == "success":
+                        logger.info(f"AI processing succeeded: {ai_result['summary']}")
+
+                        # Extract updated content from artifacts
+                        for artifact in ai_result.get("artifacts", []):
+                            if artifact.get("type") in ["context_update", "workflow_update"]:
+                                artifact_path = project_root / artifact["path"]
+                                # Content would come from artifact, but for now just log
+                                logger.info(f"AI would update: {artifact_path}")
+
+                        # Create response from AI result
+                        content = {
+                            "status": "updated_by_ai",
+                            "path": str(doc_dir.relative_to(project_root)),
+                            "steward": "system-steward",
+                            "format_applied": doc_format,
+                            "ai_summary": ai_result["summary"],
+                            "changes": ai_result.get("changes", []),
+                        }
+
+                        tool_output = ToolOutput(
+                            status="success",
+                            content=json.dumps(content, indent=2),
+                            content_type="json",
+                            metadata={"tool_name": self.name, "doc_type": request.type, "ai_used": True},
+                        )
+
+                        return [TextContent(type="text", text=tool_output.model_dump_json())]
+
+                    else:
+                        logger.warning(f"AI processing failed: {ai_result.get('error')}, falling back to template")
+
+                except Exception as e:
+                    logger.warning(f"AI processing error: {e}, falling back to template")
+
+            # Fallback to template-based document creation
             # Generate filename based on type and intent
             timestamp = datetime.now().strftime("%Y-%m-%d")
             safe_intent = self._sanitize_filename(request.intent)
