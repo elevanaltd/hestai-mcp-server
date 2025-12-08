@@ -96,7 +96,10 @@ class GeminiJSONParser(BaseParser):
         full_text = "".join(text_parts)
 
         # Construct synthetic payload
-        payload = {"response": full_text, "stats": final_stats, "_raw_stream_events": events}
+        # NOTE: Raw stream events intentionally excluded to prevent response bloat.
+        # Each token delta is a separate JSON object - storing them inflates responses
+        # by 3-4x and causes context exhaustion in multi-agent workflows (Issue #76).
+        payload = {"response": full_text, "stats": final_stats}
         return payload
 
     def _build_fallback_message(self, payload: dict[str, Any], stderr: str) -> tuple[str | None, dict[str, Any]]:

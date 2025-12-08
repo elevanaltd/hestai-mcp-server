@@ -212,12 +212,21 @@ class RequestDocTool(BaseTool):
                             existing_content = checklist_file.read_text()
 
                     # Prepare AI context with files
+                    # Variable names must match template placeholders in systemprompts/context_steward/*.txt
+                    # Convert relative file paths to absolute (clink requires absolute paths)
+                    absolute_files = []
+                    for f in request.files:
+                        file_path = Path(f)
+                        if not file_path.is_absolute():
+                            file_path = project_root / f
+                        absolute_files.append(str(file_path))
+
                     ai_context = {
                         "intent": request.intent,
-                        "content": request.content,
-                        "existing_content": existing_content or "",
+                        "session_summary": request.content,  # Maps to {{session_summary}} in template
+                        "existing_context": existing_content or "",  # Maps to {{existing_context}} in template
                         "project_root": str(project_root),
-                        "files": request.files,  # Pass files to AI
+                        "files": absolute_files,  # Pass absolute file paths to AI for analysis
                     }
 
                     # Execute AI task
@@ -233,6 +242,16 @@ class RequestDocTool(BaseTool):
                                 # Content would come from artifact, but for now just log
                                 logger.info(f"AI would update: {artifact_path}")
 
+                        # Append to PROJECT-CHANGELOG.md if there's a changelog entry
+                        changelog_entry = ai_result.get("changelog_entry")
+                        if changelog_entry:
+                            self._append_changelog(project_root, changelog_entry, request.intent)
+
+                        # Log compaction if it occurred
+                        compaction = ai_result.get("compaction_performed", False)
+                        if compaction:
+                            logger.info("Context compaction performed - items moved to PROJECT-HISTORY.md")
+
                         # Create response from AI result
                         content = {
                             "status": "updated_by_ai",
@@ -241,6 +260,7 @@ class RequestDocTool(BaseTool):
                             "format_applied": doc_format,
                             "ai_summary": ai_result["summary"],
                             "changes": ai_result.get("changes", []),
+                            "compaction_performed": compaction,
                         }
 
                         tool_output = ToolOutput(
@@ -336,6 +356,49 @@ class RequestDocTool(BaseTool):
 
         logger.debug(f"{filename} not found in any location")
         return None
+
+    def _append_changelog(self, project_root: Path, entry: str, intent: str) -> None:
+        """
+        Append entry to PROJECT-CHANGELOG.md.
+
+        Creates the changelog file if it doesn't exist with proper header.
+        Appends new entries at the top (most recent first).
+
+        Args:
+            project_root: Project root directory
+            entry: One-line changelog entry from AI
+            intent: Original intent for additional context
+        """
+        changelog_path = project_root / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        # Format the new entry
+        new_entry = f"## {timestamp}\n**{intent}**\n{entry}\n\n"
+
+        if changelog_path.exists():
+            # Read existing content and prepend new entry after header
+            existing = changelog_path.read_text()
+            # Find end of header (after first blank line following title)
+            header_end = existing.find("\n\n")
+            if header_end != -1:
+                header = existing[: header_end + 2]
+                rest = existing[header_end + 2 :]
+                updated = header + new_entry + rest
+            else:
+                updated = existing + "\n" + new_entry
+            changelog_path.write_text(updated)
+        else:
+            # Create new changelog with header
+            header = """# PROJECT-CHANGELOG
+
+*Audit trail of context updates. Most recent first.*
+
+"""
+            changelog_path.parent.mkdir(parents=True, exist_ok=True)
+            changelog_path.write_text(header + new_entry)
+
+        logger.info(f"Appended changelog entry: {entry[:50]}...")
 
     def _sanitize_filename(self, text: str) -> str:
         """

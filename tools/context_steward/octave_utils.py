@@ -228,6 +228,8 @@ def parse_context_steward_response(raw_response: str) -> dict[str, Any]:
             "files_analyzed": [],
             "changes": [],
             "artifacts": [],
+            "changelog_entry": None,
+            "compaction_performed": False,
         }
 
         # Split by comma at top level
@@ -253,6 +255,11 @@ def parse_context_steward_response(raw_response: str) -> dict[str, Any]:
                 result["changes"] = _parse_value(value) or []
             elif key == "artifacts":
                 result["artifacts"] = _parse_value(value) or []
+            elif key == "changelog_entry":
+                result["changelog_entry"] = _parse_value(value)
+            elif key == "compaction_performed":
+                parsed_val = _parse_value(value)
+                result["compaction_performed"] = parsed_val in (True, "true", "True")
 
         logger.debug(f"Successfully parsed RESPONSE: {result['status']}")
         return result

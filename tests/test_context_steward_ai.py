@@ -293,7 +293,9 @@ class TestContextStewardAIRunTask:
 ]"""
 
         mock_clink = AsyncMock()
-        mock_clink.execute.return_value = [Mock(text=json.dumps({"status": "success", "content": mock_octave_response}))]
+        mock_clink.execute.return_value = [
+            Mock(text=json.dumps({"status": "success", "content": mock_octave_response}))
+        ]
 
         # Act
         with patch("tools.context_steward.ai.CONFIG_FILE", config_file):

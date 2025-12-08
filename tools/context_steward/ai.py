@@ -241,7 +241,9 @@ class ContextStewardAI:
             response_text = clink_response[0].text
             response_data = json.loads(response_text)
 
-            if response_data.get("status") != "success":
+            # Clink returns "success" or "continuation_available" for successful calls
+            clink_status = response_data.get("status", "")
+            if clink_status not in ("success", "continuation_available"):
                 return {
                     "status": "error",
                     "error": f"Clink execution failed: {response_data.get('content', 'Unknown error')}",

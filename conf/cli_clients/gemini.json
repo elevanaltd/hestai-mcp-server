@@ -108,22 +108,6 @@
       "prompt_path": "systemprompts/clink/implementation-lead.txt",
       "role_args": []
     },
-    "ethos-rules-only": {
-      "prompt_path": "systemprompts/clink/ethos-rules-only.txt",
-      "role_args": []
-    },
-    "ethos-label-only": {
-      "prompt_path": "systemprompts/clink/ethos-label-only.txt",
-      "role_args": []
-    },
-    "ethos-priming-only": {
-      "prompt_path": "systemprompts/clink/ethos-priming-only.txt",
-      "role_args": []
-    },
-    "ethos-label-priming": {
-      "prompt_path": "systemprompts/clink/ethos-label-priming.txt",
-      "role_args": []
-    },
     "octave-specialist": {
       "prompt_path": "systemprompts/clink/octave-specialist.txt",
       "role_args": []
@@ -146,6 +130,10 @@
     },
     "test-infrastructure-steward": {
       "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
+      "role_args": []
+    },
+    "system-steward": {
+      "prompt_path": "systemprompts/clink/system-steward.txt",
       "role_args": []
     }
   }

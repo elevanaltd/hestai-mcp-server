@@ -68,12 +68,15 @@ class TestRequestDocAIIntegration:
 
     @pytest.mark.asyncio
     @patch("tools.requestdoc.ContextStewardAI")
-    async def test_context_update_without_ai_uses_template(self, mock_ai_class, requestdoc_tool, temp_project_dir):
+    async def test_context_update_without_ai_uses_template(self, mock_ai_class, temp_project_dir):
         """Test context update without AI uses template fallback"""
         # Mock ContextStewardAI to disable AI processing
         mock_ai = MagicMock()
         mock_ai_class.return_value = mock_ai
         mock_ai.is_task_enabled.return_value = False  # AI disabled
+
+        # Create tool INSIDE the patch context so mock applies
+        requestdoc_tool = RequestDocTool()
 
         arguments = {
             "type": "context_update",
@@ -374,11 +377,12 @@ class TestRequestDocFilesParameter:
 
         assert output["status"] == "success"
 
-        # Verify files were passed to AI
+        # Verify files were passed to AI (as absolute paths)
         mock_ai.run_task.assert_called_once()
         call_kwargs = mock_ai.run_task.call_args[1]
         assert "files" in call_kwargs
-        assert "src/feature.py" in call_kwargs["files"]
+        # Files are converted to absolute paths, so check the path ends with src/feature.py
+        assert any("src/feature.py" in f for f in call_kwargs["files"])
 
     @pytest.mark.asyncio
     async def test_multi_location_context_lookup_hestai(self, requestdoc_tool, temp_project_dir):
