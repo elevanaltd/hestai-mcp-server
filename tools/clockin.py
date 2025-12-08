@@ -141,6 +141,8 @@ class ClockInTool(BaseTool):
                 "focus": request.focus,
                 "working_dir": str(project_root),
                 "started_at": datetime.now().isoformat(),
+                # Store transcript_path if available from context (for clockout JSONL extraction)
+                "transcript_path": getattr(session_context, 'transcript_path', None) if session_context else None,
             }
 
             session_file = session_dir / "session.json"

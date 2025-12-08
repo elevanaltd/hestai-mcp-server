@@ -142,8 +142,8 @@ class ClockOutTool(BaseTool):
 
             session_data = json.loads(session_file.read_text())
 
-            # Find Claude session JSONL
-            jsonl_path = self._find_session_jsonl(project_root)
+            # Find Claude session JSONL using dual-path resolution
+            jsonl_path = self._resolve_transcript_path(session_data, project_root)
 
             # Parse session transcript
             messages = self._parse_session_transcript(jsonl_path)
@@ -189,6 +189,31 @@ class ClockOutTool(BaseTool):
             logger.error(f"Error in clock_out: {str(e)}")
             error_output = ToolOutput(status="error", content=f"Error archiving session: {str(e)}", content_type="text")
             return [TextContent(type="text", text=error_output.model_dump_json())]
+
+    def _resolve_transcript_path(self, session_data: dict, project_root: Path) -> Path:
+        """
+        Dual-path transcript resolution: hook metadata primary, reconstruction fallback.
+
+        Args:
+            session_data: Session metadata dict
+            project_root: Project root directory
+
+        Returns:
+            Path to session JSONL file
+
+        Raises:
+            FileNotFoundError: If no transcript found via either method
+        """
+        # Primary: Use hook-provided path (Option B - deterministic)
+        if session_data.get("transcript_path"):
+            provided = Path(session_data["transcript_path"])
+            if provided.exists():
+                logger.debug("Using hook-provided transcript path")
+                return provided
+            logger.warning("Hook path missing, falling back to discovery")
+
+        # Fallback: Reconstruct from project_root (resilient)
+        return self._find_session_jsonl(project_root)
 
     def _find_session_jsonl(self, project_root: Path) -> Path:
         """
