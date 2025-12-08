@@ -192,3 +192,4 @@ logs/
 /.coord
 /.hestai/sessions
 repomix-output.xml
+/.hestai/context
