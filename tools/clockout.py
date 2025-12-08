@@ -420,7 +420,10 @@ class ClockOutTool(BaseTool):
             if provided.exists():
                 try:
                     # Security: validate hook-provided path is within allowed sandbox
-                    validated = self._validate_path_containment(provided)
+                    # Respect CLAUDE_TRANSCRIPT_DIR if set as custom allowed root
+                    custom_root = os.environ.get("CLAUDE_TRANSCRIPT_DIR")
+                    allowed_root = Path(custom_root) if custom_root else None
+                    validated = self._validate_path_containment(provided, allowed_root)
                     logger.debug("Using hook-provided transcript path")
                     return validated
                 except ValueError as e:

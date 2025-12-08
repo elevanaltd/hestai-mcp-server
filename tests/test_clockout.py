@@ -701,3 +701,35 @@ class TestTranscriptPathResolution:
 
         assert found_path == jsonl_path
         assert found_path.exists()
+
+    def test_hook_path_respects_custom_transcript_dir(self, clockout_tool, tmp_path, monkeypatch):
+        """Test that hook-provided paths are accepted when within CLAUDE_TRANSCRIPT_DIR custom root"""
+        # Create a custom transcript directory outside ~/.claude/projects
+        custom_dir = tmp_path / "custom_transcripts"
+        custom_dir.mkdir(parents=True)
+
+        # Create a transcript file in the custom location
+        jsonl_path = custom_dir / "my-session.jsonl"
+        jsonl_content = [
+            {
+                "type": "user",
+                "message": {"role": "user", "content": [{"type": "text", "text": "Test"}]},
+            },
+        ]
+        with open(jsonl_path, "w") as f:
+            for entry in jsonl_content:
+                f.write(json.dumps(entry) + "\n")
+
+        # Set CLAUDE_TRANSCRIPT_DIR to custom location
+        monkeypatch.setenv("CLAUDE_TRANSCRIPT_DIR", str(custom_dir))
+
+        # Session data with hook-provided path pointing to custom location
+        session_data = {
+            "session_id": "test-hook-custom",
+            "transcript_path": str(jsonl_path),
+        }
+
+        # Should accept the hook path since it's within the custom root
+        result = clockout_tool._resolve_transcript_path(session_data, tmp_path)
+
+        assert result == jsonl_path
