@@ -54,6 +54,9 @@ class RequestDocRequest(BaseModel):
         "end_of_session", description="Priority level for documentation"
     )
     content: str = Field("", description="Content to document (if scope=specific)")
+    files: list[str] = Field(
+        default_factory=list, description="Files to analyze for context (paths relative to working_dir)"
+    )
     working_dir: str = Field(..., description="Project root path")
 
 
@@ -115,6 +118,12 @@ class RequestDocTool(BaseTool):
                     "type": "string",
                     "default": "",
                     "description": "Content to document (if scope=specific)",
+                },
+                "files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "default": [],
+                    "description": "Files to analyze for context (paths relative to working_dir)",
                 },
                 "working_dir": {"type": "string", "description": "Project root path"},
             },
@@ -191,23 +200,24 @@ class RequestDocTool(BaseTool):
             if ai_enabled:
                 logger.info(f"Attempting AI processing for {request.type} via task {task_key}")
                 try:
-                    # Read existing document if it exists
+                    # Read existing document if it exists (using multi-location lookup)
                     existing_content = None
                     if request.type == "context_update":
-                        context_file = doc_dir / "PROJECT-CONTEXT.md"
-                        if context_file.exists():
+                        context_file = self._find_context_file(project_root, "PROJECT-CONTEXT.md")
+                        if context_file:
                             existing_content = context_file.read_text()
                     elif request.type == "workflow_update":
-                        checklist_file = doc_dir / "PROJECT-CHECKLIST.md"
-                        if checklist_file.exists():
+                        checklist_file = self._find_context_file(project_root, "PROJECT-CHECKLIST.md")
+                        if checklist_file:
                             existing_content = checklist_file.read_text()
 
-                    # Prepare AI context
+                    # Prepare AI context with files
                     ai_context = {
                         "intent": request.intent,
                         "content": request.content,
                         "existing_content": existing_content or "",
                         "project_root": str(project_root),
+                        "files": request.files,  # Pass files to AI
                     }
 
                     # Execute AI task
@@ -296,6 +306,36 @@ class RequestDocTool(BaseTool):
                 status="error", content=f"Error routing documentation: {str(e)}", content_type="text"
             )
             return [TextContent(type="text", text=error_output.model_dump_json())]
+
+    def _find_context_file(self, project_root: Path, filename: str) -> Path | None:
+        """
+        Find context file in priority order across multiple locations.
+
+        Searches for the file in:
+        1. .hestai/context/
+        2. .coord/
+        3. project root
+
+        Args:
+            project_root: Project root directory
+            filename: Filename to search for (e.g., "PROJECT-CONTEXT.md")
+
+        Returns:
+            Path to found file, or None if not found in any location
+        """
+        search_paths = [
+            project_root / ".hestai" / "context" / filename,
+            project_root / ".coord" / filename,
+            project_root / filename,
+        ]
+
+        for path in search_paths:
+            if path.exists():
+                logger.debug(f"Found {filename} at {path}")
+                return path
+
+        logger.debug(f"{filename} not found in any location")
+        return None
 
     def _sanitize_filename(self, text: str) -> str:
         """
