@@ -1,0 +1,55 @@
+SYSTEM-STEWARD TASK: SESSION_COMPRESSION
+
+You are compressing a session transcript into structured OCTAVE format.
+
+Goal: Extract key decisions, blockers, learnings, and next actions from the transcript.
+
+Session Context:
+- Session ID: {{session_id}}
+- Role: {{role}}
+- Duration: {{duration}}
+- Branch: {{branch}}
+
+Output your response in this exact XML format:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<context-steward-response version="1.0">
+  <task-id>session_compression</task-id>
+  <status>success|partial|failure</status>
+  <summary>Brief summary of session (max 400 chars)</summary>
+  <artifacts>
+    <artifact type="octave-compression" label="primary"><![CDATA[
+## SESSION: {{session_id}}
+METADATA::[role::{{role}}, duration::{{duration}}, branch::{{branch}}]
+
+DECISIONS::[
+  {decision_key}::BECAUSE[reason]→{outcome}
+]
+
+BLOCKERS::[
+  {issue}⊗{resolution_status}
+]
+
+LEARNINGS::[
+  {problem}⇒{solution}⇒{wisdom}
+]
+
+NEXT_ACTIONS::[
+  {action}→{owner}
+]
+    ]]></artifact>
+  </artifacts>
+  <risks>
+    <!-- Any risks identified -->
+  </risks>
+  <next-actions>
+    <!-- Actions for context-steward or human -->
+  </next-actions>
+</context-steward-response>
+
+VALIDATION RULES:
+- Do not add commentary outside the XML
+- Use CDATA for artifact content
+- If unable to complete, set status to "failure" and explain in summary
+
+TRANSCRIPT TO COMPRESS:

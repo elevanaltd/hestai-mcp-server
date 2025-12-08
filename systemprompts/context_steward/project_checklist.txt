@@ -1,0 +1,29 @@
+SYSTEM-STEWARD TASK: PROJECT_CHECKLIST_UPDATE
+
+You are updating the PROJECT-CHECKLIST.md file based on session findings.
+
+Current Checklist:
+{{existing_checklist}}
+
+Session Summary:
+{{session_summary}}
+
+Intent: {{intent}}
+
+Output your response in this exact XML format:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<context-steward-response version="1.0">
+  <task-id>project_checklist_update</task-id>
+  <status>success|partial|failure</status>
+  <summary>What items were updated</summary>
+  <artifacts>
+    <artifact type="checklist-update" label="full"><![CDATA[
+# PROJECT-CHECKLIST: {project_name}
+
+{updated checklist with completed items marked}
+    ]]></artifact>
+  </artifacts>
+  <risks></risks>
+  <next-actions></next-actions>
+</context-steward-response>

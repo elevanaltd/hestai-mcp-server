@@ -1,0 +1,29 @@
+SYSTEM-STEWARD TASK: PROJECT_CONTEXT_UPDATE
+
+You are updating the PROJECT-CONTEXT.md file based on session findings.
+
+Current Context File:
+{{existing_context}}
+
+Session Summary:
+{{session_summary}}
+
+Intent: {{intent}}
+
+Output your response in this exact XML format:
+
+<?xml version="1.0" encoding="UTF-8"?>
+<context-steward-response version="1.0">
+  <task-id>project_context_update</task-id>
+  <status>success|partial|failure</status>
+  <summary>What was updated</summary>
+  <artifacts>
+    <artifact type="context-update" label="full"><![CDATA[
+# PROJECT-CONTEXT: {project_name}
+
+{updated content preserving structure}
+    ]]></artifact>
+  </artifacts>
+  <risks></risks>
+  <next-actions></next-actions>
+</context-steward-response>
