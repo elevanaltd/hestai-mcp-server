@@ -9,7 +9,9 @@ Part of the Context Steward session lifecycle management system.
 
 import json
 import logging
+import os
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -21,6 +23,11 @@ from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
 
 logger = logging.getLogger(__name__)
+
+# Security and performance constants
+MAX_PROJECTS_SCAN = 50  # DoS prevention for metadata inversion
+MAX_SCAN_TIME = 2.0  # Timeout in seconds
+TEMPORAL_BEACON_MAX_AGE_HOURS = 24  # Only scan files modified in last 24h
 
 
 class ClockOutRequest(BaseModel):
@@ -190,9 +197,207 @@ class ClockOutTool(BaseTool):
             error_output = ToolOutput(status="error", content=f"Error archiving session: {str(e)}", content_type="text")
             return [TextContent(type="text", text=error_output.model_dump_json())]
 
+    def _validate_path_containment(self, input_path: Path, allowed_root: Optional[Path] = None) -> Path:
+        """
+        Validate path is within allowed Claude projects directory.
+
+        Args:
+            input_path: Path to validate
+            allowed_root: Optional custom allowed root (defaults to ~/.claude/projects)
+
+        Returns:
+            Resolved absolute path
+
+        Raises:
+            ValueError: If path traversal attempt detected
+        """
+        if allowed_root is None:
+            allowed_root = Path("~/.claude/projects").expanduser().resolve()
+        else:
+            allowed_root = allowed_root.expanduser().resolve()
+
+        target_path = input_path.expanduser().resolve()
+
+        if not target_path.is_relative_to(allowed_root):
+            raise ValueError(f"Path traversal attempt: {target_path} not within {allowed_root}")
+
+        return target_path
+
+    def _find_by_temporal_beacon(self, session_id: str, claude_projects: Optional[Path] = None) -> Path:
+        """
+        Layer 1: Find JSONL by scanning recently modified files for session_id content.
+
+        The clockout command writes to the JSONL log, so the session_id is guaranteed
+        to be present in the file. Temporal filter (24h) provides I/O efficiency.
+
+        Args:
+            session_id: Unique session identifier to search for
+            claude_projects: Optional path to Claude projects directory
+
+        Returns:
+            Path to JSONL file containing session_id
+
+        Raises:
+            FileNotFoundError: If no matching file found in last 24h
+        """
+        if claude_projects is None:
+            claude_projects = Path("~/.claude/projects").expanduser()
+
+        # Validate path containment
+        claude_projects = self._validate_path_containment(claude_projects)
+
+        if not claude_projects.exists():
+            raise FileNotFoundError(f"Claude projects directory not found: {claude_projects}")
+
+        # Calculate cutoff time (24h ago)
+        cutoff_time = time.time() - (TEMPORAL_BEACON_MAX_AGE_HOURS * 60 * 60)
+
+        # Scan all JSONL files modified in last 24h
+        for project_dir in claude_projects.iterdir():
+            if not project_dir.is_dir():
+                continue
+
+            for jsonl_file in project_dir.glob("*.jsonl"):
+                try:
+                    # Check modification time first (I/O efficiency)
+                    if jsonl_file.stat().st_mtime < cutoff_time:
+                        continue
+
+                    # Scan file content for session_id
+                    with open(jsonl_file) as f:
+                        for line in f:
+                            if session_id in line:
+                                logger.debug(f"Found session_id via temporal beacon: {jsonl_file}")
+                                return jsonl_file
+
+                except OSError as e:
+                    logger.warning(f"Error reading {jsonl_file}: {e}")
+                    continue
+
+        raise FileNotFoundError(
+            f"No JSONL file found containing session_id {session_id} in last {TEMPORAL_BEACON_MAX_AGE_HOURS}h"
+        )
+
+    def _find_by_metadata_inversion(self, project_root: Path, claude_projects: Optional[Path] = None) -> Path:
+        """
+        Layer 2: Find JSONL by scanning project_config.json files to match project root.
+
+        Args:
+            project_root: Project root directory to match
+            claude_projects: Optional path to Claude projects directory
+
+        Returns:
+            Path to most recent JSONL file in matched project directory
+
+        Raises:
+            FileNotFoundError: If no matching project or JSONL found, or MAX_PROJECTS_SCAN exceeded
+        """
+        if claude_projects is None:
+            claude_projects = Path("~/.claude/projects").expanduser()
+
+        # Validate path containment
+        claude_projects = self._validate_path_containment(claude_projects)
+
+        if not claude_projects.exists():
+            raise FileNotFoundError(f"Claude projects directory not found: {claude_projects}")
+
+        project_root = project_root.resolve()
+        scanned_count = 0
+        start_time = time.time()
+
+        # Scan project directories
+        for project_dir in claude_projects.iterdir():
+            if not project_dir.is_dir():
+                continue
+
+            scanned_count += 1
+
+            # DoS prevention: enforce MAX_PROJECTS_SCAN limit
+            if scanned_count > MAX_PROJECTS_SCAN:
+                raise FileNotFoundError(
+                    f"MAX_PROJECTS_SCAN ({MAX_PROJECTS_SCAN}) exceeded - "
+                    f"use explicit config or temporal beacon instead"
+                )
+
+            # Timeout protection
+            if time.time() - start_time > MAX_SCAN_TIME:
+                raise FileNotFoundError(f"Metadata inversion timeout ({MAX_SCAN_TIME}s) exceeded")
+
+            # Check for project_config.json
+            config_file = project_dir / "project_config.json"
+            if not config_file.exists():
+                continue
+
+            try:
+                config = json.loads(config_file.read_text())
+                config_root = Path(config.get("rootPath", "")).resolve()
+
+                if config_root == project_root:
+                    # Found matching project - find most recent JSONL
+                    jsonl_files = list(project_dir.glob("*.jsonl"))
+                    if not jsonl_files:
+                        raise FileNotFoundError(f"No JSONL files in matched project: {project_dir}")
+
+                    most_recent = max(jsonl_files, key=lambda p: p.stat().st_mtime)
+                    logger.debug(f"Found JSONL via metadata inversion: {most_recent}")
+                    return most_recent
+
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning(f"Error reading {config_file}: {e}")
+                continue
+
+        raise FileNotFoundError(f"No project_config.json found matching project root: {project_root}")
+
+    def _find_by_explicit_config(self, session_id: str) -> Path:
+        """
+        Layer 3: Find JSONL via explicit configuration (CLAUDE_TRANSCRIPT_DIR env var).
+
+        Args:
+            session_id: Session identifier to locate file
+
+        Returns:
+            Path to JSONL file in configured directory
+
+        Raises:
+            FileNotFoundError: If env var not set or no matching file found
+        """
+        transcript_dir = os.environ.get("CLAUDE_TRANSCRIPT_DIR")
+
+        if not transcript_dir:
+            raise FileNotFoundError("CLAUDE_TRANSCRIPT_DIR environment variable not set")
+
+        transcript_path = Path(transcript_dir).expanduser().resolve()
+
+        # Validate path containment
+        transcript_path = self._validate_path_containment(transcript_path)
+
+        if not transcript_path.exists():
+            raise FileNotFoundError(f"CLAUDE_TRANSCRIPT_DIR does not exist: {transcript_path}")
+
+        # Find JSONL file containing session_id
+        for jsonl_file in transcript_path.glob("*.jsonl"):
+            try:
+                with open(jsonl_file) as f:
+                    for line in f:
+                        if session_id in line:
+                            logger.debug(f"Found session_id via explicit config: {jsonl_file}")
+                            return jsonl_file
+            except OSError as e:
+                logger.warning(f"Error reading {jsonl_file}: {e}")
+                continue
+
+        raise FileNotFoundError(f"No JSONL file containing session_id {session_id} in {transcript_path}")
+
     def _resolve_transcript_path(self, session_data: dict, project_root: Path) -> Path:
         """
-        Dual-path transcript resolution: hook metadata primary, reconstruction fallback.
+        Layered transcript resolution with security validation.
+
+        Resolution order:
+        1. Hook-provided path (deterministic, from clockin)
+        2. Temporal beacon (scan recent files for session_id)
+        3. Metadata inversion (match project_root via project_config.json)
+        4. Explicit config (CLAUDE_TRANSCRIPT_DIR env var)
+        5. Legacy fallback (Claude path encoding - kept for compatibility)
 
         Args:
             session_data: Session metadata dict
@@ -202,9 +407,11 @@ class ClockOutTool(BaseTool):
             Path to session JSONL file
 
         Raises:
-            FileNotFoundError: If no transcript found via either method
+            FileNotFoundError: If no transcript found via any method
         """
-        # Primary: Use hook-provided path (Option B - deterministic)
+        session_id = session_data.get("session_id", "")
+
+        # Layer 0: Hook-provided path (existing behavior - highest priority)
         if session_data.get("transcript_path"):
             provided = Path(session_data["transcript_path"])
             if provided.exists():
@@ -212,7 +419,28 @@ class ClockOutTool(BaseTool):
                 return provided
             logger.warning("Hook path missing, falling back to discovery")
 
-        # Fallback: Reconstruct from project_root (resilient)
+        # Layer 1: Temporal beacon (efficient for recent sessions)
+        if session_id:
+            try:
+                return self._find_by_temporal_beacon(session_id)
+            except FileNotFoundError as e:
+                logger.debug(f"Temporal beacon failed: {e}")
+
+        # Layer 2: Metadata inversion (robust cross-project discovery)
+        try:
+            return self._find_by_metadata_inversion(project_root)
+        except FileNotFoundError as e:
+            logger.debug(f"Metadata inversion failed: {e}")
+
+        # Layer 3: Explicit config (escape hatch for custom setups)
+        if session_id:
+            try:
+                return self._find_by_explicit_config(session_id)
+            except FileNotFoundError as e:
+                logger.debug(f"Explicit config failed: {e}")
+
+        # Layer 4: Legacy fallback (existing _find_session_jsonl for compatibility)
+        logger.debug("Falling back to legacy path encoding method")
         return self._find_session_jsonl(project_root)
 
     def _find_session_jsonl(self, project_root: Path) -> Path:

@@ -71,15 +71,19 @@ from config import (  # noqa: E402
 # Context7: consulted for tools - internal module
 from tools import (  # noqa: E402
     AnalyzeTool,
+    AnchorSubmitTool,
     ChallengeTool,
     ChatTool,
     CLinkTool,
+    ClockInTool,
+    ClockOutTool,
     ConsensusTool,
     CriticalEngineerTool,
     DebugIssueTool,
     ListModelsTool,
     LookupTool,
     PlannerTool,
+    RequestDocTool,
     RequirementsTool,
     SecauditTool,
     ThinkDeepTool,
@@ -347,6 +351,11 @@ TOOLS = {
     "apilookup": LookupTool(),  # Quick web/API lookup instructions
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
+    # Context Steward tools (session lifecycle management):
+    "clockin": ClockInTool(),  # Session registration, conflict detection, context paths
+    "clockout": ClockOutTool(),  # JSONL extraction, OCTAVE compression, session archival
+    "requestdoc": RequestDocTool(),  # Documentation routing via visibility rules (ADR-003)
+    "anchorsubmit": AnchorSubmitTool(),  # Anchor validation, drift detection, enforcement rules
     # Archived tools (handled by Claude subagents):
     # - codereview -> use code-review-specialist subagent
     # - precommit -> use multiple specialized subagents
@@ -389,6 +398,11 @@ def validate_tool_documentation(tools: dict[str, Any]) -> None:
         "clink",
         "apilookup",
         "registry",
+        # Context Steward (TIER 3 - OPERATIONAL)
+        "clockin",
+        "clockout",
+        "requestdoc",
+        "anchorsubmit",
     }
 
     actual_tools = set(tools.keys())
