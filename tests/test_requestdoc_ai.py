@@ -67,8 +67,14 @@ class TestRequestDocAIIntegration:
     """Test AI integration for request_doc"""
 
     @pytest.mark.asyncio
-    async def test_context_update_without_ai_uses_template(self, requestdoc_tool, temp_project_dir):
+    @patch("tools.requestdoc.ContextStewardAI")
+    async def test_context_update_without_ai_uses_template(self, mock_ai_class, requestdoc_tool, temp_project_dir):
         """Test context update without AI uses template fallback"""
+        # Mock ContextStewardAI to disable AI processing
+        mock_ai = MagicMock()
+        mock_ai_class.return_value = mock_ai
+        mock_ai.is_task_enabled.return_value = False  # AI disabled
+
         arguments = {
             "type": "context_update",
             "intent": "Update project dependencies",
@@ -315,3 +321,139 @@ class TestRequestDocAIIntegration:
         # AI run_task should not be called since is_task_enabled returned False
         # The mock property access will show attribute access but not actual call
         assert not hasattr(mock_ai.run_task, "call_count") or mock_ai.run_task.call_count == 0
+
+
+class TestRequestDocFilesParameter:
+    """Test files parameter and multi-location context lookup"""
+
+    @pytest.mark.asyncio
+    @patch("tools.requestdoc.ContextStewardAI")
+    async def test_files_parameter_passed_to_ai(self, mock_ai_class, requestdoc_tool, temp_project_dir):
+        """Test files parameter is passed to ContextStewardAI"""
+        # Create test files
+        src_dir = temp_project_dir / "src"
+        src_dir.mkdir(exist_ok=True)
+        test_file = src_dir / "feature.py"
+        test_file.write_text('def feature():\n    return "test"\n')
+
+        # Mock ContextStewardAI instance
+        mock_ai = AsyncMock()
+        mock_ai_class.return_value = mock_ai
+        mock_ai.is_task_enabled.return_value = True
+
+        mock_ai.run_task.return_value = {
+            "status": "success",
+            "summary": "Updated context with file analysis",
+            "files_analyzed": ["src/feature.py"],
+            "changes": ["Added file analysis"],
+            "artifacts": [
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                }
+            ],
+        }
+
+        arguments = {
+            "type": "context_update",
+            "intent": "Document new feature implementation",
+            "scope": "specific",
+            "priority": "blocking",
+            "content": "FEATURES::[new_feature]",
+            "files": ["src/feature.py"],  # NEW: files parameter
+            "working_dir": str(temp_project_dir),
+            "_session_context": type("obj", (object,), {"project_root": temp_project_dir})(),
+        }
+
+        result = await requestdoc_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Verify files were passed to AI
+        mock_ai.run_task.assert_called_once()
+        call_kwargs = mock_ai.run_task.call_args[1]
+        assert "files" in call_kwargs
+        assert "src/feature.py" in call_kwargs["files"]
+
+    @pytest.mark.asyncio
+    async def test_multi_location_context_lookup_hestai(self, requestdoc_tool, temp_project_dir):
+        """Test PROJECT-CONTEXT.md found in .hestai/context/"""
+        # Create context in .hestai/context/
+        hestai_context = temp_project_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        hestai_context.write_text("CONTEXT::hestai_location")
+
+        # Test should find in .hestai/context/ first
+        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        assert found_path == hestai_context
+        assert found_path.read_text() == "CONTEXT::hestai_location"
+
+    @pytest.mark.asyncio
+    async def test_multi_location_context_lookup_coord(self, requestdoc_tool, temp_project_dir):
+        """Test PROJECT-CONTEXT.md found in .coord/ when .hestai missing"""
+        # Remove .hestai/context/PROJECT-CONTEXT.md
+        hestai_context = temp_project_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        if hestai_context.exists():
+            hestai_context.unlink()
+
+        # Create context in .coord/
+        coord_dir = temp_project_dir / ".coord"
+        coord_dir.mkdir(exist_ok=True)
+        coord_context = coord_dir / "PROJECT-CONTEXT.md"
+        coord_context.write_text("CONTEXT::coord_location")
+
+        # Test should find in .coord/ when .hestai missing
+        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        assert found_path == coord_context
+        assert found_path.read_text() == "CONTEXT::coord_location"
+
+    @pytest.mark.asyncio
+    async def test_multi_location_context_lookup_root(self, requestdoc_tool, temp_project_dir):
+        """Test PROJECT-CONTEXT.md found in root when .hestai and .coord missing"""
+        # Remove .hestai/context/PROJECT-CONTEXT.md
+        hestai_context = temp_project_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        if hestai_context.exists():
+            hestai_context.unlink()
+
+        # Create context in root
+        root_context = temp_project_dir / "PROJECT-CONTEXT.md"
+        root_context.write_text("CONTEXT::root_location")
+
+        # Test should find in root when .hestai and .coord missing
+        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        assert found_path == root_context
+        assert found_path.read_text() == "CONTEXT::root_location"
+
+    @pytest.mark.asyncio
+    async def test_multi_location_context_not_found(self, requestdoc_tool, temp_project_dir):
+        """Test returns None when PROJECT-CONTEXT.md not found anywhere"""
+        # Remove all PROJECT-CONTEXT.md files
+        for location in [
+            temp_project_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md",
+            temp_project_dir / ".coord" / "PROJECT-CONTEXT.md",
+            temp_project_dir / "PROJECT-CONTEXT.md",
+        ]:
+            if location.exists():
+                location.unlink()
+
+        # Test should return None when not found
+        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        assert found_path is None
+
+    @pytest.mark.asyncio
+    async def test_multi_location_checklist_lookup(self, requestdoc_tool, temp_project_dir):
+        """Test PROJECT-CHECKLIST.md multi-location lookup"""
+        # Create checklist in .coord/
+        coord_dir = temp_project_dir / ".coord"
+        coord_dir.mkdir(exist_ok=True)
+        coord_checklist = coord_dir / "PROJECT-CHECKLIST.md"
+        coord_checklist.write_text("CHECKLIST::coord_location")
+
+        # Test should find in .coord/
+        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CHECKLIST.md")
+        assert found_path == coord_checklist
+        assert found_path.read_text() == "CHECKLIST::coord_location"
