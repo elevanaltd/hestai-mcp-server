@@ -10,7 +10,7 @@ Part of the Context Steward session lifecycle management system.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from mcp.types import TextContent
 from pydantic import BaseModel, Field
@@ -38,7 +38,7 @@ class AnchorSubmitRequest(BaseModel):
 
     session_id: str = Field(..., description="Session ID from clock_in")
     working_dir: str = Field(..., description="Project root path")
-    anchor: Dict = Field(..., description="SHANK + ARM + FLUKE structure")
+    anchor: dict = Field(..., description="SHANK + ARM + FLUKE structure")
 
 
 class AnchorSubmitTool(BaseTool):
@@ -184,12 +184,10 @@ class AnchorSubmitTool(BaseTool):
 
         except Exception as e:
             logger.error(f"Error in anchor_submit: {str(e)}")
-            error_output = ToolOutput(
-                status="error", content=f"Error validating anchor: {str(e)}", content_type="text"
-            )
+            error_output = ToolOutput(status="error", content=f"Error validating anchor: {str(e)}", content_type="text")
             return [TextContent(type="text", text=error_output.model_dump_json())]
 
-    def _validate_anchor_structure(self, anchor: Dict) -> Dict[str, Any]:
+    def _validate_anchor_structure(self, anchor: dict) -> dict[str, Any]:
         """
         Validate that anchor has complete SHANK+ARM+FLUKE structure.
 
@@ -232,7 +230,7 @@ class AnchorSubmitTool(BaseTool):
 
         return {"valid": True, "error": None}
 
-    def _detect_drift(self, anchor: Dict, session_data: Dict) -> Optional[str]:
+    def _detect_drift(self, anchor: dict, session_data: dict) -> Optional[str]:
         """
         Detect phase drift between anchor and session metadata.
 
@@ -269,7 +267,7 @@ class AnchorSubmitTool(BaseTool):
 
         return None
 
-    def _get_enforcement_rules(self, role: str) -> Dict[str, List[str]]:
+    def _get_enforcement_rules(self, role: str) -> dict[str, list[str]]:
         """
         Get enforcement rules for the given role.
 
