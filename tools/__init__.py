@@ -4,10 +4,13 @@ Focused on complex, multi-step workflows requiring premium models
 """
 
 from .analyze import AnalyzeTool
+from .anchorsubmit import AnchorSubmitTool
 from .apilookup import LookupTool
 from .challenge import ChallengeTool
 from .chat import ChatTool
 from .clink import CLinkTool
+from .clockin import ClockInTool
+from .clockout import ClockOutTool
 from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
 from .critical_engineer import CriticalEngineerTool
@@ -16,6 +19,7 @@ from .listmodels import ListModelsTool
 from .planner import PlannerTool
 from .precommit import PrecommitTool
 from .refactor import RefactorTool
+from .requestdoc import RequestDocTool
 from .secaudit import SecauditTool
 from .testguard import RequirementsTool
 from .thinkdeep import ThinkDeepTool
@@ -26,8 +30,11 @@ __all__ = [
     "ThinkDeepTool",
     "DebugIssueTool",
     "AnalyzeTool",
+    "AnchorSubmitTool",
     "ChatTool",
     "CLinkTool",
+    "ClockInTool",
+    "ClockOutTool",
     "CodeReviewTool",
     "ConsensusTool",
     "CriticalEngineerTool",
@@ -36,6 +43,7 @@ __all__ = [
     "PlannerTool",
     "PrecommitTool",
     "RefactorTool",
+    "RequestDocTool",
     "ChallengeTool",
     "RequirementsTool",
     "SecauditTool",

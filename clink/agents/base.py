@@ -166,12 +166,13 @@ class BaseCLIAgent:
                 pid,
             )
 
-            # Cancel the communicate task
+            # Cancel the communicate task and suppress any exception when awaiting
+            # (the task may have already completed with TimeoutError, which would re-raise)
             communicate_task.cancel()
             try:
                 await communicate_task
-            except asyncio.CancelledError:
-                pass
+            except Exception:
+                pass  # Suppress any exception - we're in cleanup mode
 
             # Kill the process (and entire process group on POSIX)
             await self._kill_process_tree(process, use_process_group)
@@ -191,8 +192,8 @@ class BaseCLIAgent:
             communicate_task.cancel()
             try:
                 await communicate_task
-            except asyncio.CancelledError:
-                pass
+            except Exception:
+                pass  # Suppress any exception - we're in cleanup mode
             await self._kill_process_tree(process, use_process_group)
             raise
 
