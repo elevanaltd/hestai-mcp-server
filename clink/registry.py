@@ -10,6 +10,7 @@ from pathlib import Path
 
 from clink.constants import (
     CONFIG_DIR,
+    DEFAULT_SILENCE_TIMEOUT_SECONDS,
     DEFAULT_TIMEOUT_SECONDS,
     INTERNAL_DEFAULTS,
     PROJECT_ROOT,
@@ -142,6 +143,7 @@ class ClinkRegistry:
         timeout_seconds = raw.timeout_seconds or (
             internal_defaults.timeout_seconds if internal_defaults else DEFAULT_TIMEOUT_SECONDS
         )
+        silence_timeout_seconds = raw.silence_timeout_seconds or DEFAULT_SILENCE_TIMEOUT_SECONDS
 
         parser_name = internal_defaults.parser
         if not parser_name:
@@ -162,6 +164,7 @@ class ClinkRegistry:
             config_args=config_args,
             env=env,
             timeout_seconds=int(timeout_seconds),
+            silence_timeout_seconds=int(silence_timeout_seconds),
             parser=parser_name,
             roles=roles,
             output_to_file=output_to_file,

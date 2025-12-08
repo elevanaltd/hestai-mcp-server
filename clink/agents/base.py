@@ -121,56 +121,65 @@ class BaseCLIAgent:
 
         pid = process.pid
         timeout_seconds = self.client.timeout_seconds
+        silence_timeout_seconds = self.client.silence_timeout_seconds
 
         self._logger.info(
-            "[SUBPROCESS] Started CLI '%s' (PID=%d, process_group=%s, timeout=%ds)",
+            "[SUBPROCESS] Started CLI '%s' (PID=%d, process_group=%s, timeout=%ds, silence_timeout=%ds)",
             self.client.name,
             pid,
             use_process_group,
             timeout_seconds,
+            silence_timeout_seconds,
         )
 
         # Use two-stage timeout pattern to avoid hanging on cleanup
-        communicate_task = asyncio.create_task(process.communicate(prompt.encode("utf-8")))
+        communicate_task = asyncio.create_task(
+            self._communicate_with_watchdog(
+                process,
+                prompt.encode("utf-8"),
+                timeout_seconds,
+                silence_timeout_seconds,
+            )
+        )
 
         try:
-            # Wait for subprocess to complete with timeout
-            done, pending = await asyncio.wait({communicate_task}, timeout=timeout_seconds)
+            # Wait for subprocess to complete (the task handles the timeouts internally)
+            stdout_bytes, stderr_bytes = await communicate_task
 
-            if communicate_task in done:
-                # Normal completion
-                stdout_bytes, stderr_bytes = communicate_task.result()
-                duration = time.monotonic() - start_time
-                self._logger.info(
-                    "[SUBPROCESS] CLI '%s' (PID=%d) completed normally in %.1fs",
-                    self.client.name,
-                    pid,
-                    duration,
-                )
-            else:
-                # Timeout occurred - need to kill process and cleanup
-                duration = time.monotonic() - start_time
-                self._logger.error(
-                    "[SUBPROCESS] TIMEOUT after %.1fs for CLI '%s' (PID=%d) - initiating kill sequence",
-                    duration,
-                    self.client.name,
-                    pid,
-                )
+            # Normal completion
+            duration = time.monotonic() - start_time
+            self._logger.info(
+                "[SUBPROCESS] CLI '%s' (PID=%d) completed normally in %.1fs",
+                self.client.name,
+                pid,
+                duration,
+            )
 
-                # Cancel the communicate task first
-                communicate_task.cancel()
-                try:
-                    await communicate_task
-                except asyncio.CancelledError:
-                    pass
+        except (asyncio.TimeoutError, TimeoutError) as exc:
+            # Timeout occurred (either total or silence) - need to kill process and cleanup
+            duration = time.monotonic() - start_time
+            self._logger.error(
+                "[SUBPROCESS] %s after %.1fs for CLI '%s' (PID=%d) - initiating kill sequence",
+                str(exc),
+                duration,
+                self.client.name,
+                pid,
+            )
 
-                # Kill the process (and entire process group on POSIX)
-                await self._kill_process_tree(process, use_process_group)
+            # Cancel the communicate task
+            communicate_task.cancel()
+            try:
+                await communicate_task
+            except asyncio.CancelledError:
+                pass
 
-                raise CLIAgentError(
-                    f"CLI '{self.client.name}' timed out after {timeout_seconds} seconds (PID={pid})",
-                    returncode=None,
-                )
+            # Kill the process (and entire process group on POSIX)
+            await self._kill_process_tree(process, use_process_group)
+
+            raise CLIAgentError(
+                f"CLI '{self.client.name}' failed: {exc} (PID={pid})",
+                returncode=None,
+            )
 
         except asyncio.CancelledError:
             # Task was cancelled externally - still need to cleanup
@@ -308,6 +317,83 @@ class BaseCLIAgent:
                 pid,
                 CLEANUP_TIMEOUT_SECONDS,
             )
+
+    async def _communicate_with_watchdog(
+        self,
+        process: asyncio.subprocess.Process,
+        input_data: bytes,
+        timeout_seconds: int,
+        silence_timeout_seconds: int,
+    ) -> tuple[bytes, bytes]:
+        """Communicate with process while monitoring for silence/hangs.
+
+        Reads stdout/stderr line-by-line. If no output is received on either channel
+        for `silence_timeout_seconds`, raises TimeoutError.
+        """
+        stdout_chunks: list[bytes] = []
+        stderr_chunks: list[bytes] = []
+
+        last_activity_time = time.monotonic()
+        start_time = time.monotonic()
+
+        async def read_stream(stream: asyncio.StreamReader, chunks: list[bytes]) -> None:
+            nonlocal last_activity_time
+            while True:
+                line = await stream.readline()
+                if not line:
+                    break
+                chunks.append(line)
+                last_activity_time = time.monotonic()
+
+        # Write input to stdin and close it
+        if process.stdin:
+            try:
+                process.stdin.write(input_data)
+                await process.stdin.drain()
+                process.stdin.close()
+            except (BrokenPipeError, ConnectionResetError):
+                # Process might have exited immediately or closed stdin
+                pass
+
+        # Start reading tasks
+        stdout_task = asyncio.create_task(read_stream(process.stdout, stdout_chunks))  # type: ignore
+        stderr_task = asyncio.create_task(read_stream(process.stderr, stderr_chunks))  # type: ignore
+        wait_task = asyncio.create_task(process.wait())
+
+        tasks = [stdout_task, stderr_task, wait_task]
+
+        try:
+            while not wait_task.done():
+                now = time.monotonic()
+
+                # Check total timeout
+                if now - start_time > timeout_seconds:
+                    raise asyncio.TimeoutError(f"Total timeout reached ({timeout_seconds}s)")
+
+                # Check silence timeout
+                if now - last_activity_time > silence_timeout_seconds:
+                    raise asyncio.TimeoutError(f"Silence timeout reached ({silence_timeout_seconds}s without output)")
+
+                # Wait briefly for any task to complete
+                # We use a short timeout (1s) to allow frequent silence checks
+                done, _ = await asyncio.wait(tasks, timeout=1.0, return_when=asyncio.FIRST_COMPLETED)
+
+                if wait_task in done:
+                    break
+
+            # Process finished, ensure we consume remaining output
+            await asyncio.gather(stdout_task, stderr_task)
+
+        except Exception:
+            # Ensure tasks are cancelled on error/timeout
+            for t in tasks:
+                if not t.done():
+                    t.cancel()
+            # Wait for cancellations to propagate
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
+
+        return b"".join(stdout_chunks), b"".join(stderr_chunks)
 
     def _build_command(self, *, role: ResolvedCLIRole, system_prompt: str | None) -> list[str]:
         base = list(self.client.executable)
