@@ -25,8 +25,9 @@ def temp_hestai_dir(tmp_path):
     active_dir.mkdir(parents=True)
     archive_dir.mkdir(parents=True)
 
-    # Create active session - use same session_id as temp_claude_session fixture
-    session_id = "78f5deb1-9e48-4b7b-b7a3-41bd7467c903"
+    # Create active session - use unique session_id for testing to avoid conflicts
+    # Using a different UUID than production sessions to prevent temporal beacon collisions
+    session_id = "test-clockout-00000000-0000-0000-0000-000000000001"
     session_dir = active_dir / session_id
     session_dir.mkdir()
 
@@ -53,7 +54,8 @@ def temp_claude_session(tmp_path):
     projects_dir = Path.home() / ".claude" / "projects" / encoded_path
     projects_dir.mkdir(parents=True, exist_ok=True)
 
-    session_id = "78f5deb1-9e48-4b7b-b7a3-41bd7467c903"
+    # Use the same unique test session_id to match temp_hestai_dir fixture
+    session_id = "test-clockout-00000000-0000-0000-0000-000000000001"
     jsonl_path = projects_dir / f"{session_id}.jsonl"
 
     # Create sample JSONL content
