@@ -31,10 +31,10 @@ ACTIVE_FOCUS::"Context Steward v2 - Phase 2 Complete, Phase 3 Next"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
 
 RECENT_ACHIEVEMENTS::[
+  "Updated global HestAI docs with MCP session tools (CLAUDE.md, HESTAI-SYSTEM-OVERVIEW.md)",
   "#91 Conflict detection with continuation_id dialogue (CLOSED)",
   "#90 AI prompt enrichment with git/test/authority signals (CLOSED)",
   "Fixed 3 pre-existing test failures (DISABLED_TOOLS, session UUID collision)",
-  "Phase 1 Foundation complete (#82-89 all Done)",
   "Phase 2 AI Intelligence complete (#90-91 Done)"
 ]
 
@@ -94,7 +94,7 @@ UNIT_TESTS::"pytest tests/ -v -m 'not integration'"
 CLOCKIN::"Session registration and context initialization"[implemented]
 CLOCKOUT::"Session archival and transcript extraction"[implemented]
 ANCHORSUBMIT::"Agent anchor validation"[implemented]
-REQUESTDOC::"Documentation routing and placement"[implemented]
+REQUESTDOC::"Documentation routing and placement"[deprecated→use_document_submit]
 CHAT::"Multi-model conversation orchestration"[implemented]
 CLINK::"External CLI delegation"[implemented]
 CONSENSUS::"Multi-model consensus building"[implemented]
@@ -116,11 +116,11 @@ BASE_BRANCH::"main"
 STATUS::"clean working tree"
 
 RECENT_COMMITS::[
+  "9baea58::docs: Update PROJECT-CONTEXT.md with Phase 2 completion status",
   "188c1bc::feat: Add section-aware conflict detection with continuation_id (#91)",
   "b7e64c8::fix: Exclude decision-records from linting",
   "1716a70::fix: Clear DISABLED_TOOLS in test config",
-  "601892d::chore: Archive session transcripts",
-  "c9d1523::feat: Add gather_signals function for AI context enrichment"
+  "601892d::chore: Archive session transcripts"
 ]
 
 QUALITY_STATUS::[
