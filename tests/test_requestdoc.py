@@ -41,8 +41,13 @@ def temp_hestai_dir(tmp_path):
 
 @pytest.fixture
 def requestdoc_tool():
-    """Create a RequestDocTool instance"""
-    return RequestDocTool()
+    """Create a RequestDocTool instance with AI disabled for template fallback tests"""
+    tool = RequestDocTool()
+    # Mock AI helper to be disabled (returns False for is_task_enabled)
+    # This ensures tests exercise the template fallback path, not the AI path
+    mock_ai = type("obj", (object,), {"is_task_enabled": lambda self, task: False})()
+    tool._ai_helper = mock_ai
+    return tool
 
 
 class TestRequestDocTool:
