@@ -584,6 +584,49 @@ STATUS::Active
             assert response["status"] in ["success", "skipped"]
 
     @pytest.mark.asyncio
+    async def test_ai_truncated_content_triggers_fallback(self, tool, mock_project):
+        """Test that AI returning truncated content triggers fallback to simple append."""
+        # Mock AI returning truncated placeholder content
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            # AI returns short placeholder instead of full merged content
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "success_176_LOC_within_target",
+                    "artifacts": [{"content": "success_176_LOC_within_target"}],
+                }
+            )
+
+            request = ContextUpdateRequest(
+                target="PROJECT-CONTEXT",
+                intent="Add substantial feature documentation",
+                content="## NEW_FEATURE\nThis is a substantial feature with documentation",
+                working_dir=str(mock_project),
+            )
+
+            result = await tool.run(request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed using fallback
+            assert response["status"] == "success"
+
+            # Verify the final content contains both existing and new content
+            context_file = mock_project / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+            final_content = context_file.read_text()
+
+            # Should have original content
+            assert "## IDENTITY" in final_content
+            assert "NAME::TestProject" in final_content
+
+            # Should have new content (from fallback append)
+            assert "## NEW_FEATURE" in final_content
+
+            # Should NOT have the placeholder text
+            assert "success_176_LOC_within_target" not in final_content
+
+    @pytest.mark.asyncio
     async def test_invalid_continuation_id_rejected(self, tool, mock_project):
         """Test that invalid continuation_id formats are rejected (security fix)."""
         # Attempt path traversal
