@@ -1,0 +1,204 @@
+name: Sync Phase Field to Labels (Enhanced)
+
+on:
+  issues:
+    types: [opened, edited, transferred]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
+
+permissions:
+  issues: write
+  contents: write
+
+jobs:
+  sync-phase-labels:
+    runs-on: ubuntu-latest
+    name: Sync Phase field to labels with manual change detection
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup GitHub CLI
+        run: gh --version
+
+      - name: Get last sync timestamp
+        id: last_sync
+        run: |
+          if [ -f .github/last-phase-sync.txt ]; then
+            LAST_SYNC=$(cat .github/last-phase-sync.txt)
+            echo "last_sync=$LAST_SYNC" >> $GITHUB_OUTPUT
+            echo "ℹ Last sync timestamp: $LAST_SYNC"
+          else
+            echo "last_sync=0" >> $GITHUB_OUTPUT
+            echo "ℹ First run - no previous sync"
+          fi
+
+      - name: Sync Phase field to labels (with manual override detection)
+        id: sync
+        run: |
+          #!/bin/bash
+          set -euo pipefail
+
+          PROJECT_ID="4"
+          ORG="elevanaltd"
+          REPO="hestai-mcp-server"
+          LAST_SYNC="${{ steps.last_sync.outputs.last_sync }}"
+
+          declare -A PHASE_MAP=(
+            ["Phase 0: KERNEL"]="phase-0"
+            ["Phase 1: SCHEMA"]="phase-1"
+            ["Phase 2: EFFECTORS"]="phase-2"
+            ["Phase 3: INTELLIGENCE"]="phase-3"
+            ["Phase 4: TRANSITION"]="phase-4"
+            ["Phase 5: GOVERNANCE"]="phase-5"
+          )
+
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          BLUE='\033[0;34m'
+          NC='\033[0m'
+
+          log_info() { echo -e "${GREEN}ℹ${NC} $1"; }
+          log_override() { echo -e "${BLUE}⚡${NC} $1"; }
+          log_success() { echo -e "${GREEN}✓${NC} $1"; }
+
+          get_project_items() {
+            gh project item-list "$PROJECT_ID" --owner "$ORG" --format json | jq -c '.items[]'
+          }
+
+          get_phase_value() {
+            local issue_num=$1
+            gh api graphql -f query='query($org:String!,$repo:String!,$issueNum:Int!){repository(owner:$org,name:$repo){issue(number:$issueNum){projectItems(first:10){nodes{project{number}fieldValues(first:20){nodes{...on ProjectV2ItemFieldTextValue{field{name}text}}}}}}}}}' \
+              -f org="$ORG" -f repo="$REPO" -f issueNum="$issue_num" \
+              | jq -r '.data.repository.issue.projectItems.nodes[]|select(.project.number=='$PROJECT_ID').fieldValues.nodes[]|select(.field.name=="Phase").text//empty' 2>/dev/null || echo ""
+          }
+
+          get_current_phase_labels() {
+            local issue_num=$1
+            gh issue view "$issue_num" --repo "$ORG/$REPO" --json labels | jq -r '.labels[]|select(.name|startswith("phase-")).name' | tr '\n' ',' | sed 's/,$//' 2>/dev/null || echo ""
+          }
+
+          get_issue_updated_at() {
+            local issue_num=$1
+            gh issue view "$issue_num" --repo "$ORG/$REPO" --json updatedAt | jq -r '.updatedAt' 2>/dev/null || echo ""
+          }
+
+          convert_iso_to_epoch() {
+            local iso_date=$1
+            date -u -d "$iso_date" +%s 2>/dev/null || echo "0"
+          }
+
+          detect_manual_override() {
+            local issue_num=$1
+            local last_sync=$2
+            local updated_at=$(get_issue_updated_at "$issue_num")
+            [ -z "$updated_at" ] && return 1
+            local updated_epoch=$(convert_iso_to_epoch "$updated_at")
+            [ "$updated_epoch" -gt "$last_sync" ]
+          }
+
+          remove_phase_labels() {
+            local issue_num=$1
+            local labels=$(get_current_phase_labels "$issue_num")
+            [ -z "$labels" ] && return 0
+            IFS=',' read -ra LABEL_ARRAY <<< "$labels"
+            for label in "${LABEL_ARRAY[@]}"; do
+              gh issue edit "$issue_num" --repo "$ORG/$REPO" --remove-label "$label" > /dev/null 2>&1
+              log_info "Removed label: $label from #$issue_num"
+            done
+          }
+
+          add_phase_label() {
+            local issue_num=$1
+            local label=$2
+            gh issue edit "$issue_num" --repo "$ORG/$REPO" --add-label "$label" > /dev/null 2>&1
+            log_success "Added label: $label to #$issue_num"
+          }
+
+          create_override_notice() {
+            local issue_num=$1
+            local phase_value=$2
+            local target_label=$3
+
+            local comment_body="🤖 **Phase Label Sync Notice**
+
+I detected a manual label change on this issue after my last sync.
+
+**Current state:**
+- Phase field value: \`$phase_value\`
+- Expected label: \`$target_label\`
+
+**What happened:**
+The label was manually changed since the last sync. The Phase field is the authoritative source of truth, so I'm reverting the label to match.
+
+**If you need to change the phase:**
+Please update the Phase field directly in the GitHub Project instead of changing labels.
+
+---
+*Automated notice from Phase Label Sync - Phase field is the source of truth.*"
+
+            gh issue comment "$issue_num" --repo "$ORG/$REPO" --body "$comment_body" > /dev/null 2>&1
+            log_override "Created override notice on #$issue_num"
+          }
+
+          log_info "Starting Phase field → label sync (with override detection)"
+
+          local total=0 updated=0 overrides=0 errors=0
+
+          while IFS= read -r item; do
+            issue_num=$(echo "$item" | jq -r '.content.number')
+            [ -z "$issue_num" ] && continue
+            ((total++))
+
+            phase_value=$(get_phase_value "$issue_num" || true)
+            [ -z "$phase_value" ] && continue
+
+            target_label="${PHASE_MAP[$phase_value]:-}"
+            [ -z "$target_label" ] && { ((errors++)); continue; }
+
+            current_labels=$(get_current_phase_labels "$issue_num")
+            [ "$current_labels" = "$target_label" ] && continue
+
+            if detect_manual_override "$issue_num" "$LAST_SYNC"; then
+              ((overrides++))
+              log_override "#$issue_num: Manual override detected!"
+              create_override_notice "$issue_num" "$phase_value" "$target_label"
+            fi
+
+            [ -n "$current_labels" ] && remove_phase_labels "$issue_num"
+            add_phase_label "$issue_num" "$target_label"
+            ((updated++))
+
+          done < <(get_project_items)
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          log_success "Sync Complete"
+          echo "  Total items: $total"
+          echo "  Updated: $updated"
+          echo "  Manual overrides detected: $overrides"
+          echo "  Errors: $errors"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          echo "total=$total" >> $GITHUB_OUTPUT
+          echo "updated=$updated" >> $GITHUB_OUTPUT
+          echo "overrides=$overrides" >> $GITHUB_OUTPUT
+
+          [ $errors -eq 0 ] || exit 1
+
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update last sync timestamp
+        if: success()
+        run: |
+          echo "$(date -u +%s)" > .github/last-phase-sync.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/last-phase-sync.txt
+          git commit -m "chore: Update phase sync timestamp" || true
+          git push || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
