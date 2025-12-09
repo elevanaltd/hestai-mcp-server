@@ -15,6 +15,7 @@ from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
 from .critical_engineer import CriticalEngineerTool
 from .debug import DebugIssueTool
+from .documentsubmit import DocumentSubmitTool
 from .listmodels import ListModelsTool
 from .planner import PlannerTool
 from .precommit import PrecommitTool
@@ -38,6 +39,7 @@ __all__ = [
     "CodeReviewTool",
     "ConsensusTool",
     "CriticalEngineerTool",
+    "DocumentSubmitTool",
     "ListModelsTool",
     "LookupTool",
     "PlannerTool",

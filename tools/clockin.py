@@ -17,6 +17,10 @@ from typing import Any, Optional
 from mcp.types import TextContent
 from pydantic import BaseModel, Field
 
+from tools.context_steward.context_validator import (
+    validate_context_negatives,
+    validate_state_vector,
+)
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
 
@@ -156,6 +160,12 @@ class ClockInTool(BaseTool):
                 "checklist": ".hestai/context/PROJECT-CHECKLIST.md",
             }
 
+            # Load and validate state vector if exists
+            state_vector_data = self._load_state_vector(context_dir)
+
+            # Load and validate context negatives if exists
+            context_negatives_data = self._load_context_negatives(context_dir)
+
             # Create response content
             content = {
                 "session_id": session_id,
@@ -163,6 +173,14 @@ class ClockInTool(BaseTool):
                 "conflict": conflict,
                 "instruction": "Read context_paths. Produce Full RAPH. Submit anchor.",
             }
+
+            # Add state vector if available and valid
+            if state_vector_data:
+                content.update(state_vector_data)
+
+            # Add context negatives if available and valid
+            if context_negatives_data:
+                content.update(context_negatives_data)
 
             tool_output = ToolOutput(
                 status="success",
@@ -225,6 +243,80 @@ class ClockInTool(BaseTool):
                 continue
 
         return None
+
+    def _load_state_vector(self, context_dir: Path) -> Optional[dict]:
+        """
+        Load and validate state vector if it exists.
+
+        Args:
+            context_dir: Path to .hestai/context directory
+
+        Returns:
+            Dict with state_vector key if valid, None otherwise
+        """
+        state_vector_path = context_dir / "current_state.oct"
+
+        if not state_vector_path.exists():
+            return None
+
+        try:
+            content = state_vector_path.read_text()
+
+            # Validate before including
+            validation = validate_state_vector(content)
+
+            if validation.is_valid:
+                # Include content directly if < 1KB, otherwise include path
+                if len(content) < 1024:
+                    logger.info("Including state vector content in clock_in response")
+                    return {"state_vector": content}
+                else:
+                    logger.info("State vector > 1KB, including path instead")
+                    return {"state_vector": str(state_vector_path)}
+            else:
+                logger.warning(f"State vector validation failed: {', '.join(validation.errors)}")
+                return {"validation_warning": f"State vector invalid: {', '.join(validation.errors)}"}
+
+        except Exception as e:
+            logger.error(f"Error loading state vector: {e}")
+            return None
+
+    def _load_context_negatives(self, context_dir: Path) -> Optional[dict]:
+        """
+        Load and validate context negatives if they exist.
+
+        Args:
+            context_dir: Path to .hestai/context directory
+
+        Returns:
+            Dict with context_negatives key if valid, None otherwise
+        """
+        negatives_path = context_dir / "CONTEXT-NEGATIVES.oct"
+
+        if not negatives_path.exists():
+            return None
+
+        try:
+            content = negatives_path.read_text()
+
+            # Validate before including
+            validation = validate_context_negatives(content)
+
+            if validation.is_valid:
+                # Include content directly if < 1KB, otherwise include path
+                if len(content) < 1024:
+                    logger.info("Including context negatives in clock_in response")
+                    return {"context_negatives": content}
+                else:
+                    logger.info("Context negatives > 1KB, including path instead")
+                    return {"context_negatives": str(negatives_path)}
+            else:
+                logger.warning(f"Context negatives validation failed: {', '.join(validation.errors)}")
+                return {"validation_warning": f"Context negatives invalid: {', '.join(validation.errors)}"}
+
+        except Exception as e:
+            logger.error(f"Error loading context negatives: {e}")
+            return None
 
     def get_model_category(self) -> ToolModelCategory:
         """Return the model category for this tool"""

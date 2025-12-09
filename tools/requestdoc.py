@@ -17,19 +17,13 @@ from mcp.types import TextContent
 from pydantic import BaseModel, Field
 
 from tools.context_steward.ai import ContextStewardAI
+from tools.context_steward.file_lookup import find_context_file
+from tools.context_steward.utils import append_changelog, sanitize_filename
+from tools.context_steward.visibility_rules import VISIBILITY_RULES
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_tool import BaseTool
 
 logger = logging.getLogger(__name__)
-
-
-# Visibility rules from ADR-003
-VISIBILITY_RULES = {
-    "adr": {"path": "docs/adr/", "format": "ADR_template"},
-    "context_update": {"path": ".hestai/context/", "format": "OCTAVE"},
-    "session_note": {"path": ".hestai/sessions/", "format": "OCTAVE"},
-    "workflow_update": {"path": ".hestai/workflow/", "format": "OCTAVE"},
-}
 
 # Map request types to Context Steward AI task keys
 TASK_MAPPING = {
@@ -203,11 +197,11 @@ class RequestDocTool(BaseTool):
                     # Read existing document if it exists (using multi-location lookup)
                     existing_content = None
                     if request.type == "context_update":
-                        context_file = self._find_context_file(project_root, "PROJECT-CONTEXT.md")
+                        context_file = find_context_file(project_root, "PROJECT-CONTEXT.md")
                         if context_file:
                             existing_content = context_file.read_text()
                     elif request.type == "workflow_update":
-                        checklist_file = self._find_context_file(project_root, "PROJECT-CHECKLIST.md")
+                        checklist_file = find_context_file(project_root, "PROJECT-CHECKLIST.md")
                         if checklist_file:
                             existing_content = checklist_file.read_text()
 
@@ -257,7 +251,7 @@ class RequestDocTool(BaseTool):
                         # Append to PROJECT-CHANGELOG.md if there's a changelog entry
                         changelog_entry = ai_result.get("changelog_entry")
                         if changelog_entry:
-                            self._append_changelog(project_root, changelog_entry, request.intent)
+                            append_changelog(project_root, changelog_entry, request.intent)
 
                         # Log compaction if it occurred
                         compaction = ai_result.get("compaction_performed", False)
@@ -293,7 +287,7 @@ class RequestDocTool(BaseTool):
             # Fallback to template-based document creation
             # Generate filename based on type and intent
             timestamp = datetime.now().strftime("%Y-%m-%d")
-            safe_intent = self._sanitize_filename(request.intent)
+            safe_intent = sanitize_filename(request.intent)
 
             if request.type == "adr":
                 # ADR filename: YYYY-MM-DD-description.md
@@ -338,96 +332,6 @@ class RequestDocTool(BaseTool):
                 status="error", content=f"Error routing documentation: {str(e)}", content_type="text"
             )
             return [TextContent(type="text", text=error_output.model_dump_json())]
-
-    def _find_context_file(self, project_root: Path, filename: str) -> Path | None:
-        """
-        Find context file in priority order across multiple locations.
-
-        Searches for the file in:
-        1. .hestai/context/
-        2. .coord/
-        3. project root
-
-        Args:
-            project_root: Project root directory
-            filename: Filename to search for (e.g., "PROJECT-CONTEXT.md")
-
-        Returns:
-            Path to found file, or None if not found in any location
-        """
-        search_paths = [
-            project_root / ".hestai" / "context" / filename,
-            project_root / ".coord" / filename,
-            project_root / filename,
-        ]
-
-        for path in search_paths:
-            if path.exists():
-                logger.debug(f"Found {filename} at {path}")
-                return path
-
-        logger.debug(f"{filename} not found in any location")
-        return None
-
-    def _append_changelog(self, project_root: Path, entry: str, intent: str) -> None:
-        """
-        Append entry to PROJECT-CHANGELOG.md.
-
-        Creates the changelog file if it doesn't exist with proper header.
-        Appends new entries at the top (most recent first).
-
-        Args:
-            project_root: Project root directory
-            entry: One-line changelog entry from AI
-            intent: Original intent for additional context
-        """
-        changelog_path = project_root / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
-
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        # Format the new entry
-        new_entry = f"## {timestamp}\n**{intent}**\n{entry}\n\n"
-
-        if changelog_path.exists():
-            # Read existing content and prepend new entry after header
-            existing = changelog_path.read_text()
-            # Find end of header (after first blank line following title)
-            header_end = existing.find("\n\n")
-            if header_end != -1:
-                header = existing[: header_end + 2]
-                rest = existing[header_end + 2 :]
-                updated = header + new_entry + rest
-            else:
-                updated = existing + "\n" + new_entry
-            changelog_path.write_text(updated)
-        else:
-            # Create new changelog with header
-            header = """# PROJECT-CHANGELOG
-
-*Audit trail of context updates. Most recent first.*
-
-"""
-            changelog_path.parent.mkdir(parents=True, exist_ok=True)
-            changelog_path.write_text(header + new_entry)
-
-        logger.info(f"Appended changelog entry: {entry[:50]}...")
-
-    def _sanitize_filename(self, text: str) -> str:
-        """
-        Sanitize text for use in filename.
-
-        Args:
-            text: Raw text to sanitize
-
-        Returns:
-            Sanitized filename-safe string
-        """
-        # Convert to lowercase, replace spaces with hyphens
-        sanitized = text.lower().replace(" ", "-")
-        # Remove any characters that aren't alphanumeric or hyphens
-        sanitized = "".join(c for c in sanitized if c.isalnum() or c == "-")
-        # Limit length
-        return sanitized[:50]
 
     def _create_document(self, doc_path: Path, request: RequestDocRequest, doc_format: str):
         """

@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from tools.context_steward.file_lookup import find_context_file
 from tools.requestdoc import RequestDocTool
 
 
@@ -392,7 +393,7 @@ class TestRequestDocFilesParameter:
         hestai_context.write_text("CONTEXT::hestai_location")
 
         # Test should find in .hestai/context/ first
-        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        found_path = find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
         assert found_path == hestai_context
         assert found_path.read_text() == "CONTEXT::hestai_location"
 
@@ -411,7 +412,7 @@ class TestRequestDocFilesParameter:
         coord_context.write_text("CONTEXT::coord_location")
 
         # Test should find in .coord/ when .hestai missing
-        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        found_path = find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
         assert found_path == coord_context
         assert found_path.read_text() == "CONTEXT::coord_location"
 
@@ -428,7 +429,7 @@ class TestRequestDocFilesParameter:
         root_context.write_text("CONTEXT::root_location")
 
         # Test should find in root when .hestai and .coord missing
-        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        found_path = find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
         assert found_path == root_context
         assert found_path.read_text() == "CONTEXT::root_location"
 
@@ -445,7 +446,7 @@ class TestRequestDocFilesParameter:
                 location.unlink()
 
         # Test should return None when not found
-        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
+        found_path = find_context_file(temp_project_dir, "PROJECT-CONTEXT.md")
         assert found_path is None
 
     @pytest.mark.asyncio
@@ -458,6 +459,6 @@ class TestRequestDocFilesParameter:
         coord_checklist.write_text("CHECKLIST::coord_location")
 
         # Test should find in .coord/
-        found_path = requestdoc_tool._find_context_file(temp_project_dir, "PROJECT-CHECKLIST.md")
+        found_path = find_context_file(temp_project_dir, "PROJECT-CHECKLIST.md")
         assert found_path == coord_checklist
         assert found_path.read_text() == "CHECKLIST::coord_location"
