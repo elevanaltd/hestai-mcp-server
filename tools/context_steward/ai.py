@@ -9,10 +9,12 @@ Provides:
 - Prompt template building with variable substitution
 - End-to-end task execution via clink with XML response parsing
 - Graceful degradation on errors
+- Runtime signal gathering for AI context enrichment
 """
 
 import json
 import logging
+import subprocess
 from pathlib import Path
 from typing import Any, Optional
 
@@ -23,6 +25,80 @@ logger = logging.getLogger(__name__)
 
 # Configuration file path (can be overridden for testing)
 CONFIG_FILE = Path(__file__).parent.parent.parent / "conf" / "context_steward.json"
+
+
+def gather_signals(working_dir: str) -> dict[str, str]:
+    """Gather runtime signals for AI context enrichment.
+
+    Collects contextual information about the current state of the project:
+    - Git branch and commit hash
+    - Quality gate status (lint, typecheck, test)
+    - Authority ownership from state vector
+
+    Args:
+        working_dir: Project working directory path
+
+    Returns:
+        Dictionary with signal keys:
+        - branch: Current git branch (fallback: "unknown")
+        - commit: Latest commit hash (fallback: "unknown")
+        - lint_status: Lint status ("passing", "failing", or "pending")
+        - typecheck_status: Typecheck status ("passing", "failing", or "pending")
+        - test_status: Test status ("passing", "failing", or "pending")
+        - authority: Authority owner from state vector (fallback: "unassigned")
+
+    Example:
+        >>> signals = gather_signals("/path/to/project")
+        >>> print(signals["branch"])
+        'feature/context-steward-octave'
+        >>> print(signals["commit"])
+        'dcb28e9abc123...'
+    """
+    signals = {
+        "branch": "unknown",
+        "commit": "unknown",
+        "lint_status": "pending",
+        "typecheck_status": "pending",
+        "test_status": "pending",
+        "authority": "unassigned",
+    }
+
+    # Gather git signals
+    try:
+        # Get current branch
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=working_dir,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            signals["branch"] = result.stdout.strip()
+
+        # Get latest commit hash
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=working_dir,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            signals["commit"] = result.stdout.strip()
+
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.debug(f"Git signal gathering failed (using fallbacks): {e}")
+
+    # Quality gate status would be gathered from recent CI runs or log files
+    # For now, we use "pending" as the default
+    # Future enhancement: Parse logs or CI status files
+
+    # Authority would be gathered from state vector or .hestai/state.json
+    # For now, we use "unassigned" as the default
+    # Future enhancement: Read from state management system
+
+    return signals
 
 
 class ContextStewardAI:
@@ -170,14 +246,16 @@ class ContextStewardAI:
 
         Orchestrates:
         1. Task enabled check
-        2. Prompt building from template
-        3. clink execution with system-steward role
-        4. XML response parsing
-        5. Error handling with graceful degradation
+        2. Signal gathering (branch, commit, quality gates, authority)
+        3. Prompt building from template with signals
+        4. clink execution with system-steward role
+        5. XML response parsing
+        6. Error handling with graceful degradation
 
         Args:
             task_key: Task identifier
-            **context: Variables for template substitution and clink params
+            **context: Variables for template substitution and clink params.
+                      Must include 'working_dir' for signal gathering.
 
         Returns:
             Dictionary with parsed response:
@@ -190,7 +268,9 @@ class ContextStewardAI:
 
         Example:
             >>> ai = ContextStewardAI()
-            >>> result = await ai.run_task("session_compression", session_id="abc123")
+            >>> result = await ai.run_task("session_compression",
+            ...                           session_id="abc123",
+            ...                           working_dir="/path/to/project")
             >>> if result["status"] == "success":
             ...     octave_content = result["artifacts"][0]["content"]
         """
@@ -202,8 +282,20 @@ class ContextStewardAI:
             config = self.load_config()
             task_config = config["tasks"][task_key]
 
-            # Build prompt from template
-            prompt = self.build_prompt(task_key, **context)
+            # Gather runtime signals if working_dir is provided
+            working_dir = context.get("working_dir", ".")
+            signals = gather_signals(working_dir)
+
+            # Merge signals into context (signals can be overridden by explicit context)
+            enriched_context = {**signals, **context}
+
+            logger.debug(
+                f"Enriched context for task '{task_key}': branch={signals['branch']}, "
+                f"commit={signals['commit'][:8]}..., quality_gates=pending"
+            )
+
+            # Build prompt from template with enriched context
+            prompt = self.build_prompt(task_key, **enriched_context)
 
             # Get CLI configuration
             cli_name = task_config.get("cli", config.get("default_cli", "gemini"))
