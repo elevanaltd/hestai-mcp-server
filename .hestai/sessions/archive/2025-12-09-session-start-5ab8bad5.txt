@@ -1,0 +1,350 @@
+================================================================================
+Claude Code Session Export
+Session ID: 5ab8bad5
+Role: holistic-orchestrator
+Focus: session-start
+Started: 2025-12-09T05:20:18.046482
+Exported: 2025-12-09T07:39:30.568905
+Description: Context Steward v2 implementation session - completed Phase 0 (Kernel), Phase 1 (Foundation), and Phase 2 core (context_update). 12 commits, 8 issues closed, ~110 new tests.
+Working Directory: /Volumes/HestAI-Tools/hestai-mcp-server
+================================================================================
+
+[assistant]
+I'll conduct a comprehensive audit of the `.coord/` → `.hestai/` migration feasibility.
+
+[assistant]
+Now I'll compile the comprehensive audit report:
+
+---
+
+# `.coord/` → `.hestai/` Migration Feasibility Audit
+
+**Date:** 2025-12-09  
+**Authority:** system-steward  
+**Scope:** EAV Monorepo (10-app ecosystem, 3.4MB coordination infrastructure)
+
+---
+
+## 1. STRUCTURE MAPPING
+
+### Core Mapping Table
+
+| `.coord/` Location | `.hestai/` Destination | Rationale | Git Tracking |
+|-------------------|----------------------|-----------|--------------|
+| `PROJECT-CONTEXT.md` | `.hestai/context/PROJECT-CONTEXT.md` | ✅ Direct match (MCP requirement) | Tracked |
+| `PROJECT-CHECKLIST.md` | `.hestai/context/PROJECT-CHECKLIST.md` | ✅ Direct match | Tracked |
+| `PROJECT-HISTORY.md` | `.hestai/context/PROJECT-HISTORY.md` | ✅ Direct match | Tracked |
+| `PROJECT-ROADMAP.md` | `.hestai/context/PROJECT-ROADMAP.md` | ✅ Reference has this | Tracked |
+| `DECISIONS.md` | `.hestai/workflow/decisions/DECISIONS.md` | Architectural decisions → workflow | Tracked |
+| `apps/{app}/` | `.hestai/context/apps/{app}/` | ✅ Reference has `apps/` placeholder | Tracked |
+| `workflow-docs/` | `.hestai/workflow/` | Methodology + North Star | Tracked |
+| `architecture-decisions/` | `.hestai/workflow/decisions/` | ADRs = permanent decisions | Tracked |
+| `test-context/` | `.hestai/workflow/test-context/` | ✅ Reference has placeholder | Tracked |
+| `sessions/` | `.hestai/sessions/archive/` | Session artifacts → archive | **Gitignored** |
+| `reports/` | `.hestai/reports/` | ✅ Direct match | Tracked |
+| `architecture-analysis/` | `.hestai/reports/architecture-analysis/` | Analysis → reports | Tracked |
+| `.archive/` | `.hestai/context/.archive/` | Historical artifacts | **Gitignored** |
+| `docs/`, `guides/`, `prompts/` | ⚠️ **UNMAPPED** | No clear `.hestai/` equivalent | TBD |
+| `logs/` | **Delete** (gitignored already) | Ephemeral log data | Gitignored |
+
+### Complexity Assessment: Per-App Contexts
+
+**Current `.coord/apps/` structure (10 apps):**
+```
+apps/
+├── copy-editor/
+│   ├── APP-CONTEXT.md (operational state)
+│   ├── APP-CHECKLIST.md (task tracking)
+│   └── APP-HISTORY.md (phase progression)
+├── scenes-web/ [same pattern]
+├── library-manager/
+│   ├── ARCHITECTURE.md (D3 blueprint)
+│   ├── UI-SPEC.md
+│   ├── BUILD-PLAN.md
+│   └── DATABASE.md
+└── [8 more apps...]
+```
+
+**Migration:** `.hestai/context/apps/` can handle this structure. Reference implementation shows `apps/` subdirectory support.
+
+---
+
+## 2. GIT TRACKING STRATEGY
+
+### Recommended `.gitignore` Updates
+
+**Current** (`.coord/` tracking):
+```gitignore
+# Track all .coord except archives and logs
+.coord/.archive/
+.coord/logs/
+```
+
+**Migrated** (`.hestai/` tracking):
+```gitignore
+# Sessions are ephemeral (MCP manages these)
+.hestai/sessions/
+
+# Archives and ephemeral data
+.hestai/context/.archive/
+.hestai/.DS_Store
+
+# Legacy .coord (during transition only)
+.coord/
+```
+
+### Visibility Rules Compliance
+
+| Rule | `.coord/` Behavior | `.hestai/` Behavior | Assessment |
+|------|-------------------|---------------------|------------|
+| **RULE_1:** Permanent architectural → `docs/` | ❌ Mixed (some in `.coord/architecture-decisions/`) | ⚠️ Needs `docs/` integration | **Gap** |
+| **RULE_2:** Operational state → `.hestai/context/` | ✅ Matches | ✅ Matches | **Aligned** |
+| **RULE_3:** Session artifacts → `.hestai/sessions/` | ✅ Matches | ✅ Matches (gitignored) | **Aligned** |
+| **RULE_4:** Methodology → `.hestai/workflow/` | ✅ Matches | ✅ Matches | **Aligned** |
+| **RULE_5:** Claude config → `.claude/` | ✅ Separate | ✅ Separate | **Aligned** |
+
+---
+
+## 3. MIGRATION SEQUENCE
+
+### Phase 1: Foundation (Low Risk)
+1. **Create `.hestai/` structure** with `.gitkeep` files:
+   ```bash
+   mkdir -p .hestai/{context,workflow,sessions,reports,history,rules}
+   mkdir -p .hestai/context/{apps,.archive}
+   mkdir -p .hestai/workflow/{decisions,test-context}
+   mkdir -p .hestai/sessions/{active,archive}
+   ```
+
+2. **Symlink core files** (test MCP integration):
+   ```bash
+   ln -s ../../.coord/PROJECT-CONTEXT.md .hestai/context/PROJECT-CONTEXT.md
+   ln -s ../../.coord/PROJECT-CHECKLIST.md .hestai/context/PROJECT-CHECKLIST.md
+   ```
+
+3. **Test MCP tools** (`clock_in`, `anchor_submit`) against symlinks
+
+### Phase 2: Content Migration (Medium Risk)
+4. **Move (not copy) structural content**:
+   ```bash
+   # Context files
+   mv .coord/PROJECT-*.md .hestai/context/
+   
+   # Workflow documentation
+   mv .coord/workflow-docs/* .hestai/workflow/
+   
+   # Decisions
+   mv .coord/DECISIONS.md .hestai/workflow/decisions/
+   mv .coord/architecture-decisions/* .hestai/workflow/decisions/
+   
+   # Test context
+   mv .coord/test-context/* .hestai/workflow/test-context/
+   
+   # Apps
+   mv .coord/apps/* .hestai/context/apps/
+   
+   # Reports
+   mv .coord/reports/* .hestai/reports/
+   ```
+
+5. **Update internal references** in markdown files:
+   - Search/replace `.coord/` → `.hestai/` in all files
+   - Update `CLAUDE.md` documentation paths
+
+### Phase 3: Cleanup (Low Risk)
+6. **Archive `.coord/`**:
+   ```bash
+   mv .coord .coord-archived-20251209
+   ```
+
+7. **Update `.gitignore`** per tracking strategy above
+
+8. **Update worktree symlinks** (if using worktrees):
+   - Verify symlink target is now `.hestai/` in main repo
+
+9. **Update CI/documentation paths** if referencing `.coord/`
+
+---
+
+## 4. COMPLEXITY PARITY ASSESSMENT
+
+### ✅ **GO** - `.hestai/` CAN handle EAV monorepo complexity
+
+**Evidence:**
+
+| Requirement | `.coord/` Support | `.hestai/` Support | Status |
+|-------------|------------------|-------------------|--------|
+| 10-app per-app contexts | ✅ `apps/{app}/` | ✅ `.hestai/context/apps/` | **Parity** |
+| North Star + methodology | ✅ `workflow-docs/` | ✅ `.hestai/workflow/` | **Parity** |
+| Architectural decisions | ✅ `architecture-decisions/` + `DECISIONS.md` | ✅ `.hestai/workflow/decisions/` | **Parity** |
+| Test infrastructure docs | ✅ `test-context/` | ✅ `.hestai/workflow/test-context/` | **Parity** |
+| Session artifacts | ✅ `sessions/` | ✅ `.hestai/sessions/archive/` | **Parity** |
+| Work reports | ✅ `reports/` | ✅ `.hestai/reports/` | **Parity** |
+| MCP tool compatibility | ❌ Not integrated | ✅ Native support | **Upgrade** |
+| Worktree symlink support | ❌ Manual | ✅ Standardized pattern | **Upgrade** |
+
+**Size validation:**
+- Current `.coord/` total: ~3.4MB (mostly logs/reports)
+- Active coordination docs: ~500KB (well within limits)
+- `.hestai/` tested with similar scale in reference implementation
+
+---
+
+## 5. GAPS AND MITIGATIONS
+
+### Gap 1: `docs/`, `guides/`, `prompts/` Unmapped ⚠️
+
+**Problem:** VISIBILITY-RULES.md says permanent architectural docs belong in `docs/` (outside `.hestai/`), but EAV monorepo has mixed content in `.coord/docs/`, `.coord/guides/`, `.coord/prompts/`.
+
+**Analysis:**
+- `.coord/docs/` = 1 file (disaster recovery playbook) → Could go to `docs/ops/`
+- `.coord/guides/` = 1 file (unknown) → Audit needed
+- `.coord/prompts/` = 2 files (resumption prompts) → Could merge into `.hestai/workflow/`
+
+**Mitigation:**
+```octave
+STRATEGY::[
+  AUDIT::categorize_each_file[permanent_architectural vs ephemeral_scaffolding],
+  PERMANENT→docs/[create_if_needed],
+  EPHEMERAL→.hestai/workflow/[merge_or_archive],
+  EMPTY→delete[clean_slate]
+]
+```
+
+### Gap 2: Architectural Decisions Placement 🔴
+
+**Problem:** VISIBILITY-RULES.md says permanent architectural decisions → `docs/` (ADR format), but current pattern tracks them in `.coord/architecture-decisions/` (git committed).
+
+**Analysis:**
+- EAV has **6 ADRs** + `DECISIONS.md` (OCTAVE compressed)
+- Reference implementation puts decisions in `.hestai/workflow/decisions/` (tracked)
+- VISIBILITY-RULES says `docs/` for permanent architecture
+
+**Conflict:** Reference implementation violates its own rules?
+
+**Mitigation:**
+```octave
+RESOLUTION::[
+  INTERPRETATION::ADRs_are_architectural[belongs_in_docs/],
+  DECISIONS.md::operational_binding_decisions[belongs_in_.hestai/workflow/decisions/],
+  MIGRATION::[
+    mv .coord/architecture-decisions/*.md docs/architecture-decisions/,
+    mv .coord/DECISIONS.md .hestai/workflow/decisions/DECISIONS.md
+  ],
+  RATIONALE::ADR_003_visibility_rules_enforced[permanent→docs, operational→.hestai]
+]
+```
+
+### Gap 3: Session Artifact Git Tracking Inconsistency
+
+**Problem:** EAV currently tracks `.coord/sessions/` in git, but `.hestai/sessions/` is gitignored.
+
+**Analysis:**
+- Current: Session handoffs committed for agent collaboration
+- Reference: Sessions ephemeral (MCP archives to `.txt`)
+
+**Mitigation:**
+```octave
+DECISION::[
+  ADOPT::reference_pattern[sessions_ephemeral],
+  BECAUSE::MCP_clock_out_handles_archival[programmatic_stewardship],
+  TRANSITION::archive_current_.coord/sessions→.hestai/sessions/archive/[one_time_migration],
+  FUTURE::rely_on_MCP_clock_out[no_manual_session_commits]
+]
+```
+
+### Gap 4: `.hestai/history/` Undefined
+
+**Problem:** Reference has `.hestai/history/` but it's empty with just `.gitkeep`.
+
+**Analysis:**
+- EAV has `PROJECT-HISTORY.md` (OCTAVE compressed historical context)
+- Unclear if `.hestai/history/` is for:
+  - Historical snapshots (versioned `PROJECT-CONTEXT.md`)?
+  - Archived session transcripts?
+  - Deprecated/replaced artifacts?
+
+**Mitigation:**
+```octave
+INTERPRETATION::[
+  .hestai/history/::archived_historical_snapshots[not_current_operational_state],
+  PROJECT-HISTORY.md::.hestai/context/PROJECT-HISTORY.md[current_historical_reference],
+  USAGE::future_snapshots[when_PROJECT-CONTEXT_reaches_bloat]
+]
+```
+
+---
+
+## 6. FINAL RECOMMENDATION
+
+### **GO** with Conditional Mitigations
+
+```octave
+VERDICT::MIGRATION_FEASIBLE[with_gap_resolution]
+
+CONFIDENCE::HIGH[
+  structure_parity::✅,
+  complexity_handling::✅,
+  MCP_integration::✅,
+  worktree_compatibility::✅
+]
+
+BLOCKERS::NONE[all_gaps_mitigatable]
+
+PREREQUISITES::[
+  1::resolve_docs_guides_prompts_placement[audit+categorize],
+  2::clarify_ADR_vs_DECISIONS_split[docs/ vs .hestai/workflow/decisions/],
+  3::adopt_session_gitignore_pattern[MCP_stewardship],
+  4::document_.hestai/history/_usage_pattern
+]
+
+MIGRATION_SEQUENCE::Phase_1[foundation+symlink_test]→Phase_2[content_migration]→Phase_3[cleanup]
+
+ESTIMATED_EFFORT::2-4_hours[
+  Phase_1::30min,
+  Phase_2::60-120min[search_replace+file_moves],
+  Phase_3::30min[verification]
+]
+
+RISK_LEVEL::LOW[
+  reversible::git_makes_rollback_trivial,
+  testable::symlink_phase_validates_MCP,
+  isolated::no_code_changes_required
+]
+```
+
+---
+
+## 7. RECOMMENDED NEXT STEPS
+
+1. **Resolve Gap 2** (ADR placement):
+   - Decision: Keep ADRs in `docs/architecture-decisions/` OR merge into `.hestai/workflow/decisions/`?
+   - Consult: Does reference implementation need to move its own ADRs to `docs/`?
+
+2. **Audit unmapped directories**:
+   ```bash
+   # Categorize each file
+   ls -lh .coord/docs/ .coord/guides/ .coord/prompts/
+   ```
+
+3. **Execute Phase 1** (symlink test):
+   - Create `.hestai/` structure
+   - Symlink `PROJECT-CONTEXT.md`, `PROJECT-CHECKLIST.md`
+   - Test `mcp__hestai__clockin` tool
+
+4. **Execute Phase 2** (migration) after validation
+
+5. **Update documentation**:
+   - `CLAUDE.md` → replace `.coord/` references with `.hestai/`
+   - Update agent constitutions if they reference `.coord/`
+
+---
+
+**Files Referenced:**
+- `/Volumes/HestAI-Tools/hestai-mcp-server/.hestai/rules/VISIBILITY-RULES.md`
+- `/Volumes/HestAI-Projects/eav-monorepo/.coord/` (audited 3.4MB structure)
+- `/Volumes/HestAI-Projects/eav-monorepo/.gitignore`
+
+================================================================================
+End of session (2 messages)
+================================================================================
