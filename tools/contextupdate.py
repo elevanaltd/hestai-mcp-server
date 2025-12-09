@@ -16,6 +16,12 @@ from mcp.types import TextContent
 from pydantic import BaseModel, Field
 
 from tools.context_steward.ai import ContextStewardAI
+from tools.context_steward.changelog_parser import (
+    detect_section_conflicts,
+    load_conflict_state,
+    parse_recent_changes,
+    store_conflict_state,
+)
 from tools.context_steward.file_lookup import find_context_file
 from tools.context_steward.inbox import process_inbox_item, submit_to_inbox
 from tools.context_steward.schemas import PROJECT_CONTEXT_SCHEMA
@@ -332,13 +338,84 @@ class ContextUpdateTool(BaseTool):
             existing_content = target_path.read_text()
             changelog_path = project_root / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
 
-            # 4. DETECT_CONFLICTS - Check for recent changes
-            conflicts = detect_recent_conflicts(changelog_path, request.target, minutes=30)
-            if conflicts:
-                logger.warning(f"Detected {len(conflicts)} potential conflicts for {request.target}")
-                # For now, log warning but continue (future: return continuation_id for resolution)
-                conflict_summary = "; ".join([f"{c['intent']} ({c['timestamp']})" for c in conflicts])
-                logger.info(f"Recent changes: {conflict_summary}")
+            # 4. DETECT_CONFLICTS - Check for section-level conflicts (Phase 2)
+            # If continuation_id provided, validate it corresponds to a real conflict
+            skip_detection = False
+            if request.continuation_id:
+                logger.info(f"Conflict resolution attempt via continuation_id: {request.continuation_id}")
+                # Security: load and validate conflict state exists and matches target
+                try:
+                    conflict_state = load_conflict_state(project_root, request.continuation_id)
+                except ValueError as e:
+                    # Invalid continuation_id format (path traversal attempt)
+                    logger.error(f"Invalid continuation_id: {e}")
+                    raise ValueError(f"Invalid continuation_id: {e}") from e
+
+                if not conflict_state:
+                    # No valid conflict state found - must go through detection
+                    logger.warning(
+                        f"No conflict state found for continuation_id {request.continuation_id}, "
+                        "falling back to conflict detection"
+                    )
+                    skip_detection = False
+                elif conflict_state.get("original_request", {}).get("target") != request.target:
+                    # Conflict state is for different target - suspicious
+                    logger.error(
+                        f"Continuation_id {request.continuation_id} is for "
+                        f"{conflict_state.get('original_request', {}).get('target')}, "
+                        f"but current request is for {request.target}"
+                    )
+                    raise ValueError("Continuation_id target mismatch")
+                else:
+                    # Valid continuation - skip detection and continue to merge
+                    logger.info(f"Resolving conflict: {conflict_state.get('conflict', {}).get('details')}")
+                    skip_detection = True
+                    # Clear conflict state after successful validation
+                    from tools.context_steward.changelog_parser import clear_conflict_state
+
+                    clear_conflict_state(project_root, request.continuation_id)
+
+            # Run conflict detection if no valid continuation_id
+            if not skip_detection:
+                # Parse recent changes from CHANGELOG
+                recent_entries = parse_recent_changes(changelog_path, minutes=30)
+
+                # Check for section-level conflicts
+                conflict_response = detect_section_conflicts(
+                    recent_entries=recent_entries,
+                    new_content=new_content,
+                    target=request.target,
+                )
+
+                if conflict_response:
+                    # Store conflict state for resolution via continuation_id
+                    store_conflict_state(
+                        project_root=project_root,
+                        conflict_id=conflict_response["continuation_id"],
+                        conflict_data=conflict_response,
+                        request_data=request.__dict__,
+                    )
+
+                    # Return conflict response (blocks merge until resolved)
+                    logger.warning(f"Section-level conflict detected: {conflict_response['details']['section']}")
+                    return [
+                        TextContent(
+                            type="text",
+                            text=ToolOutput(
+                                status="conflict",
+                                content=json.dumps(conflict_response, indent=2),
+                                content_type="json",
+                                metadata={"tool_name": self.name, "target": request.target},
+                            ).model_dump_json(),
+                        )
+                    ]
+
+                # Legacy: also check old-style conflicts for logging
+                conflicts = detect_recent_conflicts(changelog_path, request.target, minutes=30)
+                if conflicts:
+                    logger.info(f"Legacy detection: {len(conflicts)} potential conflicts for {request.target}")
+                    conflict_summary = "; ".join([f"{c['intent']} ({c['timestamp']})" for c in conflicts])
+                    logger.info(f"Recent changes: {conflict_summary}")
 
             # 5. MERGE - Use AI to intelligently merge content
             ai = ContextStewardAI()
@@ -378,12 +455,15 @@ class ContextUpdateTool(BaseTool):
 
             # 8. LOG - Append to changelog
             changelog_entry = f"Updated {request.target}"
-            if conflicts:
+            if "conflicts" in locals() and conflicts:
                 changelog_entry += f" (resolved {len(conflicts)} conflicts)"
             append_changelog(project_root, changelog_entry, request.intent)
 
             # 9. RETURN - Process inbox and return result
             process_inbox_item(project_root, uuid)
+
+            # Count conflicts for reporting (may be 0 if continuation_id path taken)
+            conflicts_count = len(conflicts) if "conflicts" in locals() else 0
 
             result = {
                 "status": "success",
@@ -392,7 +472,7 @@ class ContextUpdateTool(BaseTool):
                 "target_path": str(target_path.relative_to(project_root)),
                 "merged": True,
                 "compacted": len(merged_content.split("\n")) > max_loc,
-                "conflicts_detected": len(conflicts),
+                "conflicts_detected": conflicts_count,
                 "source": source,
             }
 

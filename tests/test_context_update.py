@@ -310,6 +310,136 @@ Modified CURRENT_STATE section
             assert result_data["conflicts_detected"] > 0
 
     @pytest.mark.asyncio
+    async def test_same_section_conflict_returns_conflict_response(self, tool, mock_project):
+        """Test same-section conflict returns conflict status with continuation_id (Phase 2)."""
+        # Add recent changelog entry modifying CURRENT_STATE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE section**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        # New request also modifying CURRENT_STATE (conflict!)
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Update CURRENT_STATE",
+            content="## CURRENT_STATE\nPHASE::B1",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        assert response["status"] == "conflict"
+        result_data = json.loads(response["content"])
+        assert result_data["conflict_type"] == "same_section_modified"
+        assert "CURRENT_STATE" in result_data["details"]["section"]
+        assert "continuation_id" in result_data
+
+    @pytest.mark.asyncio
+    async def test_unrelated_sections_no_conflict(self, tool, mock_project):
+        """Test unrelated section changes processed without conflict (Phase 2)."""
+        # Recent change to ARCHITECTURE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update ARCHITECTURE section**
+Added new service
+
+"""
+        changelog.write_text(changelog_content)
+
+        # New change to RECENT_ACHIEVEMENTS (different section, no conflict)
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Add achievement",
+            content="## RECENT_ACHIEVEMENTS\n- Completed feature X",
+            working_dir=str(mock_project),
+        )
+
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "Merged content",
+                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged"}],
+                }
+            )
+
+            result = await tool.run(request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed without conflict
+            assert response["status"] == "success"
+            result_data = json.loads(response["content"])
+            assert result_data.get("conflicts_detected", 0) == 0
+
+    @pytest.mark.asyncio
+    async def test_continuation_id_resolves_conflict(self, tool, mock_project):
+        """Test continuation_id allows conflict resolution (Phase 2)."""
+        # First, create a conflict
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Update CURRENT_STATE",
+            content="## CURRENT_STATE\nPHASE::B1",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+        response = json.loads(result[0].text)
+        assert response["status"] == "conflict"
+
+        # Get continuation_id
+        conflict_data = json.loads(response["content"])
+        continuation_id = conflict_data["continuation_id"]
+
+        # Now resolve with continuation_id
+        resolve_request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Confirm B2 phase",
+            content="## CURRENT_STATE\nPHASE::B2",
+            continuation_id=continuation_id,
+            working_dir=str(mock_project),
+        )
+
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "Resolved conflict",
+                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nResolved"}],
+                }
+            )
+
+            result = await tool.run(resolve_request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed after conflict resolution
+            assert response["status"] == "success"
+
+    @pytest.mark.asyncio
     async def test_loc_compaction_when_exceeded(self, tool, mock_project):
         """Test LOC limit exceeded triggers compaction to PROJECT-HISTORY.md."""
         # Create PROJECT-CONTEXT with content that will exceed 200 lines
@@ -452,6 +582,57 @@ STATUS::Active
             response = json.loads(result[0].text)
             # Should still succeed with simple append
             assert response["status"] in ["success", "skipped"]
+
+    @pytest.mark.asyncio
+    async def test_invalid_continuation_id_rejected(self, tool, mock_project):
+        """Test that invalid continuation_id formats are rejected (security fix)."""
+        # Attempt path traversal
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Bypass attempt",
+            content="## CURRENT_STATE\nBYPASS",
+            continuation_id="../../../etc/passwd",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        # Should return error
+        assert response["status"] == "error"
+        assert "Invalid continuation_id" in response["content"]
+
+    @pytest.mark.asyncio
+    async def test_fake_continuation_id_falls_back_to_detection(self, tool, mock_project):
+        """Test that fake continuation_id without state falls back to detection (security fix)."""
+        # Add recent changelog entry modifying CURRENT_STATE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE section**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        # Attempt bypass with valid-looking but non-existent continuation_id
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Bypass attempt",
+            content="## CURRENT_STATE\nPHASE::B1",
+            continuation_id="fake-bypass-12345678",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        # Should detect conflict (fallback to detection when state not found)
+        assert response["status"] == "conflict"
+        result_data = json.loads(response["content"])
+        assert "CURRENT_STATE" in result_data["details"]["section"]
 
 
 class TestConflictDetection:
