@@ -2,6 +2,13 @@ SYSTEM-STEWARD TASK: PROJECT_CONTEXT_UPDATE
 
 You are updating the PROJECT-CONTEXT.md file based on session findings.
 
+SIGNAL_CONTEXT::[
+  BRANCH::{{branch}},
+  COMMIT::{{commit}},
+  QUALITY_GATES::[lint={{lint_status}}, typecheck={{typecheck_status}}, test={{test_status}}],
+  AUTHORITY::{{authority}}
+]
+
 Current Context File:
 {{existing_context}}
 

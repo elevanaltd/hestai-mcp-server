@@ -4,6 +4,13 @@ You are compressing a session transcript into structured OCTAVE format.
 
 Goal: Extract key decisions, blockers, learnings, and next actions from the transcript.
 
+SIGNAL_CONTEXT::[
+  BRANCH::{{branch}},
+  COMMIT::{{commit}},
+  QUALITY_GATES::[lint={{lint_status}}, typecheck={{typecheck_status}}, test={{test_status}}],
+  AUTHORITY::{{authority}}
+]
+
 Session Context:
 - Session ID: {{session_id}}
 - Role: {{role}}
