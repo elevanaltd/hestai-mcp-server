@@ -23,7 +23,7 @@ RESPONSE::[
     "Updated task Y status to in_progress"
   ],
   ARTIFACTS::[
-    {type::workflow_update, path::".hestai/workflow/PROJECT-CHECKLIST.md", action::updated}
+    {type::workflow_update, path::".hestai/workflow/PROJECT-CHECKLIST.md", action::updated, content::"UPDATED_FILE_CONTENT"}
   ]
 ]
 

@@ -224,10 +224,15 @@ class RequestDocTool(BaseTool):
                     ai_context = {
                         "intent": request.intent,
                         "session_summary": request.content,  # Maps to {{session_summary}} in template
-                        "existing_context": existing_content or "",  # Maps to {{existing_context}} in template
                         "project_root": str(project_root),
                         "files": absolute_files,  # Pass absolute file paths to AI for analysis
                     }
+
+                    # Dynamic key assignment based on request type to match template placeholders
+                    if request.type == "workflow_update":
+                        ai_context["existing_checklist"] = existing_content or ""
+                    else:
+                        ai_context["existing_context"] = existing_content or ""
 
                     # Execute AI task
                     ai_result = await self.ai_helper.run_task(task_key, **ai_context)
@@ -235,12 +240,19 @@ class RequestDocTool(BaseTool):
                     if ai_result["status"] == "success":
                         logger.info(f"AI processing succeeded: {ai_result['summary']}")
 
-                        # Extract updated content from artifacts
+                        # Extract updated content from artifacts and write to disk
                         for artifact in ai_result.get("artifacts", []):
                             if artifact.get("type") in ["context_update", "workflow_update"]:
                                 artifact_path = project_root / artifact["path"]
-                                # Content would come from artifact, but for now just log
-                                logger.info(f"AI would update: {artifact_path}")
+                                if "content" in artifact:
+                                    try:
+                                        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+                                        artifact_path.write_text(artifact["content"])
+                                        logger.info(f"AI updated: {artifact_path}")
+                                    except Exception as e:
+                                        logger.error(f"Failed to write artifact {artifact_path}: {e}")
+                                else:
+                                    logger.warning(f"AI response missing content for {artifact_path}")
 
                         # Append to PROJECT-CHANGELOG.md if there's a changelog entry
                         changelog_entry = ai_result.get("changelog_entry")

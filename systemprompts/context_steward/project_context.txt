@@ -53,7 +53,7 @@ RESPONSE::[
   CHANGELOG_ENTRY::"One-line summary for PROJECT-CHANGELOG.md",
   COMPACTION_PERFORMED::true|false,
   ARTIFACTS::[
-    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged}
+    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged, content::"UPDATED_FILE_CONTENT"}
   ]
 ]
 
