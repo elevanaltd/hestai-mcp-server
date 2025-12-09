@@ -1,0 +1,46 @@
+STATE_VECTOR::[
+  IDENTITY::{
+    project_name:"HestAI MCP Server",
+    type:"Model Context Protocol Server",
+    purpose:"Orchestrate multiple AI models for enhanced code analysis and collaborative development",
+    origin:"Fork of zen-mcp-server, rebranded by Elevana Ltd",
+    version:"2.0.0-dev"
+  },
+  AUTHORITY::{
+    current_owner:"implementation-lead",
+    phase:"B2",
+    blocking_items:[],
+    session_id:"5ab8bad5",
+    last_updated:"2025-12-09T12:00:00Z"
+  },
+  QUALITY::{
+    branch:"feature/context-steward-octave",
+    lint_status:"pending",
+    typecheck_status:"pending",
+    test_status:"pass",
+    coverage:"Context Steward Kernel: 100% (21/21 tests)",
+    build_status:"n/a"
+  },
+  FOCUS::{
+    top_3_active_items:[
+      "Implement Context Steward v2 Kernel validation layer",
+      "Create State Vector and Context Negatives files",
+      "Integrate validators with existing MCP tools"
+    ],
+    next_milestone:"Phase 0 completion (Kernel validation)",
+    dependencies:[
+      "Quality gates (lint+typecheck+test) must pass before PR",
+      "Code review required before merge",
+      "Integration with clockin/requestdoc/anchorsubmit pending"
+    ]
+  },
+  SIGNALS::{
+    latest_commit:"cec4c38",
+    dependent_projects:[
+      "HestAI (uses MCP server for agent orchestration)",
+      "Elevana projects (leverage MCP tools)"
+    ],
+    last_deployment:"n/a (development branch)",
+    health_check:"All new tests passing, quality gates pending"
+  }
+]
