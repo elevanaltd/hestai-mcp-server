@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from tools.requestdoc import RequestDocTool
 from tools.context_steward.file_lookup import find_context_file
+from tools.requestdoc import RequestDocTool
 
 
 @pytest.fixture
