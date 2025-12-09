@@ -184,6 +184,7 @@ class ClockOutTool(BaseTool):
                         role=session_data.get("role", "unknown"),
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
+                        working_dir=str(project_root),  # For signal gathering
                         transcript_path=str(archive_path),
                     )
                     if result.get("status") == "success":

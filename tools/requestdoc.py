@@ -219,6 +219,7 @@ class RequestDocTool(BaseTool):
                         "intent": request.intent,
                         "session_summary": request.content,  # Maps to {{session_summary}} in template
                         "project_root": str(project_root),
+                        "working_dir": str(project_root),  # For signal gathering
                         "files": absolute_files,  # Pass absolute file paths to AI for analysis
                     }
 
@@ -228,7 +229,7 @@ class RequestDocTool(BaseTool):
                     else:
                         ai_context["existing_context"] = existing_content or ""
 
-                    # Execute AI task
+                    # Execute AI task with working_dir for signal gathering
                     ai_result = await self.ai_helper.run_task(task_key, **ai_context)
 
                     if ai_result["status"] == "success":

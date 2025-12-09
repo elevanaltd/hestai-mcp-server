@@ -12,6 +12,7 @@ Provides:
 - Runtime signal gathering for AI context enrichment
 """
 
+import asyncio
 import json
 import logging
 import subprocess
@@ -27,32 +28,17 @@ logger = logging.getLogger(__name__)
 CONFIG_FILE = Path(__file__).parent.parent.parent / "conf" / "context_steward.json"
 
 
-def gather_signals(working_dir: str) -> dict[str, str]:
-    """Gather runtime signals for AI context enrichment.
+def _gather_signals_sync(working_dir: str) -> dict[str, str]:
+    """Synchronous helper for signal gathering (internal use only).
 
-    Collects contextual information about the current state of the project:
-    - Git branch and commit hash
-    - Quality gate status (lint, typecheck, test)
-    - Authority ownership from state vector
+    This function performs blocking subprocess calls and should only be
+    called via asyncio.to_thread() to avoid blocking the event loop.
 
     Args:
         working_dir: Project working directory path
 
     Returns:
-        Dictionary with signal keys:
-        - branch: Current git branch (fallback: "unknown")
-        - commit: Latest commit hash (fallback: "unknown")
-        - lint_status: Lint status ("passing", "failing", or "pending")
-        - typecheck_status: Typecheck status ("passing", "failing", or "pending")
-        - test_status: Test status ("passing", "failing", or "pending")
-        - authority: Authority owner from state vector (fallback: "unassigned")
-
-    Example:
-        >>> signals = gather_signals("/path/to/project")
-        >>> print(signals["branch"])
-        'feature/context-steward-octave'
-        >>> print(signals["commit"])
-        'dcb28e9abc123...'
+        Dictionary with signal keys (see gather_signals for details)
     """
     signals = {
         "branch": "unknown",
@@ -99,6 +85,40 @@ def gather_signals(working_dir: str) -> dict[str, str]:
     # Future enhancement: Read from state management system
 
     return signals
+
+
+async def gather_signals(working_dir: str) -> dict[str, str]:
+    """Gather runtime signals for AI context enrichment (async).
+
+    Collects contextual information about the current state of the project:
+    - Git branch and commit hash
+    - Quality gate status (lint, typecheck, test)
+    - Authority ownership from state vector
+
+    This function runs blocking subprocess calls in a background thread to
+    avoid blocking the event loop.
+
+    Args:
+        working_dir: Project working directory path
+
+    Returns:
+        Dictionary with signal keys:
+        - branch: Current git branch (fallback: "unknown")
+        - commit: Latest commit hash (fallback: "unknown")
+        - lint_status: Lint status ("passing", "failing", or "pending")
+        - typecheck_status: Typecheck status ("passing", "failing", or "pending")
+        - test_status: Test status ("passing", "failing", or "pending")
+        - authority: Authority owner from state vector (fallback: "unassigned")
+
+    Example:
+        >>> signals = await gather_signals("/path/to/project")
+        >>> print(signals["branch"])
+        'feature/context-steward-octave'
+        >>> print(signals["commit"])
+        'dcb28e9abc123...'
+    """
+    # Offload blocking subprocess calls to background thread
+    return await asyncio.to_thread(_gather_signals_sync, working_dir)
 
 
 class ContextStewardAI:
@@ -284,7 +304,7 @@ class ContextStewardAI:
 
             # Gather runtime signals if working_dir is provided
             working_dir = context.get("working_dir", ".")
-            signals = gather_signals(working_dir)
+            signals = await gather_signals(working_dir)
 
             # Merge signals into context (signals can be overridden by explicit context)
             enriched_context = {**signals, **context}

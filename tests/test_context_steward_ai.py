@@ -375,8 +375,9 @@ class TestContextStewardAIRunTask:
 class TestContextStewardAISignalGathering:
     """Test signal gathering for AI context enrichment."""
 
-    def test_gather_signals_success(self, tmp_path):
-        """FAILING TEST: Should gather runtime signals from git and state"""
+    @pytest.mark.asyncio
+    async def test_gather_signals_success(self, tmp_path):
+        """Test gathering runtime signals from git and state"""
         # Arrange: Create a git repo
         repo_dir = tmp_path / "test_repo"
         repo_dir.mkdir()
@@ -400,7 +401,7 @@ class TestContextStewardAISignalGathering:
         # Act
         from tools.context_steward.ai import gather_signals
 
-        signals = gather_signals(str(repo_dir))
+        signals = await gather_signals(str(repo_dir))
 
         # Assert
         assert "branch" in signals
@@ -412,8 +413,9 @@ class TestContextStewardAISignalGathering:
         assert "test_status" in signals
         assert "authority" in signals
 
-    def test_gather_signals_no_git_repo(self, tmp_path):
-        """FAILING TEST: Should handle missing git repo gracefully"""
+    @pytest.mark.asyncio
+    async def test_gather_signals_no_git_repo(self, tmp_path):
+        """Test handling of missing git repo gracefully"""
         # Arrange: Non-git directory
         non_git_dir = tmp_path / "not_a_repo"
         non_git_dir.mkdir()
@@ -421,7 +423,7 @@ class TestContextStewardAISignalGathering:
         # Act
         from tools.context_steward.ai import gather_signals
 
-        signals = gather_signals(str(non_git_dir))
+        signals = await gather_signals(str(non_git_dir))
 
         # Assert: Should return fallback values
         assert signals["branch"] == "unknown"
@@ -431,12 +433,13 @@ class TestContextStewardAISignalGathering:
         assert "test_status" in signals
         assert "authority" in signals
 
-    def test_gather_signals_fallback_values(self):
-        """FAILING TEST: Should provide sensible fallback values"""
+    @pytest.mark.asyncio
+    async def test_gather_signals_fallback_values(self):
+        """Test sensible fallback values for non-existent directory"""
         # Act: Use non-existent directory
         from tools.context_steward.ai import gather_signals
 
-        signals = gather_signals("/nonexistent/directory")
+        signals = await gather_signals("/nonexistent/directory")
 
         # Assert: All required keys present with fallback values
         assert signals["branch"] == "unknown"
@@ -549,4 +552,10 @@ class TestContextStewardAISignalInjection:
         assert result["status"] == "success"
         call_args = mock_clink.execute.call_args[0][0]
         prompt_sent = call_args["prompt"]
-        assert "feature/signal-test" in prompt_sent or "Branch:" in prompt_sent
+        # Verify actual signal substitution (not just template placeholder)
+        assert "Branch: feature/signal-test" in prompt_sent, f"Expected branch signal in prompt, got: {prompt_sent}"
+        # Also verify commit hash was substituted (should be 40 chars)
+        assert "Commit: " in prompt_sent
+        # Extract commit value and verify it's a proper hash (not {{commit}} placeholder)
+        commit_match = prompt_sent.split("Commit: ")[1].split(",")[0].strip()
+        assert len(commit_match) == 40, f"Expected 40-char commit hash, got: {commit_match}"
