@@ -78,6 +78,7 @@ from tools import (  # noqa: E402
     ClockInTool,
     ClockOutTool,
     ConsensusTool,
+    ContextUpdateTool,
     CriticalEngineerTool,
     DebugIssueTool,
     DocumentSubmitTool,
@@ -357,6 +358,7 @@ TOOLS = {
     "clockout": ClockOutTool(),  # JSONL extraction, OCTAVE compression, session archival
     "requestdoc": RequestDocTool(),  # Documentation routing via visibility rules (ADR-003)
     "documentsubmit": DocumentSubmitTool(),  # Document submission via inbox workflow (Context Steward v2)
+    "contextupdate": ContextUpdateTool(),  # AI-driven context file merging (Context Steward v2)
     "anchorsubmit": AnchorSubmitTool(),  # Anchor validation, drift detection, enforcement rules
     # Archived tools (handled by Claude subagents):
     # - codereview -> use code-review-specialist subagent
@@ -405,6 +407,7 @@ def validate_tool_documentation(tools: dict[str, Any]) -> None:
         "clockout",
         "requestdoc",
         "documentsubmit",
+        "contextupdate",
         "anchorsubmit",
     }
 
