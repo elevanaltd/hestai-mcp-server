@@ -1,0 +1,92 @@
+CONTEXT_NEGATIVES::[
+  ANTI_PATTERN_1::{
+    pattern:"Using deprecated thinkdeep tool",
+    description:"Invoking thinkdeep for systematic investigation when HestAI workflow phases provide superior structured investigation",
+    instead:"Use D1_02 (research-analyst), D2_01 (ideator + edge-optimizer), D2_03 (synthesizer), or B0_01 (critical-design-validator) based on investigation type",
+    severity:"high"
+  },
+  ANTI_PATTERN_2::{
+    pattern:"Using deprecated debug tool",
+    description:"Invoking generic debug tool for error resolution when domain-specific error routing is more effective",
+    instead:"Route errors via ERROR_HANDLING_TAXONOMY: test failures → error-resolver-hermes (≤4h), architectural violations → error-architect-zeus (>4h), North Star misalignment → requirements-steward",
+    severity:"high"
+  },
+  ANTI_PATTERN_3::{
+    pattern:"Skipping quality gates",
+    description:"Merging code without all quality gates passing (lint+typecheck+test)",
+    instead:"Run ./code_quality_checks.sh and ensure 100% pass rate before committing. All three gates (lint, typecheck, test) must be green",
+    severity:"critical"
+  },
+  ANTI_PATTERN_4::{
+    pattern:"Implementing without TDD",
+    description:"Writing implementation code before creating failing tests",
+    instead:"Follow RED-GREEN-REFACTOR: Write failing test first, implement minimal code to pass, refactor while green",
+    severity:"high"
+  },
+  ANTI_PATTERN_5::{
+    pattern:"Exceeding LOC limits without archival",
+    description:"Allowing PROJECT-CONTEXT.md to exceed 200 LOC without moving stale content to PROJECT-HISTORY.md",
+    instead:"When approaching 180 LOC, identify stale content (old achievements, completed phases, resolved issues) and archive to PROJECT-HISTORY.md with dated sections",
+    severity:"medium"
+  },
+  ANTI_PATTERN_6::{
+    pattern:"Context file corruption without recovery",
+    description:"Manually editing context files and introducing corruption without using LKG recovery",
+    instead:"Use context_validator to validate before saving. If corruption detected, recover from .lkg/ snapshots using recover_from_lkg()",
+    severity:"high"
+  },
+  ANTI_PATTERN_7::{
+    pattern:"Creating files without validation",
+    description:"Creating or updating State Vector, PROJECT-CONTEXT, or CONTEXT-NEGATIVES without schema validation",
+    instead:"Run appropriate validator (validate_state_vector, validate_project_context, validate_context_negatives) before saving changes",
+    severity:"high"
+  },
+  ANTI_PATTERN_8::{
+    pattern:"Insufficient anti-patterns",
+    description:"Creating CONTEXT-NEGATIVES.oct with fewer than 10 anti-patterns, reducing effectiveness as a guard rail",
+    instead:"Maintain minimum 10 anti-patterns covering deprecated tools, quality violations, architecture mistakes, workflow errors, testing failures, documentation gaps, security issues, and performance anti-patterns",
+    severity:"medium"
+  },
+  ANTI_PATTERN_9::{
+    pattern:"Modifying Kernel from Shell",
+    description:"Attempting to modify context_validator.py or schemas.py from AI-driven Shell components",
+    instead:"Kernel (validator) validates Shell (context files). Shell cannot modify Kernel. Human intervention required for Kernel changes",
+    severity:"critical"
+  },
+  ANTI_PATTERN_10::{
+    pattern:"Skipping LKG snapshots after validation",
+    description:"Validating context files successfully but not creating Last Known Good snapshots",
+    instead:"After successful validation, call create_lkg_snapshot() to preserve validated state for future recovery",
+    severity:"medium"
+  },
+  ANTI_PATTERN_11::{
+    pattern:"Missing required sections in PROJECT-CONTEXT",
+    description:"Omitting required sections (IDENTITY, ARCHITECTURE, CURRENT_STATE, DEVELOPMENT_GUIDELINES, QUICK_REFERENCES, CONTEXT_LIFECYCLE)",
+    instead:"Ensure all required sections present as defined in PROJECT_CONTEXT_SCHEMA. Validator will reject incomplete structure",
+    severity:"high"
+  },
+  ANTI_PATTERN_12::{
+    pattern:"Invalid State Vector structure",
+    description:"Creating State Vector without required fields (IDENTITY, AUTHORITY, QUALITY, FOCUS, SIGNALS) or missing subfields",
+    instead:"Follow STATE_VECTOR_SCHEMA: Each section must have required subfields. Use valid status values (pass/fail/unknown/n/a) and valid phases (D0-D3, B0-B5, maintenance)",
+    severity:"high"
+  },
+  ANTI_PATTERN_13::{
+    pattern:"Committing without conventional format",
+    description:"Creating git commits without conventional commit format (feat/fix/docs/refactor/test/chore)",
+    instead:"Use conventional commit format: 'feat: description' or 'TEST: failing test' → 'FEAT: implementation'. Include evidence in commit message",
+    severity:"medium"
+  },
+  ANTI_PATTERN_14::{
+    pattern:"Bypassing code review",
+    description:"Merging implementation code without mandatory code-review-specialist consultation",
+    instead:"TRACED protocol requires code-review-specialist review for all code changes. This is non-negotiable quality gate",
+    severity:"critical"
+  },
+  ANTI_PATTERN_15::{
+    pattern:"Unclear OCTAVE syntax",
+    description:"Using OCTAVE notation incorrectly (missing brackets, incorrect :: usage, malformed nested structures)",
+    instead:"Follow OCTAVE patterns: KEY::value, KEY::[list], KEY::{dict}. Use validator warnings to correct syntax issues",
+    severity:"low"
+  }
+]
