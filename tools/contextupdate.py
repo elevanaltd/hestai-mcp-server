@@ -434,7 +434,17 @@ class ContextUpdateTool(BaseTool):
                     artifacts = result.get("artifacts", [])
                     if artifacts and "content" in artifacts[0]:
                         merged_content = artifacts[0]["content"]
-                        logger.info(f"AI merge successful: {result.get('summary', 'merged')}")
+
+                        # Defensive check: AI must return substantial content
+                        MIN_CONTENT_LENGTH = 500  # ~10 lines minimum
+                        if len(merged_content) < MIN_CONTENT_LENGTH:
+                            logger.error(
+                                f"AI returned truncated content ({len(merged_content)} chars), "
+                                f"expected at least {MIN_CONTENT_LENGTH}. Using fallback."
+                            )
+                            merged_content = existing_content + "\n\n" + new_content
+                        else:
+                            logger.info(f"AI merge successful: {result.get('summary', 'merged')}")
                     else:
                         logger.warning("AI merge returned no content, using simple append")
                         merged_content = existing_content + "\n\n" + new_content
