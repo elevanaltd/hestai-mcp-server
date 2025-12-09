@@ -268,3 +268,191 @@ class TestRequestDocTool:
         # Verify .hestai/context directory was created
         context_dir = working_dir / ".hestai" / "context"
         assert context_dir.exists()
+
+
+class TestRequestDocPR77Fixes:
+    """Test suite for PR #77 P1 fixes - variable mapping, file write, content field"""
+
+    @pytest.mark.asyncio
+    async def test_workflow_update_uses_existing_checklist_key(self, requestdoc_tool, monkeypatch):
+        """
+        Test Issue 1: workflow_update should use 'existing_checklist' key not 'existing_context'
+
+        When AI is enabled and type is workflow_update, the ai_context dict should contain
+        'existing_checklist' to match the template placeholder {{existing_checklist}}.
+        """
+        # Track what context was passed to AI
+        captured_context = {}
+
+        async def mock_run_task(self, task_key, **kwargs):
+            captured_context.update(kwargs)
+            return {"status": "failure", "error": "mock"}
+
+        # Mock AI helper to capture context
+        mock_ai = type("obj", (object,), {"is_task_enabled": lambda self, task: True, "run_task": mock_run_task})()
+
+        # Replace AI helper
+        requestdoc_tool._ai_helper = mock_ai
+
+        arguments = {
+            "type": "workflow_update",
+            "intent": "Test checklist update",
+            "scope": "specific",
+            "priority": "end_of_session",
+            "content": "Test content",
+            "working_dir": "/tmp/test",
+            "_session_context": type("obj", (object,), {"project_root": "/tmp/test"})(),
+        }
+
+        await requestdoc_tool.execute(arguments)
+
+        # Verify 'existing_checklist' key exists (not 'existing_context')
+        assert "existing_checklist" in captured_context, "workflow_update should use 'existing_checklist' key"
+        assert "existing_context" not in captured_context, "workflow_update should NOT use 'existing_context' key"
+
+    @pytest.mark.asyncio
+    async def test_context_update_uses_existing_context_key(self, requestdoc_tool, monkeypatch):
+        """
+        Test Issue 1: context_update should use 'existing_context' key
+
+        When AI is enabled and type is context_update, the ai_context dict should contain
+        'existing_context' to match the template placeholder {{existing_context}}.
+        """
+        # Track what context was passed to AI
+        captured_context = {}
+
+        async def mock_run_task(self, task_key, **kwargs):
+            captured_context.update(kwargs)
+            return {"status": "failure", "error": "mock"}
+
+        # Mock AI helper to capture context
+        mock_ai = type("obj", (object,), {"is_task_enabled": lambda self, task: True, "run_task": mock_run_task})()
+
+        # Replace AI helper
+        requestdoc_tool._ai_helper = mock_ai
+
+        arguments = {
+            "type": "context_update",
+            "intent": "Test context update",
+            "scope": "specific",
+            "priority": "end_of_session",
+            "content": "Test content",
+            "working_dir": "/tmp/test",
+            "_session_context": type("obj", (object,), {"project_root": "/tmp/test"})(),
+        }
+
+        await requestdoc_tool.execute(arguments)
+
+        # Verify 'existing_context' key exists (not 'existing_checklist')
+        assert "existing_context" in captured_context, "context_update should use 'existing_context' key"
+        assert "existing_checklist" not in captured_context, "context_update should NOT use 'existing_checklist' key"
+
+    @pytest.mark.asyncio
+    async def test_ai_success_writes_artifact_with_content_to_disk(self, requestdoc_tool, tmp_path):
+        """
+        Test Issue 2: AI success path should actually write files (not just log)
+
+        When AI returns artifacts with 'content' field, those files should be written to disk.
+        """
+        working_dir = tmp_path / "test-project"
+        working_dir.mkdir()
+
+        # Create .hestai/context directory
+        context_dir = working_dir / ".hestai" / "context"
+        context_dir.mkdir(parents=True)
+
+        # Mock AI helper that returns success with artifact containing content
+        async def mock_run_task(self, task_key, **kwargs):
+            return {
+                "status": "success",
+                "summary": "Updated context",
+                "changes": ["Added new section"],
+                "artifacts": [
+                    {
+                        "type": "context_update",
+                        "path": ".hestai/context/PROJECT-CONTEXT.md",
+                        "action": "merged",
+                        "content": "NEW_CONTEXT_CONTENT",
+                    }
+                ],
+            }
+
+        mock_ai = type("obj", (object,), {"is_task_enabled": lambda self, task: True, "run_task": mock_run_task})()
+
+        requestdoc_tool._ai_helper = mock_ai
+
+        arguments = {
+            "type": "context_update",
+            "intent": "Test file write",
+            "scope": "specific",
+            "priority": "end_of_session",
+            "content": "Test content",
+            "working_dir": str(working_dir),
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        await requestdoc_tool.execute(arguments)
+
+        # Verify file was actually written to disk
+        artifact_path = working_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        assert artifact_path.exists(), "AI artifact file should be written to disk"
+        assert artifact_path.read_text() == "NEW_CONTEXT_CONTENT", "AI artifact content should match what AI returned"
+
+    @pytest.mark.asyncio
+    async def test_ai_success_logs_warning_for_artifact_without_content(self, requestdoc_tool, tmp_path, caplog):
+        """
+        Test Issue 2: AI artifacts without 'content' field should log warning (not error)
+
+        When AI returns artifacts without 'content' field, should log warning and continue.
+        """
+        import logging
+
+        caplog.set_level(logging.WARNING)
+
+        working_dir = tmp_path / "test-project"
+        working_dir.mkdir()
+
+        # Create .hestai/context directory
+        context_dir = working_dir / ".hestai" / "context"
+        context_dir.mkdir(parents=True)
+
+        # Mock AI helper that returns success with artifact missing content field
+        async def mock_run_task(self, task_key, **kwargs):
+            return {
+                "status": "success",
+                "summary": "Updated context",
+                "changes": ["Added new section"],
+                "artifacts": [
+                    {
+                        "type": "context_update",
+                        "path": ".hestai/context/PROJECT-CONTEXT.md",
+                        "action": "merged",
+                        # Missing 'content' field
+                    }
+                ],
+            }
+
+        mock_ai = type("obj", (object,), {"is_task_enabled": lambda self, task: True, "run_task": mock_run_task})()
+
+        requestdoc_tool._ai_helper = mock_ai
+
+        arguments = {
+            "type": "context_update",
+            "intent": "Test missing content",
+            "scope": "specific",
+            "priority": "end_of_session",
+            "content": "Test content",
+            "working_dir": str(working_dir),
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        await requestdoc_tool.execute(arguments)
+
+        # Verify warning was logged
+        assert any(
+            "missing content" in record.message.lower() for record in caplog.records
+        ), "Should log warning when artifact is missing content field"
+
+        # Verify file was NOT created
+        artifact_path = working_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        assert not artifact_path.exists(), "File should not be created when artifact is missing content field"
