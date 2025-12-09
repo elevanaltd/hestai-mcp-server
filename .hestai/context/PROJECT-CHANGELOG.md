@@ -1,5 +1,12 @@
 # Project Changelog
 
+## 2025-12-09 05:45
+**Session a1172310 complete - PR #95 submitted**
+- Created PR #95 for Context Steward v2 architecture
+- Enabled cross-agent visibility (context files git-tracked)
+- GitHub Project #4 now has 17 issues
+- Added #94 (Documentation Standards) to project
+
 ## 2025-12-09 05:30
 **Migrate task tracking to GitHub Projects**
 - Created GitHub Project #4 for Context Steward v2 (16 issues)
