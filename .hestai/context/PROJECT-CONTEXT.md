@@ -100,10 +100,10 @@ CLINK::"External CLI delegation"[implemented]
 CONSENSUS::"Multi-model consensus building"[implemented]
 
 ### Context Steward v2 Tools
+DOCUMENT_SUBMIT::"Document routing and placement"[implemented]
 CONTEXT_UPDATE::"AI-driven context file merging with conflict detection"[implemented]
-DOCUMENT_SUBMIT::"Document routing and placement via visibility rules"[implemented]
-GATHER_SIGNALS::"Runtime signal collection (git/test/authority)"[implemented]
-CHANGELOG_PARSER::"Section-aware conflict detection"[implemented]
+CHANGELOG_PARSER::"Section-aware conflict detection with continuation_id"[implemented]
+GATHER_SIGNALS::"Runtime signal gathering (git, test, authority)"[implemented]
 
 ### Deprecated Tools
 THINKDEEP::"Replaced by HestAI phase progression (D1-D2-B0)"[deprecated]
@@ -118,15 +118,15 @@ STATUS::"clean working tree"
 RECENT_COMMITS::[
   "188c1bc::feat: Add section-aware conflict detection with continuation_id (#91)",
   "b7e64c8::fix: Exclude decision-records from linting",
-  "c316d65::fix: Use unique test session ID to prevent temporal beacon collisions",
   "1716a70::fix: Clear DISABLED_TOOLS in test config",
+  "601892d::chore: Archive session transcripts",
   "c9d1523::feat: Add gather_signals function for AI context enrichment"
 ]
 
 QUALITY_STATUS::[
   lint::"passing",
   typecheck::"passing",
-  test::"1213/1213 passing (full suite)",
+  test::"1213/1213 passing",
   coverage::"Context Steward v2 components fully covered"
 ]
 
