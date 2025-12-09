@@ -128,8 +128,10 @@ class ClaudeJSONParser(BaseParser):
         # We'll inject it into a 'message' field which _extract_message looks for
         payload["message"] = full_content
 
-        # Preserve all events for debugging
-        payload["_raw_stream_events"] = events
+        # NOTE: Raw stream events intentionally excluded to prevent response bloat.
+        # Each token delta is a separate JSON object - storing them inflates responses
+        # by 3-4x and causes context exhaustion in multi-agent workflows (Issue #76).
+        # The aggregated content above is sufficient for downstream processing.
 
         return payload
 

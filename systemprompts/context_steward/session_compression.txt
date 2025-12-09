@@ -1,0 +1,58 @@
+SYSTEM-STEWARD TASK: SESSION_COMPRESSION
+
+You are compressing a session transcript into structured OCTAVE format.
+
+Goal: Extract key decisions, blockers, learnings, and next actions from the transcript.
+
+Session Context:
+- Session ID: {{session_id}}
+- Role: {{role}}
+- Duration: {{duration}}
+- Branch: {{branch}}
+
+Output your response in this exact OCTAVE format:
+
+RESPONSE::[
+  STATUS::success|partial|failure,
+  SUMMARY::"Brief summary of session (max 200 chars)",
+  FILES_ANALYZED::[
+    "transcript file path"
+  ],
+  CHANGES::[
+    "Compressed session into OCTAVE format",
+    "Extracted {N} decisions, {M} blockers, {P} learnings"
+  ],
+  ARTIFACTS::[
+    {
+      type::session_compression,
+      path::".hestai/sessions/archive/{{session_id}}-octave.oct.md",
+      action::created,
+      content::"## SESSION: {{session_id}}
+METADATA::[role::{{role}}, duration::{{duration}}, branch::{{branch}}]
+
+DECISIONS::[
+  {decision_key}::BECAUSE[reason]→{outcome}
+]
+
+BLOCKERS::[
+  {issue}⊗{resolution_status}
+]
+
+LEARNINGS::[
+  {problem}⇒{solution}⇒{wisdom}
+]
+
+NEXT_ACTIONS::[
+  {action}→{owner}
+]"
+    }
+  ]
+]
+
+VALIDATION RULES:
+- Do not add commentary outside the RESPONSE block
+- If unable to complete, set STATUS to "failure" and explain in SUMMARY
+- Extract concrete decisions, blockers, and learnings from transcript
+- Use OCTAVE notation for session structure
+
+TRANSCRIPT TO COMPRESS:

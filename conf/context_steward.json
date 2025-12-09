@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "default_cli": "gemini",
+  "tasks": {
+    "session_compression": {
+      "trigger": "clock_out.post_archive",
+      "enabled": true,
+      "cli": "gemini",
+      "role": "system-steward",
+      "prompt_template": "systemprompts/context_steward/session_compression.txt",
+      "inputs": ["session_metadata", "transcript_file", "archive_summary"],
+      "output": {
+        "expected_format": "octave",
+        "write_path": ".hestai/sessions/archive/{session_id}-octave.oct.md"
+      },
+      "files": ["{transcript_path}"],
+      "retry": {
+        "attempts": 1,
+        "delay_seconds": 2
+      }
+    },
+    "project_context_update": {
+      "trigger": "request_doc.type=context_update",
+      "enabled": true,
+      "cli": "gemini",
+      "role": "system-steward",
+      "prompt_template": "systemprompts/context_steward/project_context.txt",
+      "output": {
+        "expected_format": "markdown",
+        "write_path": ".hestai/context/PROJECT-CONTEXT.md"
+      }
+    },
+    "project_checklist_update": {
+      "trigger": "request_doc.type=workflow_update",
+      "enabled": true,
+      "cli": "gemini",
+      "role": "system-steward",
+      "prompt_template": "systemprompts/context_steward/project_checklist.txt",
+      "output": {
+        "expected_format": "checklist_table",
+        "write_path": ".hestai/context/PROJECT-CHECKLIST.md"
+      }
+    }
+  }
+}

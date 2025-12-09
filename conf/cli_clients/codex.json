@@ -166,6 +166,10 @@
     "test-infrastructure-steward": {
       "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
       "role_args": ["-c", "model_reasoning_effort=medium"]
+    },
+    "system-steward": {
+      "prompt_path": "systemprompts/clink/system-steward.txt",
+      "role_args": []
     }
   }
 }

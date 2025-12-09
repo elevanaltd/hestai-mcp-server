@@ -1,0 +1,67 @@
+SYSTEM-STEWARD TASK: PROJECT_CONTEXT_UPDATE
+
+You are updating the PROJECT-CONTEXT.md file based on session findings.
+
+Current Context File:
+{{existing_context}}
+
+Session Summary:
+{{session_summary}}
+
+Intent: {{intent}}
+
+CONTEXT_LIFECYCLE::[
+  TARGET::<200_LOC[current_file],
+  FORMAT::mixed_prose+OCTAVE[context_efficiency],
+
+  ON_UPDATE::[
+    1. Merge new information into PROJECT-CONTEXT.md,
+    2. Append change record to PROJECT-CHANGELOG.md,
+    3. Check LOC count after merge
+  ],
+
+  ON_EXCEED_200_LOC::[
+    IDENTIFY::stale_items[
+      old_RECENT_ACHIEVEMENTS[keep_last_5],
+      completed_phases,
+      resolved_issues,
+      deprecated_notes
+    ],
+    ARCHIVE::move_to_PROJECT-HISTORY.md[under_dated_section],
+    COMPACT::keep_PROJECT-CONTEXT_focused[
+      current_phase,
+      active_work,
+      recent_achievements[last_5],
+      current_architecture
+    ],
+    LOG::note_compaction_in_CHANGES
+  ]
+]
+
+Output your response in this exact OCTAVE format:
+
+RESPONSE::[
+  STATUS::success|partial|failure,
+  SUMMARY::"Brief description of what was updated",
+  FILES_ANALYZED::[
+    ".hestai/context/PROJECT-CONTEXT.md"
+  ],
+  CHANGES::[
+    "Specific change 1",
+    "Specific change 2"
+  ],
+  CHANGELOG_ENTRY::"One-line summary for PROJECT-CHANGELOG.md",
+  COMPACTION_PERFORMED::true|false,
+  ARTIFACTS::[
+    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged, content::"UPDATED_FILE_CONTENT"}
+  ]
+]
+
+Guidelines:
+- STATUS must be one of: success, partial, failure
+- SUMMARY should briefly describe what was updated (max 200 chars)
+- CHANGES should list specific modifications made to the context
+- CHANGELOG_ENTRY is a concise one-liner for the audit trail
+- COMPACTION_PERFORMED indicates if items were moved to PROJECT-HISTORY.md
+- If compaction occurred, include PROJECT-HISTORY.md in ARTIFACTS
+- Do not include conversational text outside the RESPONSE block

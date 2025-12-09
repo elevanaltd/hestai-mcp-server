@@ -171,6 +171,33 @@ class ClockOutTool(BaseTool):
 
             logger.info(f"Archived session {request.session_id} to {archive_path}")
 
+            # AI compression (optional - graceful degradation)
+            # Controlled by conf/context_steward.json enabled flag
+            from tools.context_steward.ai import ContextStewardAI
+
+            try:
+                ai = ContextStewardAI()
+                if ai.is_task_enabled("session_compression"):
+                    result = await ai.run_task(
+                        "session_compression",
+                        session_id=request.session_id,
+                        role=session_data.get("role", "unknown"),
+                        duration=session_data.get("duration", "unknown"),
+                        branch=session_data.get("branch", "main"),
+                        transcript_path=str(archive_path),
+                    )
+                    if result.get("status") == "success":
+                        # Save octave summary
+                        octave_path = archive_path.with_suffix(".oct.md")
+                        artifacts = result.get("artifacts", [])
+                        if artifacts:
+                            octave_content = artifacts[0].get("content", "")
+                            octave_path.write_text(octave_content)
+                            logger.info(f"AI compression saved to {octave_path}")
+            except Exception as e:
+                logger.warning(f"AI compression skipped: {e}")
+                # Graceful degradation - continue without AI
+
             # Remove active session directory
             shutil.rmtree(session_dir)
             logger.info(f"Removed active session directory: {session_dir}")
