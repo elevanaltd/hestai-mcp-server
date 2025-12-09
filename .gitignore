@@ -190,6 +190,12 @@ logs/
 *.bak
 /worktrees
 /.coord
-/.hestai/sessions
+# HestAI session data (ephemeral, not tracked)
+/.hestai/sessions/active
+
+# Track context files for cross-agent visibility (Claude Web, Codex)
+# But ignore temporary analysis artifacts
+/.hestai/context/REQUEST-DOC-*.md
+/.hestai/context/RESEARCH-*.md
+
 repomix-output.xml
-/.hestai/context
