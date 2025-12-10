@@ -95,10 +95,6 @@ from tools import (  # noqa: E402
 # CONTEXT7_BYPASS: INTERNAL-MODULE - Internal import for canary test
 from tools.models import ToolOutput  # noqa: E402
 
-# Context7: consulted for tools.registry - internal module
-# Critical-Engineer: consulted for architectural-decisions - adding new tool to server
-from tools.registry import RegistryTool  # noqa: E402
-
 # Context7: consulted for tools.shared.session_models - internal typed models
 # Critical-Engineer: consulted for typed context model integration
 from tools.shared.session_models import SessionContextModel, ToolExecutionContext  # noqa: E402
@@ -348,7 +344,6 @@ TOOLS = {
     "challenge": ChallengeTool(),  # Critical challenge prompt wrapper to avoid automatic agreement
     "critical-engineer": CriticalEngineerTool(),  # Technical validation for major decisions and architecture
     "testguard": RequirementsTool(),  # Test methodology guardian to prevent test manipulation
-    "registry": RegistryTool(),  # Registry management for specialist approval of blocked changes
     "apilookup": LookupTool(),  # Quick web/API lookup instructions
     "listmodels": ListModelsTool(),  # List all available AI models by provider
     "version": VersionTool(),  # Display server version and system information
@@ -399,7 +394,6 @@ def validate_tool_documentation(tools: dict[str, Any]) -> None:
         # Infrastructure (TIER 3 - OPERATIONAL)
         "clink",
         "apilookup",
-        "registry",
         # Context Steward (TIER 3 - OPERATIONAL)
         "clockin",
         "clockout",
