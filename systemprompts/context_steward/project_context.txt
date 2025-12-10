@@ -45,6 +45,29 @@ CONTEXT_LIFECYCLE::[
   ]
 ]
 
+COMPACTION_ENFORCEMENT::[
+  GATE::ARCHIVE_BEFORE_COMPACT[
+    IF::LOC_EXCEEDS_200=true,
+    THEN::REQUIRE[both_artifacts_in_response],
+    ARTIFACTS_REQUIRED::[
+      {type::history_archive, path::"PROJECT-HISTORY.md", action::append_dated_section},
+      {type::context_update, path::"PROJECT-CONTEXT.md", action::compacted_version}
+    ],
+    FAIL_IF::"COMPACTION_PERFORMED::true BUT history_archive artifact missing",
+    BLOCKING::true
+  ]
+]
+
+OUTPUT_VALIDATION::[
+  IF[compaction_performed]::[
+    REQUIRE::[
+      artifacts.contains("history_archive"),
+      artifacts.contains("context_update")
+    ],
+    REJECT_IF::missing_any_required_artifact
+  ]
+]
+
 CRITICAL OUTPUT REQUIREMENTS:
 1. You MUST output the COMPLETE updated file content - not a summary or placeholder
 2. The content field MUST contain ALL lines of the merged file (typically 150-200 lines)

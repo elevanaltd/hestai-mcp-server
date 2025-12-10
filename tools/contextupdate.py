@@ -91,6 +91,55 @@ def detect_recent_conflicts(changelog_path: Path, target: str, minutes: int = 30
     return conflicts
 
 
+def validate_ai_response_compaction(ai_response: dict) -> bool:
+    """
+    Validate AI response complies with COMPACTION_ENFORCEMENT gate.
+
+    BLOCKING GATE: If compaction was performed (COMPACTION_PERFORMED::true),
+    AI response MUST include both artifacts:
+    1. history_archive - archived content to PROJECT-HISTORY.md
+    2. context_update - compacted content for PROJECT-CONTEXT.md
+
+    Args:
+        ai_response: AI response dict with status, artifacts, compaction_performed
+
+    Returns:
+        True if validation passes
+
+    Raises:
+        ValueError: If compaction performed without history_archive artifact
+    """
+    compaction_performed = ai_response.get("compaction_performed", False)
+
+    if not compaction_performed:
+        # No compaction, no archive required
+        return True
+
+    # COMPACTION_ENFORCEMENT gate active
+    artifacts = ai_response.get("artifacts", [])
+
+    # Check for required artifacts
+    has_history_archive = any(artifact.get("type") == "history_archive" for artifact in artifacts)
+    has_context_update = any(artifact.get("type") == "context_update" for artifact in artifacts)
+
+    if not has_history_archive:
+        raise ValueError(
+            "COMPACTION_ENFORCEMENT gate failure: compaction_performed=true but "
+            "history_archive artifact missing. AI must provide both artifacts when "
+            "compacting PROJECT-CONTEXT."
+        )
+
+    if not has_context_update:
+        raise ValueError(
+            "COMPACTION_ENFORCEMENT gate failure: compaction_performed=true but "
+            "context_update artifact missing. AI must provide both artifacts when "
+            "compacting PROJECT-CONTEXT."
+        )
+
+    logger.info("COMPACTION_ENFORCEMENT gate passed: both artifacts present")
+    return True
+
+
 def compact_if_needed(content: str, target: str, project_root: Path, max_loc: int = 200) -> str:
     """
     If content exceeds max_loc, move old sections to PROJECT-HISTORY.md
@@ -431,6 +480,13 @@ class ContextUpdateTool(BaseTool):
                 )
 
                 if result.get("status") == "success":
+                    # COMPACTION_ENFORCEMENT gate: validate AI response before processing
+                    try:
+                        validate_ai_response_compaction(result)
+                    except ValueError as e:
+                        logger.error(f"COMPACTION_ENFORCEMENT gate failure: {e}")
+                        raise ValueError(f"AI response validation failed: {e}") from e
+
                     artifacts = result.get("artifacts", [])
                     if artifacts and "content" in artifacts[0]:
                         merged_content = artifacts[0]["content"]
