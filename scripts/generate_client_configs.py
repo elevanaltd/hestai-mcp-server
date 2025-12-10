@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 
 class ConfigGenerator:
@@ -49,9 +49,7 @@ class ConfigGenerator:
     def load_tier_mapping(self) -> None:
         """Load agent-model-tiers.json."""
         if not self.tier_mapping_path.exists():
-            raise FileNotFoundError(
-                f"Tier mapping not found: {self.tier_mapping_path}"
-            )
+            raise FileNotFoundError(f"Tier mapping not found: {self.tier_mapping_path}")
 
         with open(self.tier_mapping_path) as f:
             self.tier_mapping = json.load(f)
@@ -84,9 +82,7 @@ class ConfigGenerator:
                 return tier_name
         return None
 
-    def get_model_for_agent(
-        self, agent_name: str, cli_name: str
-    ) -> Optional[str]:
+    def get_model_for_agent(self, agent_name: str, cli_name: str) -> Optional[str]:
         """Get the appropriate model for an agent on a given CLI.
 
         Priority:
@@ -130,9 +126,7 @@ class ConfigGenerator:
                 return effort_level
         return None
 
-    def update_client_config(
-        self, cli_name: str, dry_run: bool = False
-    ) -> Dict[str, Any]:
+    def update_client_config(self, cli_name: str, dry_run: bool = False) -> Dict[str, Any]:
         """Update a client configuration with tier-based model assignments.
 
         Args:
@@ -166,9 +160,7 @@ class ConfigGenerator:
                 if role_data.get("role_args") != new_role_args:
                     if not dry_run:
                         role_data["role_args"] = new_role_args
-                    changes.append(
-                        f"UPDATE {agent_name}: {role_data.get('role_args')} -> {new_role_args}"
-                    )
+                    changes.append(f"UPDATE {agent_name}: {role_data.get('role_args')} -> {new_role_args}")
 
             elif cli_name == "codex":
                 # Codex uses -c model_reasoning_effort in role_args
@@ -181,9 +173,7 @@ class ConfigGenerator:
                 if role_data.get("role_args") != new_role_args:
                     if not dry_run:
                         role_data["role_args"] = new_role_args
-                    changes.append(
-                        f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}"
-                    )
+                    changes.append(f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}")
 
                 # Update model in additional_args at top level
                 # (Codex model is global, not per-role)
@@ -196,9 +186,7 @@ class ConfigGenerator:
                 if role_data.get("role_args") != new_role_args:
                     if not dry_run:
                         role_data["role_args"] = new_role_args
-                    changes.append(
-                        f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}"
-                    )
+                    changes.append(f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}")
 
         # Remove explicitly excluded agents
         exceptions = self.tier_mapping.get("exceptions", {})
@@ -234,9 +222,7 @@ class ConfigGenerator:
 
                 valid_models = model_mappings.get(cli_name, {})
                 if model not in valid_models:
-                    errors.append(
-                        f"Invalid model '{model}' for {cli_name} in tier {tier_name}"
-                    )
+                    errors.append(f"Invalid model '{model}' for {cli_name} in tier {tier_name}")
 
         # Validate exception model assignments
         for agent_name, exception_data in self.tier_mapping.get("exceptions", {}).items():
@@ -247,9 +233,7 @@ class ConfigGenerator:
 
                 valid_models = model_mappings.get(cli_name, {})
                 if model not in valid_models:
-                    errors.append(
-                        f"Invalid model '{model}' for {cli_name} in exception {agent_name}"
-                    )
+                    errors.append(f"Invalid model '{model}' for {cli_name} in exception {agent_name}")
 
         return errors
 
@@ -290,9 +274,7 @@ class ConfigGenerator:
                     pass  # Complex logic, skip for now
 
                 if primary_tier_level == 3 and fallback_agent_tier == "LOW":
-                    warnings.append(
-                        f"DEGRADATION: {agent_name} primary=HIGH fallback=LOW"
-                    )
+                    warnings.append(f"DEGRADATION: {agent_name} primary=HIGH fallback=LOW")
 
         return warnings
 
@@ -320,9 +302,7 @@ class ConfigGenerator:
         # Check for agents in tiers but not in configs
         missing_in_configs = tier_agents - config_agents
         if missing_in_configs:
-            errors.append(
-                f"Agents in tiers but missing from client configs: {missing_in_configs}"
-            )
+            errors.append(f"Agents in tiers but missing from client configs: {missing_in_configs}")
 
         # Check for agents in configs but not in tiers (warning, not error)
         # These might be in exceptions only
@@ -364,9 +344,7 @@ class ConfigGenerator:
             json.dump(hints, f, indent=2)
             f.write("\n")
 
-    def run(
-        self, mode: str = "generate", cli_names: Optional[List[str]] = None
-    ) -> int:
+    def run(self, mode: str = "generate", cli_names: Optional[List[str]] = None) -> int:
         """Run the generator.
 
         Args:
@@ -412,9 +390,7 @@ class ConfigGenerator:
             all_changes = {}
             for cli_name in cli_names:
                 print(f"\nProcessing {cli_name} client...")
-                result = self.update_client_config(
-                    cli_name, dry_run=(mode in ["check", "dry-run"])
-                )
+                result = self.update_client_config(cli_name, dry_run=(mode in ["check", "dry-run"]))
 
                 if result["changes"]:
                     print(f"  Changes for {cli_name}:")
@@ -432,7 +408,7 @@ class ConfigGenerator:
             if mode == "generate":
                 hints = self.generate_fallback_hints()
                 self.write_fallback_hints(hints)
-                print(f"\n✓ Generated fallback_hints.json")
+                print("\n✓ Generated fallback_hints.json")
 
             # Check mode validation
             if mode == "check":
@@ -457,15 +433,14 @@ class ConfigGenerator:
         except Exception as e:
             print(f"ERROR: {e}")
             import traceback
+
             traceback.print_exc()
             return 1
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate CLI client configs from agent-model-tiers.json"
-    )
+    parser = argparse.ArgumentParser(description="Generate CLI client configs from agent-model-tiers.json")
     parser.add_argument(
         "--check",
         action="store_true",

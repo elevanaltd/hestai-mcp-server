@@ -9,9 +9,8 @@ deployment.
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, Optional, Set
 
 import pytest
 
@@ -502,9 +501,8 @@ class TestCapabilityContracts:
                         hint_primary_cli = fallback_hints[agent_name].get("primary_cli")
                         hint_fallback_cli = fallback_hints[agent_name].get("fallback_cli")
                         # Routes away if primary and fallback avoid Gemini
-                        routes_away_from_gemini = (
-                            hint_primary_cli != "gemini" and
-                            (hint_fallback_cli is None or hint_fallback_cli != "gemini")
+                        routes_away_from_gemini = hint_primary_cli != "gemini" and (
+                            hint_fallback_cli is None or hint_fallback_cli != "gemini"
                         )
 
                     if not routes_away_from_gemini and not (has_exception or has_fallback_hint):

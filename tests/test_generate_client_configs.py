@@ -3,7 +3,7 @@
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -146,10 +146,7 @@ class TestConfigGenerator:
 
         # MEDIUM tier agent
         assert generator.get_model_for_agent("implementation-lead", "claude") == "sonnet"
-        assert (
-            generator.get_model_for_agent("implementation-lead", "gemini")
-            == "gemini-3-pro-preview"
-        )
+        assert generator.get_model_for_agent("implementation-lead", "gemini") == "gemini-3-pro-preview"
 
         # LOW tier agent
         assert generator.get_model_for_agent("surveyor", "claude") == "haiku"
@@ -159,10 +156,7 @@ class TestConfigGenerator:
         # system-steward has exception override
         assert generator.get_model_for_agent("system-steward", "claude") == "haiku"
         assert generator.get_model_for_agent("system-steward", "gemini") is None  # Explicit exclusion
-        assert (
-            generator.get_model_for_agent("system-steward", "codex")
-            == "gpt-5.1-codex-mini"
-        )
+        assert generator.get_model_for_agent("system-steward", "codex") == "gpt-5.1-codex-mini"
 
     def test_get_reasoning_effort(self, generator):
         """Test getting reasoning effort level."""
