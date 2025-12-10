@@ -212,11 +212,32 @@ class ClockOutTool(BaseTool):
                                 verification_path = archive_dir / f"{request.session_id}.verification.json"
                                 verification_path.write_text(json.dumps(verification, indent=2))
 
-                                # Log if blocking issues found
+                                # FIX: Make verification gate actually block (not just log)
                                 if not verification["passed"]:
                                     logger.warning(
                                         f"Verification issues for session {request.session_id}: {verification['issues']}"
                                     )
+                                    # Return error status to block (gate actually enforces, not just logs)
+                                    error_message = (
+                                        f"Session archived but verification failed ({len(verification['issues'])} issues). "
+                                        "Context sync blocked. "
+                                        f"Issues: {', '.join(verification['issues'][:3])}"
+                                        + ("..." if len(verification["issues"]) > 3 else "")
+                                    )
+
+                                    tool_output = ToolOutput(
+                                        status="error",
+                                        content=error_message,
+                                        content_type="text",
+                                        metadata={
+                                            "tool_name": self.name,
+                                            "session_id": request.session_id,
+                                            "archive_path": str(archive_path),
+                                            "verification": verification,
+                                        },
+                                    )
+
+                                    return [TextContent(type="text", text=tool_output.model_dump_json())]
             except Exception as e:
                 logger.warning(f"AI compression skipped: {e}")
                 # Graceful degradation - continue without AI
@@ -689,16 +710,28 @@ class ClockOutTool(BaseTool):
             files = [f.strip() for f in files_str.split(",")]
             mentioned_files.extend(files)
 
-        # 2. Verify artifact existence
+        # 2. Verify artifact existence (with path traversal protection)
         for file_path in mentioned_files:
             if not file_path:
                 continue
 
             full_path = working_dir / file_path
+
+            # FIX: Validate path containment BEFORE checking existence
+            # Security: Prevent attacker-controlled OCTAVE from probing /etc/passwd
+            try:
+                resolved = full_path.resolve()
+                if not resolved.is_relative_to(working_dir.resolve()):
+                    issues.append(f"Path traversal rejected: {file_path}")
+                    continue  # Skip this file, don't check existence
+            except (ValueError, OSError) as e:
+                issues.append(f"Invalid path: {file_path} ({e})")
+                continue
+
             if not full_path.exists():
                 issues.append(f"Artifact missing: {file_path}")
 
-        # 3. Check reference integrity (markdown links)
+        # 3. Check reference integrity (markdown links with path traversal protection)
         # Pattern: [link text](path/to/file.md)
         link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
         link_matches = re.finditer(link_pattern, octave_content)
@@ -710,8 +743,19 @@ class ClockOutTool(BaseTool):
             if link_path.startswith("http://") or link_path.startswith("https://"):
                 continue
 
-            # Check if referenced file exists
             full_link_path = working_dir / link_path
+
+            # FIX: Validate path containment for markdown links too
+            try:
+                resolved = full_link_path.resolve()
+                if not resolved.is_relative_to(working_dir.resolve()):
+                    issues.append(f"Path traversal rejected: {link_path}")
+                    continue
+            except (ValueError, OSError) as e:
+                issues.append(f"Invalid link path: {link_path} ({e})")
+                continue
+
+            # Check if referenced file exists
             if not full_link_path.exists():
                 issues.append(f"Broken reference: {link_path}")
 
