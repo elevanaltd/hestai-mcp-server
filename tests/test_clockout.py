@@ -1416,6 +1416,7 @@ This ensures the OCTAVE file gets created properly and verification runs.
         assert "content" in update_call or "file_ref" in update_call
         assert update_call["working_dir"] == str(working_dir)
 
+
 @pytest.mark.asyncio
 async def test_focus_sanitization_path_separators(temp_hestai_dir):
     """Test that focus field with path separators is sanitized in archive filename"""
