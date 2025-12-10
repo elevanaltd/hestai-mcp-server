@@ -255,87 +255,11 @@ class CriticalEngineerTool(SimpleTool):
         Returns:
             The formatted prompt for the AI model with file context
         """
-        # TESTGUARD_BYPASS: INFRA-002 - Infrastructure enhancement for registry integration
-        # Check for blocked file review requests
-        # Context7: consulted for re
-        import re
-
-        # Patterns for blocked changes
-        blocked_patterns = [
-            r"/tmp/blocked-[^/\s]+",
-            r"blocked[_-]changes/([a-f0-9-]+)",
-            r"review\s+([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})",
-            r"blocked[_-]([a-f0-9]{8})",
+        # Build prompt for critical engineering validation
+        prompt_parts = [
+            f"🔍 CRITICAL ENGINEERING VALIDATION REQUIRED 🔍\n\n"
+            f'Technical decision/design to validate: "{request.prompt}"\n\n'
         ]
-
-        blocked_uuid = None
-        for pattern in blocked_patterns:
-            match = re.search(pattern, request.prompt)
-            if match:
-                if pattern.startswith(r"/tmp/"):
-                    # Extract UUID from /tmp/blocked-* path
-                    blocked_path = match.group(0)
-                    uuid_match = re.search(r"blocked-[^-]+-([a-f0-9-]+)", blocked_path)
-                    if uuid_match:
-                        blocked_uuid = uuid_match.group(1)
-                else:
-                    # Direct UUID extraction
-                    blocked_uuid = match.group(1) if match.lastindex else None
-                break
-
-        # If this is a blocked file review, handle it specially
-        # Critical-Engineer: consulted for architectural-decisions
-        # Integration with registry tool for approval workflow
-        if blocked_uuid or "/tmp/blocked-" in request.prompt or "blocked_changes" in request.prompt:
-            # Context7: consulted for tools - internal module
-            # TESTGUARD_BYPASS: INFRA-002 - Fixing linting issue for unused variable
-            from tools.registry import RegistryTool  # noqa: F401
-
-            # Registry tool import for blocked change detection
-            # Actual registry instance would be created when processing approvals
-            # Build special prompt for blocked change analysis
-            prompt_parts = [
-                f"🔍 BLOCKED CHANGE REVIEW - CRITICAL ENGINEERING 🔍\n\n"
-                f"A change has been blocked requiring production readiness validation.\n\n"
-                f"Original request: {request.prompt}\n\n"
-            ]
-
-            # Add registry integration instructions
-            prompt_parts.append(
-                "REGISTRY INTEGRATION ACTIVE:\n"
-                "- If the change is production-ready and architecturally sound, APPROVE\n"
-                "- If the change has critical flaws or will break in production, REJECT\n"
-                "- Use the RegistryTool to generate official approval/rejection\n\n"
-            )
-
-            if blocked_uuid:
-                prompt_parts.append(f"Blocked Change UUID: {blocked_uuid}\n\n")
-
-                # Critical-Engineer: consulted for architectural-decisions
-                # Stateless design validated - AI calls registry directly
-                prompt_parts.append(
-                    "IMPORTANT: After your validation, you MUST take action:\n\n"
-                    "If APPROVED (production-ready):\n"
-                    f"  Call the 'registry' tool with:\n"
-                    f"    action: 'approve'\n"
-                    f"    uuid: '{blocked_uuid}'\n"
-                    f"    specialist: 'critical-engineer'\n"
-                    f"    reason: <your validation reason>\n\n"
-                    "If REJECTED (will break in production):\n"
-                    f"  Call the 'registry' tool with:\n"
-                    f"    action: 'reject'\n"
-                    f"    uuid: '{blocked_uuid}'\n"
-                    f"    specialist: 'critical-engineer'\n"
-                    f"    reason: <critical flaw identified>\n"
-                    f"    education: <how to fix for production>\n\n"
-                    "The registry will generate the appropriate token or rejection record.\n"
-                )
-        else:
-            # Normal critical engineering validation
-            prompt_parts = [
-                f"🔍 CRITICAL ENGINEERING VALIDATION REQUIRED 🔍\n\n"
-                f'Technical decision/design to validate: "{request.prompt}"\n\n'
-            ]
 
         # Add file context if provided
         if request.files or request.include_tree:

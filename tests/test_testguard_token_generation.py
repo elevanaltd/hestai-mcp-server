@@ -13,9 +13,6 @@ import re
 # Context7: consulted for unittest
 import unittest
 
-# Context7: consulted for unittest.mock
-from unittest.mock import MagicMock, patch
-
 # Context7: consulted for tools.testguard - internal module
 from tools.testguard import RequirementsRequest, RequirementsTool
 
@@ -50,36 +47,33 @@ class TestTestguardTokenGeneration(unittest.TestCase):
         response = "APPROVED: This is valid TDD practice - writing test before implementation"
         request = RequirementsRequest(prompt="review blocked change", model="google/gemini-2.5-pro")
 
-        # Mock the registry to avoid actual database writes
-        with patch("tools.registry.RegistryDB") as mock_registry_class:
-            mock_registry = MagicMock()
-            mock_registry_class.return_value = mock_registry
+        # Format the response (token is generated statelessly, no registry needed)
+        formatted = self.tool.format_response(response, request)
 
-            # Format the response
-            formatted = self.tool.format_response(response, request)
+        # Verify token generation
+        self.assertIn("APPROVED ✅", formatted)
+        self.assertIn("APPROVAL TOKEN GENERATED", formatted)
+        self.assertIn("TEST METHODOLOGY GUARDIAN", formatted)  # Without hyphens
+        self.assertIn("7b55dcdd", formatted)  # UUID short form in token
 
-            # Verify token generation
-            self.assertIn("APPROVED ✅", formatted)
-            self.assertIn("APPROVAL TOKEN GENERATED", formatted)
-            self.assertIn("TEST METHODOLOGY GUARDIAN", formatted)  # Without hyphens
-            self.assertIn("7b55dcdd", formatted)  # UUID short form in token
+        # Extract the generated token
+        token_match = re.search(r"Token: `([^`]+)`", formatted)
+        self.assertIsNotNone(token_match, "Token not found in response")
 
-            # Extract the generated token
-            token_match = re.search(r"Token: `([^`]+)`", formatted)
-            self.assertIsNotNone(token_match, "Token not found in response")
+        token = token_match.group(1)
+        # Verify token format: TESTGUARD-{YYYYMMDD}-{uuid_short}
+        # Example: TESTGUARD-20231210-7b55dcdd
+        self.assertTrue(token.startswith("TESTGUARD-"), f"Token should start with 'TESTGUARD-', got: {token}")
+        self.assertIn("7b55dcdd", token, f"Token should contain UUID short form, got: {token}")
 
-            token = token_match.group(1)
-            # Verify token format - it should be the mocked token value
-            # In the mock, approve_entry returns {"token": token} where token is generated
-            # The actual format is TEST-METHODOLOGY-GUARDIAN-{date}-{uuid_short}
-            self.assertIsNotNone(token)  # Just check it exists, as it's mocked
-
-            # Verify registry was called
-            mock_registry.approve_entry.assert_called_once_with(
-                uuid="7b55dcdd-test-uuid",
-                specialist="testguard",
-                reason="This is valid TDD practice - writing test before implementation",
-            )
+        # Verify token has correct format (TESTGUARD-DATE-UUID)
+        parts = token.split("-")
+        self.assertEqual(len(parts), 3, f"Token should have 3 parts separated by '-', got: {token}")
+        self.assertEqual(parts[0], "TESTGUARD", "First part should be 'TESTGUARD'")
+        self.assertTrue(
+            parts[1].isdigit() and len(parts[1]) == 8, f"Second part should be 8-digit date, got: {parts[1]}"
+        )
+        self.assertEqual(parts[2], "7b55dcdd", f"Third part should be UUID short form '7b55dcdd', got: {parts[2]}")
 
     def test_rejected_response_formatting(self):
         """Test that rejected changes are formatted correctly."""
@@ -116,8 +110,8 @@ class TestTestguardTokenGeneration(unittest.TestCase):
         self.assertNotIn("APPROVED ✅", formatted)
         self.assertNotIn("REJECTED ❌", formatted)
 
-    def test_registry_failure_still_generates_token(self):
-        """Test that token is generated even if registry recording fails."""
+    def test_stateless_token_generation(self):
+        """Test that token is generated statelessly without registry dependency."""
         # Set up blocked UUID
         self.tool._blocked_uuid = "7b55dcdd-test-uuid"
 
@@ -125,17 +119,18 @@ class TestTestguardTokenGeneration(unittest.TestCase):
         response = "APPROVED: Valid TDD practice"
         request = RequirementsRequest(prompt="review blocked change", model="google/gemini-2.5-pro")
 
-        # Mock the registry to raise an exception
-        with patch("tools.registry.RegistryDB") as mock_registry_class:
-            mock_registry_class.side_effect = Exception("Database error")
+        # Format the response - token generated statelessly, no registry needed
+        formatted = self.tool.format_response(response, request)
 
-            # Format the response - should not raise exception
-            formatted = self.tool.format_response(response, request)
+        # Verify token is generated
+        self.assertIn("APPROVAL TOKEN GENERATED", formatted)
+        token_match = re.search(r"Token: `([^`]+)`", formatted)
+        self.assertIsNotNone(token_match, "Token not generated in stateless mode")
 
-            # Verify token still generated
-            self.assertIn("APPROVAL TOKEN GENERATED", formatted)
-            token_match = re.search(r"Token: `([^`]+)`", formatted)
-            self.assertIsNotNone(token_match, "Token not generated despite registry failure")
+        # Verify token format is correct
+        token = token_match.group(1)
+        self.assertTrue(token.startswith("TESTGUARD-"), f"Token should start with 'TESTGUARD-', got: {token}")
+        self.assertIn("7b55dcdd", token, f"Token should contain UUID short form, got: {token}")
 
     async def test_prepare_prompt_for_blocked_change(self):
         """Test that prepare_prompt correctly identifies and handles blocked changes."""
