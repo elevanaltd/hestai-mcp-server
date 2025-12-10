@@ -1545,3 +1545,26 @@ async def test_focus_sanitization_newlines(temp_hestai_dir):
             jsonl_path.unlink()
         if jsonl_dir.exists():
             shutil.rmtree(jsonl_dir)
+
+
+def test_extract_context_with_nested_brackets():
+    """Test that nested brackets in OCTAVE sections are preserved."""
+    from tools.clockout import ClockOutTool
+
+    tool = ClockOutTool()
+
+    octave_content = """
+DECISIONS::[Use pattern X[from ADR-003], Reject Y[too complex]]
+OUTCOMES::[Feature implemented[tested], Bug fixed[regression]]
+BLOCKERS::[Dependency Z[v2.0+] unavailable]
+PHASE_CHANGES::[B2[implementation] to B3[integration]]
+"""
+
+    extracted = tool._extract_context_from_octave(octave_content)
+
+    # Verify nested brackets preserved
+    assert "pattern X[from ADR-003]" in extracted
+    assert "Y[too complex]" in extracted
+    assert "implemented[tested]" in extracted
+    assert "Z[v2.0+]" in extracted
+    assert "B2[implementation]" in extracted

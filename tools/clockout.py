@@ -795,22 +795,22 @@ class ClockOutTool(BaseTool):
         sections = {}
 
         # Extract DECISIONS
-        decisions_match = re.search(r"DECISIONS::\[([^\]]+)\]", octave_content)
+        decisions_match = re.search(r"DECISIONS::\[(.*)\]", octave_content)
         if decisions_match:
             sections["DECISIONS"] = decisions_match.group(1).strip()
 
         # Extract OUTCOMES
-        outcomes_match = re.search(r"OUTCOMES::\[([^\]]+)\]", octave_content)
+        outcomes_match = re.search(r"OUTCOMES::\[(.*)\]", octave_content)
         if outcomes_match:
             sections["OUTCOMES"] = outcomes_match.group(1).strip()
 
         # Extract BLOCKERS
-        blockers_match = re.search(r"BLOCKERS::\[([^\]]+)\]", octave_content)
+        blockers_match = re.search(r"BLOCKERS::\[(.*)\]", octave_content)
         if blockers_match:
             sections["BLOCKERS"] = blockers_match.group(1).strip()
 
         # Extract PHASE_CHANGES
-        phase_match = re.search(r"PHASE_CHANGES::\[([^\]]+)\]", octave_content)
+        phase_match = re.search(r"PHASE_CHANGES::\[(.*)\]", octave_content)
         if phase_match:
             sections["PHASE_CHANGES"] = phase_match.group(1).strip()
 
