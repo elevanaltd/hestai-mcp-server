@@ -328,6 +328,57 @@ class TestClockOutTool:
         with pytest.raises(ValidationError, match="Session ID cannot be empty"):
             ClockOutRequest(session_id="   ")
 
+    def test_verify_context_claims_rejects_path_traversal(self, clockout_tool, tmp_path):
+        """
+        Test _verify_context_claims rejects path traversal attempts.
+
+        SECURITY ISSUE: Attacker-controlled OCTAVE could probe for /etc/passwd existence.
+        Fix: Validate path containment before checking existence.
+        """
+        working_dir = tmp_path / "project"
+        working_dir.mkdir()
+
+        # Malicious OCTAVE content with path traversal attempt
+        malicious_octave = """
+SESSION_SUMMARY::[
+  FILES_MODIFIED::[../../etc/passwd,../../etc/shadow],
+  ARTIFACTS::[../../../../sensitive/data.txt]
+]
+"""
+
+        # CURRENTLY FAILS: Code checks existence without validating containment
+        # This allows probing for files outside working_dir
+        result = clockout_tool._verify_context_claims(malicious_octave, working_dir)
+
+        # After fix, should reject path traversal attempts
+        # Expected: issues list contains "Path traversal rejected" for each attempt
+        assert len(result["issues"]) == 3  # All 3 traversal attempts rejected
+        assert any("Path traversal" in issue for issue in result["issues"])
+        assert result["passed"] is False
+
+    def test_verify_context_claims_allows_valid_paths(self, clockout_tool, tmp_path):
+        """Test _verify_context_claims allows valid paths within working_dir"""
+        working_dir = tmp_path / "project"
+        working_dir.mkdir()
+
+        # Create valid files
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "clockout.py").write_text("# implementation")
+
+        # Valid OCTAVE content with paths inside working_dir
+        valid_octave = """
+SESSION_SUMMARY::[
+  FILES_MODIFIED::[tools/clockout.py],
+  ARTIFACTS::[]
+]
+"""
+
+        result = clockout_tool._verify_context_claims(valid_octave, working_dir)
+
+        # Should pass - all paths are valid and within working_dir
+        assert result["passed"] is True
+        assert len(result["issues"]) == 0
+
     @pytest.mark.asyncio
     async def test_clockout_uses_transcript_path_from_session(self, clockout_tool, temp_hestai_dir, monkeypatch):
         """Test clock_out prefers transcript_path from session.json when available"""
@@ -799,6 +850,18 @@ class TestOctaveContentValidation:
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
 
+        # Create files mentioned in OCTAVE content so verification passes
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "clockout.py").write_text("# implementation")
+        (working_dir / "tests").mkdir()
+        (working_dir / "tests" / "test_clockout.py").write_text("# tests")
+
+        # Create archive file mentioned in OCTAVE
+        archive_dir = working_dir / ".hestai" / "sessions" / "archive"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        (archive_dir / "2025-12-09-b2-implementation-abc123.txt").write_text("session")
+        (archive_dir / "2025-12-09-b2-implementation-abc123.oct.md").write_text("octave")
+
         # Create long OCTAVE content (> MIN_OCTAVE_LENGTH)
         long_octave_content = """
 SESSION_SUMMARY::[
@@ -1075,8 +1138,9 @@ SESSION_SUMMARY::[
 
         assert result["passed"] is False
         assert len(result["issues"]) > 0
-        assert any("clockout.py" in issue or "test_missing.py" in issue or "missing.txt" in issue
-                  for issue in result["issues"])
+        assert any(
+            "clockout.py" in issue or "test_missing.py" in issue or "missing.txt" in issue for issue in result["issues"]
+        )
 
     def test_verify_context_claims_reference_integrity_pass(self, clockout_tool, tmp_path):
         """Test verification passes when markdown links point to real files"""
@@ -1194,3 +1258,69 @@ ARTIFACTS_GENERATED::[
         assert "passed" in verification_data
         assert "issues" in verification_data
         assert "advisory" in verification_data
+
+    @pytest.mark.asyncio
+    async def test_clockout_verification_gate_blocks_on_failure(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """
+        Test that verification failures cause non-success status response.
+
+        ISSUE: Verification issues are only logged, gate never actually blocks.
+        FIX: Return error/warning status when verification fails.
+        """
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Mock AI to return OCTAVE with non-existent files
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                # Create OCTAVE content > MIN_OCTAVE_LENGTH with broken references
+                octave_content = """
+SESSION_SUMMARY::[
+  SESSION_ID::test-verification-gate,
+  ROLE::implementation-lead,
+  FOCUS::verification-testing,
+  FILES_MODIFIED::[nonexistent/file1.py,nonexistent/file2.py,nonexistent/file3.py],
+  ARTIFACTS::[missing/artifact1.txt,missing/artifact2.txt]
+]
+
+TECHNICAL_CONTEXT::[
+  BRANCH::feature/verification-gate,
+  QUALITY_GATES::ALL_PASSING,
+  VERIFICATION_READY::false
+]
+
+ARTIFACTS_GENERATED::[
+  MISSING::nonexistent/file1.py[FileNotFound],
+  MISSING::nonexistent/file2.py[FileNotFound]
+]
+
+This is long enough content to pass MIN_OCTAVE_LENGTH validation.
+Additional padding to ensure we exceed 300 characters minimum requirement.
+More content here to make sure the OCTAVE file gets created properly.
+"""
+                return {"status": "success", "artifacts": [{"content": octave_content}]}
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test verification gate blocking",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        # CURRENTLY FAILS: status is "success" even though verification failed
+        # EXPECTED: status should be "error" with verification details
+        # This makes the gate actually block, not just log
+        assert output["status"] == "error", "Verification failures should cause error status"
+        assert "verification" in output.get("content", "").lower(), "Error message should mention verification"
