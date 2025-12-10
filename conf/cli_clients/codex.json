@@ -25,27 +25,18 @@
     },
     "codereviewer": {
       "prompt_path": "systemprompts/clink/codex_codereviewer.txt",
-      "role_args": ["-c", "model_reasoning_effort=high"]
+      "role_args": []
     },
     "quality-observer": {
       "prompt_path": "systemprompts/clink/quality-observer.txt",
       "role_args": []
     },
-    "critical-engineer": {
-      "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
-    },
     "ho-liaison": {
       "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
-    },
-    "holistic-orchestrator": {
-      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
-    },
-    "north-star-architect": {
-      "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": []
+      "role_args": [
+        "-c",
+        "model_reasoning_effort=medium"
+      ]
     },
     "task-decomposer": {
       "prompt_path": "systemprompts/clink/task-decomposer.txt",
@@ -63,14 +54,6 @@
       "prompt_path": "systemprompts/clink/validator.txt",
       "role_args": []
     },
-    "synthesizer": {
-      "prompt_path": "systemprompts/clink/synthesizer.txt",
-      "role_args": []
-    },
-    "edge-optimizer": {
-      "prompt_path": "systemprompts/clink/edge-optimizer.txt",
-      "role_args": []
-    },
     "design-architect": {
       "prompt_path": "systemprompts/clink/design-architect.txt",
       "role_args": []
@@ -81,23 +64,10 @@
     },
     "technical-architect": {
       "prompt_path": "systemprompts/clink/technical-architect.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
-    },
-    "critical-design-validator": {
-      "prompt_path": "systemprompts/clink/critical-design-validator.txt",
-      "role_args": []
-    },
-    "requirements-steward": {
-      "prompt_path": "systemprompts/clink/requirements-steward.txt",
-      "role_args": []
-    },
-    "test-methodology-guardian": {
-      "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
-    },
-    "universal-test-engineer": {
-      "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
+      "role_args": [
+        "-c",
+        "model_reasoning_effort=medium"
+      ]
     },
     "implementation-lead": {
       "prompt_path": "systemprompts/clink/implementation-lead.txt",
@@ -117,26 +87,20 @@
     },
     "code-review-specialist": {
       "prompt_path": "systemprompts/clink/code-review-specialist.txt",
-      "role_args": ["-c", "model_reasoning_effort=high"]
+      "role_args": [
+        "-c",
+        "model_reasoning_effort=high"
+      ]
     },
     "test-infrastructure-steward": {
       "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
-      "role_args": ["-c", "model_reasoning_effort=medium"]
+      "role_args": [
+        "-c",
+        "model_reasoning_effort=medium"
+      ]
     },
     "system-steward": {
       "prompt_path": "systemprompts/clink/system-steward.txt",
-      "role_args": []
-    },
-    "build-plan-checker": {
-      "prompt_path": "systemprompts/clink/build-plan-checker.txt",
-      "role_args": []
-    },
-    "coherence-oracle": {
-      "prompt_path": "systemprompts/clink/coherence-oracle.txt",
-      "role_args": []
-    },
-    "completion-architect": {
-      "prompt_path": "systemprompts/clink/completion-architect.txt",
       "role_args": []
     },
     "complexity-guard": {
@@ -147,10 +111,6 @@
       "prompt_path": "systemprompts/clink/compression-fidelity-validator.txt",
       "role_args": []
     },
-    "critical-implementation-validator": {
-      "prompt_path": "systemprompts/clink/critical-implementation-validator.txt",
-      "role_args": []
-    },
     "directory-curator": {
       "prompt_path": "systemprompts/clink/directory-curator.txt",
       "role_args": []
@@ -159,16 +119,8 @@
       "prompt_path": "systemprompts/clink/documentation-compressor.txt",
       "role_args": []
     },
-    "error-architect": {
-      "prompt_path": "systemprompts/clink/error-architect.txt",
-      "role_args": []
-    },
     "error-architect-surface": {
       "prompt_path": "systemprompts/clink/error-architect-surface.txt",
-      "role_args": []
-    },
-    "hestai-doc-steward": {
-      "prompt_path": "systemprompts/clink/hestai-doc-steward.txt",
       "role_args": []
     },
     "idea-clarifier": {
@@ -189,10 +141,6 @@
     },
     "research-curator": {
       "prompt_path": "systemprompts/clink/research-curator.txt",
-      "role_args": []
-    },
-    "security-specialist": {
-      "prompt_path": "systemprompts/clink/security-specialist.txt",
       "role_args": []
     },
     "semantic-optimizer": {
@@ -227,5 +175,7 @@
       "prompt_path": "systemprompts/clink/workspace-architect.txt",
       "role_args": []
     }
-  }
+  },
+  "_generated_by": "scripts/generate_client_configs.py",
+  "_tier_mapping_version": "1.0.0"
 }
