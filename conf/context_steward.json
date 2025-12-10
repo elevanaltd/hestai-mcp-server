@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
   "enabled": true,
-  "default_cli": "gemini",
+  "default_cli": "claude",
   "tasks": {
     "session_compression": {
       "trigger": "clock_out.post_archive",
       "enabled": true,
-      "cli": "gemini",
+      "cli": "claude",
       "role": "system-steward",
       "prompt_template": "systemprompts/context_steward/session_compression.txt",
       "inputs": ["session_metadata", "transcript_file", "archive_summary"],
@@ -23,7 +23,7 @@
     "project_context_update": {
       "trigger": "request_doc.type=context_update",
       "enabled": true,
-      "cli": "gemini",
+      "cli": "claude",
       "role": "system-steward",
       "prompt_template": "systemprompts/context_steward/project_context.txt",
       "output": {
@@ -34,7 +34,7 @@
     "project_checklist_update": {
       "trigger": "request_doc.type=workflow_update",
       "enabled": true,
-      "cli": "gemini",
+      "cli": "claude",
       "role": "system-steward",
       "prompt_template": "systemprompts/context_steward/project_checklist.txt",
       "output": {

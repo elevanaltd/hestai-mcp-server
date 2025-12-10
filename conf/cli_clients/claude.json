@@ -3,9 +3,7 @@
   "command": "claude",
   "additional_args": [
     "--permission-mode",
-    "bypassPermissions",
-    "--model",
-    "opus"
+    "bypassPermissions"
   ],
   "env": {},
   "roles": {
@@ -27,7 +25,8 @@
     },
     "north-star-architect": {
       "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",
@@ -39,11 +38,13 @@
     },
     "synthesizer": {
       "prompt_path": "systemprompts/clink/synthesizer.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "edge-optimizer": {
       "prompt_path": "systemprompts/clink/edge-optimizer.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "design-architect": {
       "prompt_path": "systemprompts/clink/design-architect.txt",
@@ -59,23 +60,28 @@
     },
     "critical-design-validator": {
       "prompt_path": "systemprompts/clink/critical-design-validator.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "requirements-steward": {
       "prompt_path": "systemprompts/clink/requirements-steward.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "critical-engineer": {
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "test-methodology-guardian": {
       "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "universal-test-engineer": {
       "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "opus"]
     },
     "implementation-lead": {
       "prompt_path": "systemprompts/clink/implementation-lead.txt",
@@ -87,7 +93,8 @@
     },
     "system-steward": {
       "prompt_path": "systemprompts/clink/system-steward.txt",
-      "role_args": []
+      "role_args": ["--model",
+    "haiku"]
     }
   }
 }
