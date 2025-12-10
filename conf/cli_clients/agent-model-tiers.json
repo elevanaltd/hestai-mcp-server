@@ -1,0 +1,114 @@
+{
+  "description": "Agent responsibility-based model tier assignment. Maps agents to capability tiers which determine optimal model selection across CLI clients.",
+  "tiers": {
+    "HIGH_CAPABILITY": {
+      "description": "Strategic, architectural, design validation, system-level decisions requiring deep reasoning, and critical build-affecting roles",
+      "agents": [
+        "north-star-architect",
+        "critical-engineer",
+        "principal-engineer",
+        "synthesizer",
+        "technical-architect",
+        "design-architect",
+        "critical-design-validator",
+        "requirements-steward",
+        "visual-architect",
+        "holistic-orchestrator",
+        "error-architect",
+        "coherence-oracle",
+        "completion-architect",
+        "implementation-lead",
+        "test-methodology-guardian",
+        "code-review-specialist",
+        "universal-test-engineer",
+        "ho-liaison",
+        "octave-specialist",
+        "subagent-creator",
+        "quality-observer",
+        "security-specialist"
+      ],
+      "model_assignments": {
+        "claude": "opus",
+        "gemini": "gemini-3-pro-preview",
+        "codex": "gpt-5.1-codex-max"
+      }
+    },
+    "MEDIUM_CAPABILITY": {
+      "description": "Domain specialists, implementation coordination, quality assurance with structured decision-making",
+      "agents": [
+        "task-decomposer",
+        "task-decomposer-validator",
+        "solution-steward",
+        "workspace-architect",
+        "test-infrastructure-steward",
+        "supabase-expert",
+        "smartsuite-expert",
+        "skills-expert",
+        "directory-curator",
+        "critical-implementation-validator"
+      ],
+      "model_assignments": {
+        "claude": "sonnet",
+        "gemini": "gemini-2.5-pro",
+        "codex": "gpt-5.1-codex"
+      }
+    },
+    "LOW_CAPABILITY": {
+      "description": "Analysis, observation, curation, execution support with straightforward logic",
+      "agents": [
+        "surveyor",
+        "research-analyst",
+        "blind-assessor",
+        "ideator",
+        "ideator-catalyst",
+        "edge-optimizer",
+        "research-curator",
+        "validator",
+        "hestai-doc-steward",
+        "system-steward",
+        "octave-validator",
+        "semantic-optimizer",
+        "documentation-compressor",
+        "compression-fidelity-validator",
+        "vibe-coder",
+        "complexity-guard",
+        "build-plan-checker",
+        "idea-clarifier",
+        "error-architect-surface",
+        "default",
+        "default_codereviewer",
+        "default_planner",
+        "codex_codereviewer"
+      ],
+      "model_assignments": {
+        "claude": "haiku",
+        "gemini": "gemini-2.5-flash",
+        "codex": "gpt-5.1-codex-mini"
+      }
+    }
+  },
+  "summary": {
+    "total_agents": 57,
+    "high_capability": 22,
+    "medium_capability": 10,
+    "low_capability": 25
+  },
+  "implementation_notes": {
+    "claude_tier_mapping": {
+      "high": "opus (use --model opus)",
+      "medium": "sonnet (use --model sonnet)",
+      "low": "haiku (use --model haiku)"
+    },
+    "gemini_tier_mapping": {
+      "high": "gemini-3-pro-preview",
+      "medium": "gemini-2.5-pro",
+      "low": "gemini-2.5-flash"
+    },
+    "codex_tier_mapping": {
+      "high": "gpt-5.1-codex-max (use auto reasoning)",
+      "medium": "gpt-5.1-codex",
+      "low": "gpt-5.1-codex-mini"
+    },
+    "reasoning_strategy": "Codex auto-selects reasoning based on task complexity. Claude models don't expose reasoning effort. Gemini uses default reasoning for all tiers."
+  }
+}
