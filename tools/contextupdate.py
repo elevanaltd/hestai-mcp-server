@@ -501,6 +501,33 @@ class ContextUpdateTool(BaseTool):
 
                     merged_content = context_artifact
 
+                    # Extract and persist history_archive artifact if present
+                    # This enforces the COMPACTION_ENFORCEMENT gate (validation + persistence)
+                    history_artifact = next(
+                        (a["content"] for a in artifacts if a.get("type") == "history_archive"), None
+                    )
+
+                    if history_artifact and result.get("compaction_performed"):
+                        # AI performed compaction and returned history_archive - persist it
+                        context_dir = project_root / ".hestai" / "context"
+                        context_dir.mkdir(parents=True, exist_ok=True)
+                        history_file = context_dir / "PROJECT-HISTORY.md"
+
+                        # Prepare archived content with date stamp (consistent with compact_if_needed)
+                        archived_content = (
+                            f"*Archived from {request.target} on {datetime.now().strftime('%Y-%m-%d')}*\n\n"
+                        )
+                        archived_content += history_artifact
+
+                        # Append to history file (or create if doesn't exist)
+                        if history_file.exists():
+                            existing = history_file.read_text()
+                            history_file.write_text(existing + "\n\n---\n\n" + archived_content)
+                        else:
+                            history_file.write_text("# PROJECT-HISTORY\n\n" + archived_content)
+
+                        logger.info(f"Persisted history_archive artifact to {history_file}")
+
                     # Defensive check: AI must return substantial content
                     MIN_CONTENT_LENGTH = 500  # ~10 lines minimum
                     if len(merged_content) < MIN_CONTENT_LENGTH:

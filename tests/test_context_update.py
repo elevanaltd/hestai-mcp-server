@@ -145,7 +145,9 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged new feature section",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nUpdated content with new feature"}],
+                    "artifacts": [
+                        {"type": "context_update", "content": "# PROJECT-CONTEXT\n\nUpdated content with new feature"}
+                    ],
                 }
             )
 
@@ -185,7 +187,7 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged content from file",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged content"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged content"}],
                 }
             )
 
@@ -229,6 +231,7 @@ STATUS::Active
                     "summary": "Successfully merged content",
                     "artifacts": [
                         {
+                            "type": "context_update",
                             "content": """# PROJECT-CONTEXT
 
 ## IDENTITY
@@ -241,7 +244,7 @@ STACK::Python+FastAPI
 ## CURRENT_STATE
 STATUS::Active
 FEATURE_X::Implemented
-"""
+""",
                         }
                     ],
                 }
@@ -297,7 +300,7 @@ Modified CURRENT_STATE section
                 return_value={
                     "status": "success",
                     "summary": "Merged with conflict resolution",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged content"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged content"}],
                 }
             )
 
@@ -371,7 +374,7 @@ Added new service
                 return_value={
                     "status": "success",
                     "summary": "Merged content",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged"}],
                 }
             )
 
@@ -429,7 +432,7 @@ Set PHASE to B2
                 return_value={
                     "status": "success",
                     "summary": "Resolved conflict",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nResolved"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nResolved"}],
                 }
             )
 
@@ -474,7 +477,9 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged content",
-                    "artifacts": [{"content": long_content + "\n## NEW_SECTION\nNew content\n"}],
+                    "artifacts": [
+                        {"type": "context_update", "content": long_content + "\n## NEW_SECTION\nNew content\n"}
+                    ],
                 }
             )
 
@@ -514,7 +519,7 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Added feature documentation",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nUpdated"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nUpdated"}],
                 }
             )
 
@@ -595,7 +600,7 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "success_176_LOC_within_target",
-                    "artifacts": [{"content": "success_176_LOC_within_target"}],
+                    "artifacts": [{"type": "context_update", "content": "success_176_LOC_within_target"}],
                 }
             )
 

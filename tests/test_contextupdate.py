@@ -242,3 +242,101 @@ class TestCompactionEnforcementGate:
         # Should fail - compaction performed but context_update missing
         with pytest.raises(ValueError, match="COMPACTION_ENFORCEMENT gate failure.*context_update artifact missing"):
             validate_ai_response_compaction(ai_response)
+
+    @pytest.mark.asyncio
+    async def test_history_archive_actually_persisted(self, contextupdate_tool, temp_project_dir, monkeypatch):
+        """
+        Test that history_archive artifact is actually persisted to PROJECT-HISTORY.md
+
+        REGRESSION TEST: After validation passes, history_archive content must be
+        written to .hestai/context/PROJECT-HISTORY.md, not just validated and discarded.
+
+        This is the Paper Gate vulnerability - validation without enforcement.
+        """
+        # Create existing PROJECT-CONTEXT.md
+        context_file = temp_project_dir / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+        context_file.write_text("# PROJECT-CONTEXT\n\nExisting content")
+
+        # Mock AI to return both artifacts (validation passes)
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_key, **kwargs):
+                # Long content to pass MIN_CONTENT_LENGTH check (>500 chars)
+                long_context_content = """# PROJECT-CONTEXT
+
+## IDENTITY
+Project: Test Project
+Type: Integration Test
+Purpose: Verify history archive persistence functionality
+
+## ARCHITECTURE
+Components:
+- Component A: Main application handling core business logic
+- Component B: Testing framework with comprehensive coverage
+- Component C: Integration layer connecting external services
+- Component D: Data persistence layer with caching
+
+## CURRENT_STATE
+Phase: B2 Implementation
+Status: In Progress
+Last Updated: 2025-12-10
+Next Milestone: Complete Phase B2 by end of quarter
+
+## TECHNICAL_STACK
+- Language: Python 3.12
+- Framework: FastAPI for API layer
+- Testing: Pytest with async support
+- Database: PostgreSQL with connection pooling
+
+Compacted content after archiving old sections to history.
+"""
+                history_content = """## ACHIEVEMENTS
+- Completed Phase 1
+- Implemented core features
+- Established testing infrastructure
+
+## HISTORICAL_NOTES
+- Initial architecture established
+- Test framework configured
+"""
+
+                return {
+                    "status": "success",
+                    "compaction_performed": True,
+                    "artifacts": [
+                        {
+                            "type": "context_update",
+                            "content": long_context_content,
+                        },
+                        {
+                            "type": "history_archive",
+                            "content": history_content,
+                        },
+                    ],
+                }
+
+        monkeypatch.setattr("tools.contextupdate.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "target": "PROJECT-CONTEXT",
+            "intent": "Test history archive persistence",
+            "content": "Some new content requiring compaction",
+            "working_dir": str(temp_project_dir),
+        }
+
+        # Execute the tool
+        await contextupdate_tool.execute(arguments)
+
+        # VERIFY: history_archive content was actually written to PROJECT-HISTORY.md
+        history_file = temp_project_dir / ".hestai" / "context" / "PROJECT-HISTORY.md"
+
+        # THIS WILL FAIL until implementation is added
+        assert history_file.exists(), "PROJECT-HISTORY.md should be created"
+
+        history_content = history_file.read_text()
+        assert "## ACHIEVEMENTS" in history_content, "Archived ACHIEVEMENTS section should be in history"
+        assert "Completed Phase 1" in history_content, "Archived achievement details should be preserved"
+        assert "## HISTORICAL_NOTES" in history_content, "Archived HISTORICAL_NOTES section should be in history"
+        assert "Initial architecture established" in history_content, "Historical notes should be preserved"
