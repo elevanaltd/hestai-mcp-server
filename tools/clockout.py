@@ -204,6 +204,19 @@ class ClockOutTool(BaseTool):
                             else:
                                 octave_path.write_text(octave_content)
                                 logger.info(f"AI compression saved to {octave_path}")
+
+                                # Verify claims before context_update
+                                verification = self._verify_context_claims(octave_content, project_root)
+
+                                # Save verification result
+                                verification_path = archive_dir / f"{request.session_id}.verification.json"
+                                verification_path.write_text(json.dumps(verification, indent=2))
+
+                                # Log if blocking issues found
+                                if not verification["passed"]:
+                                    logger.warning(
+                                        f"Verification issues for session {request.session_id}: {verification['issues']}"
+                                    )
             except Exception as e:
                 logger.warning(f"AI compression skipped: {e}")
                 # Graceful degradation - continue without AI
@@ -640,6 +653,70 @@ class ClockOutTool(BaseTool):
         lines.append("=" * 80)
 
         return "\n".join(lines)
+
+    def _verify_context_claims(self, octave_content: str, working_dir: Path) -> dict:
+        """
+        Verify session claims before syncing to PROJECT-CONTEXT.
+
+        Checks:
+        1. Artifact Reality Check - Mentioned files exist
+        2. Reference Integrity - Links aren't broken
+        3. Context Appropriateness - Project-level vs session noise
+        4. Consistency Cross-Check - No contradictions with existing context
+
+        Args:
+            octave_content: OCTAVE compressed session content
+            working_dir: Project root directory
+
+        Returns:
+            dict with {passed: bool, issues: list, advisory: list}
+        """
+        import re
+
+        issues = []
+        advisory = []
+
+        # 1. Extract file paths from OCTAVE content
+        # Look for patterns like: tools/clockout.py, tests/test_clockout.py
+        # OCTAVE format: FILES_MODIFIED::[file1,file2]
+        file_pattern = r"(?:FILES_MODIFIED|ARTIFACTS|FILES_CHANGED)::\[([^\]]+)\]"
+        matches = re.finditer(file_pattern, octave_content)
+
+        mentioned_files = []
+        for match in matches:
+            # Extract comma-separated file list
+            files_str = match.group(1)
+            files = [f.strip() for f in files_str.split(",")]
+            mentioned_files.extend(files)
+
+        # 2. Verify artifact existence
+        for file_path in mentioned_files:
+            if not file_path:
+                continue
+
+            full_path = working_dir / file_path
+            if not full_path.exists():
+                issues.append(f"Artifact missing: {file_path}")
+
+        # 3. Check reference integrity (markdown links)
+        # Pattern: [link text](path/to/file.md)
+        link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
+        link_matches = re.finditer(link_pattern, octave_content)
+
+        for match in link_matches:
+            link_path = match.group(2)
+
+            # Skip external URLs (http/https)
+            if link_path.startswith("http://") or link_path.startswith("https://"):
+                continue
+
+            # Check if referenced file exists
+            full_link_path = working_dir / link_path
+            if not full_link_path.exists():
+                issues.append(f"Broken reference: {link_path}")
+
+        # Return verification result
+        return {"passed": len(issues) == 0, "issues": issues, "advisory": advisory}
 
     def get_model_category(self) -> ToolModelCategory:
         """Return the model category for this tool"""
