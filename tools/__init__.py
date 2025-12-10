@@ -13,6 +13,7 @@ from .clockin import ClockInTool
 from .clockout import ClockOutTool
 from .codereview import CodeReviewTool
 from .consensus import ConsensusTool
+from .contextupdate import ContextUpdateTool
 from .critical_engineer import CriticalEngineerTool
 from .debug import DebugIssueTool
 from .documentsubmit import DocumentSubmitTool
@@ -38,6 +39,7 @@ __all__ = [
     "ClockOutTool",
     "CodeReviewTool",
     "ConsensusTool",
+    "ContextUpdateTool",
     "CriticalEngineerTool",
     "DocumentSubmitTool",
     "ListModelsTool",

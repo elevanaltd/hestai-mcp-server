@@ -19,7 +19,18 @@ SESSION_CONTEXT::[
   PHASE::{{phase}}
 ]
 
-===COMPRESSION_MANDATE===
+SIGNAL_CONTEXT::[
+  BRANCH::{{branch}},
+  COMMIT::{{commit}},
+  QUALITY_GATES::[lint={{lint_status}}, typecheck={{typecheck_status}}, test={{test_status}}],
+  AUTHORITY::{{authority}}
+]
+
+Session Context:
+- Session ID: {{session_id}}
+- Role: {{role}}
+- Duration: {{duration}}
+- Branch: {{branch}}
 
 GOAL::[
   EXTRACT::[decisions, blockers, learnings, outcomes, next_actions]→OCTAVE_format,

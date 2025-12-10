@@ -26,34 +26,58 @@ RUNTIME_DEPENDENCIES::[
 ]
 
 ## CURRENT_STATE
-DATE::2025-12-09
-ACTIVE_FOCUS::"Context Steward v2 - Phase 0 Kernel Implementation"
+DATE::2025-12-10
+ACTIVE_FOCUS::"Context Steward v2 - Complete Clockout Flow (#104)"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
-SESSION::"5ab8bad5 (HO orchestrating)"
 
 RECENT_ACHIEVEMENTS::[
-  "Created PR #95 for Context Steward v2 architecture",
-  "Enabled cross-agent visibility (context files now git-tracked)",
-  "Created GitHub Project #4 with 17 issues across 4 phases",
-  "Created CONTEXT-STEWARD-V2-SPEC.oct.md",
-  "Migrated task tracking from CHECKLIST to GitHub Projects",
-  "Implemented Kernel validator (context_validator.py, schemas.py)",
-  "Achieved 21/21 tests passing for validation infrastructure"
+  "#107 history_archive persistence FIXED (PR #111 - pending CI)",
+  "#104 Clockout verification gate implemented (CE: GO)",
+  "OCTAVE compression at clockout WORKING",
+  "1258 tests passing (full suite)",
+  "CRS review: 3 issues fixed (artifact type, path traversal, blocking gate)"
 ]
 
-OPEN_PR::#95[Context Steward v2: Architecture Specification and Cross-Agent Visibility]
+NEXT_PRIORITY::"Complete clockout flow - AI-driven context_update to PROJECT-CONTEXT"
+
+## CLOCKOUT_FLOW_STATUS
+INTENDED_FLOW::[
+  "1. Session transcript created → WORKING",
+  "2. OCTAVE compression by AI → WORKING (see archive/{session_id}-octave.oct.md)",
+  "3. context_update by AI → NOT_IMPLEMENTED (clockout doesn't call context_update)",
+  "4. PROJECT-CONTEXT updated → NOT_IMPLEMENTED (depends on step 3)"
+]
+
+GAP_ANALYSIS::[
+  "clockout.py creates transcript + OCTAVE compression",
+  "BUT: clockout does NOT call context_update to merge session insights into PROJECT-CONTEXT",
+  "RESULT: Session wisdom stays in archive, doesn't flow to PROJECT-CONTEXT automatically"
+]
+
+IMPLEMENTATION_NEEDED::[
+  "After OCTAVE compression succeeds:",
+  "  1. Extract context-worthy items from OCTAVE (DECISIONS, OUTCOMES, BLOCKERS)",
+  "  2. Call context_update with extracted content",
+  "  3. AI merges into PROJECT-CONTEXT.md",
+  "  4. If compaction triggered, history_archive now persists (PR #111)"
+]
+
+PHASE_STATUS::[
+  "Phase 1 Foundation: COMPLETE",
+  "Phase 2 AI Intelligence: COMPLETE",
+  "Phase 3 Deprecation: #92 TODO",
+  "Phase 4 Validation: #93 UNBLOCKED (pending PR #111 merge)"
+]
 
 ## AUTHORITY
 CURRENT_OWNER::implementation-lead
 PHASE::B2[Build Phase - Implementation]
 ACCOUNTABLE_TO::critical-engineer[via holistic-orchestrator]
-SESSION_ID::5ab8bad5
 
-BLOCKING_ITEMS::none
 QUALITY_GATES::[
-  lint::"pending",
-  typecheck::"pending",
-  test::"21/21 passing (test_context_validator.py)"
+  lint::"passing",
+  typecheck::"passing",
+  test::"72/72 passing (clockout + context_update)"
 ]
 
 ## DEVELOPMENT_GUIDELINES
@@ -93,16 +117,16 @@ UNIT_TESTS::"pytest tests/ -v -m 'not integration'"
 CLOCKIN::"Session registration and context initialization"[implemented]
 CLOCKOUT::"Session archival and transcript extraction"[implemented]
 ANCHORSUBMIT::"Agent anchor validation"[implemented]
-REQUESTDOC::"Documentation routing and placement"[implemented]
+REQUESTDOC::"Documentation routing and placement"[deprecated→use_document_submit]
 CHAT::"Multi-model conversation orchestration"[implemented]
 CLINK::"External CLI delegation"[implemented]
 CONSENSUS::"Multi-model consensus building"[implemented]
 
-### Context Steward v2 Tools (In Development)
-CONTEXT_VALIDATOR::"Kernel validation (Phase 0)"[in_progress]
-CONTEXT_ROUTER::"Shell routing logic (Phase 1)"[planned]
-CONTEXT_UPDATER::"Context file updates (Phase 1)"[planned]
-CONTEXT_ARCHIVER::"Compression and archival (Phase 2)"[planned]
+### Context Steward v2 Tools
+DOCUMENT_SUBMIT::"Document routing and placement"[implemented]
+CONTEXT_UPDATE::"AI-driven context file merging with conflict detection"[implemented]
+CHANGELOG_PARSER::"Section-aware conflict detection with continuation_id"[implemented]
+GATHER_SIGNALS::"Runtime signal gathering (git, test, authority)"[implemented]
 
 ### Deprecated Tools
 THINKDEEP::"Replaced by HestAI phase progression (D1-D2-B0)"[deprecated]
@@ -112,21 +136,27 @@ DEBUG::"Replaced by domain-specific error routing"[deprecated]
 
 CURRENT_BRANCH::"feature/context-steward-octave"
 BASE_BRANCH::"main"
-STATUS::"clean working tree"
+STATUS::"8 commits ahead of origin"
 
 RECENT_COMMITS::[
-  "cec4c38::Track context files for cross-agent visibility",
-  "058f4fa::Add Context Steward v2 spec and critical-engineer assessment",
-  "ddc0540::Mock AI helper in requestdoc fixture for template path tests",
-  "68cbdc9::Fix PR #77 P1 issues in requestdoc and templates",
-  "878eb53::Add tests for PR #77 P1 fixes"
+  "cb06877::fix: Persist history_archive artifact to PROJECT-HISTORY.md (#107)",
+  "ed48f4f::fix: Add path containment validation to prevent traversal attacks",
+  "312dae7::fix: Select artifact by type, not array order in contextupdate",
+  "a9af46a::feat: Implement clockout verification gate",
+  "425207b::feat: Implement COMPACTION_ENFORCEMENT gate for context_update (#107)"
+]
+
+PR_STATUS::[
+  "PR #111: feat: Context Steward v2 - Coherence Gates and Security Fixes",
+  "Status: CI running (lint, test-full 3.10/3.11/3.12)",
+  "URL: https://github.com/elevanaltd/hestai-mcp-server/pull/111"
 ]
 
 QUALITY_STATUS::[
-  lint::"pending full run",
-  typecheck::"pending full run",
-  test::"21/21 new tests passing, full suite pending",
-  coverage::"Context Steward components fully covered"
+  lint::"passing",
+  typecheck::"passing",
+  test::"1258 passed, 11 skipped, 12 deselected, 1 xfailed",
+  coverage::"Full suite including clockout + context_update + history_archive persistence"
 ]
 
 ## INTEGRATION_GUARDRAILS

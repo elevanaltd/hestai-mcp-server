@@ -27,6 +27,11 @@ if not os.environ.get("XAI_API_KEY"):
 # This prevents all tests from failing due to missing model parameter
 os.environ["DEFAULT_MODEL"] = "gemini-2.5-flash"
 
+# Clear DISABLED_TOOLS to ensure all tools are available during tests
+# This prevents test failures where tools are disabled via .env configuration
+# Set to empty string (not pop) so load_dotenv won't override it from .env file
+os.environ["DISABLED_TOOLS"] = ""
+
 # Force reload of config module to pick up the env var
 import config  # noqa: E402
 

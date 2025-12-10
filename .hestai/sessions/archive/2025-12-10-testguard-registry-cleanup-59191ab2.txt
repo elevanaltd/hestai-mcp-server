@@ -1,0 +1,906 @@
+================================================================================
+Claude Code Session Export
+Session ID: 59191ab2
+Role: holistic-orchestrator
+Focus: testguard-registry-cleanup
+Started: 2025-12-10T03:33:25.151460
+Exported: 2025-12-10T03:34:52.706133
+Description: Testguard/registry cleanup audit + #17 testing validation strategy research. Executed surgical registry removal via implementation-lead. Decided to use TMG (clink) instead of testguard for #17. Documented blocking vs advisory framework. Ready for next phase: implementation of #17 testing gates (pending option selection: A/B/C).
+Working Directory: /Volumes/HestAI-Tools/hestai-mcp-server
+================================================================================
+
+[user]
+we set up testguard in this repo but it wasn't working very well (convoluted system where it would block via a hook in claude code, and then they've invoke testgusrd mcp and get some code that they had to try and provide and it would unlock.
+
+We abandoned it, and just now use TMG via clink. However, I'd like to explore how we could reuse this as part of https://github.com/elevanaltd/hestai/issues/17
+
+Whatare the best next steps?
+
+[assistant]
+I'll help you explore this. Let me first understand the current state and what issue #17 is about.
+
+[assistant]
+Now let me check what issue #17 is about:
+
+[assistant]
+Excellent context. Now I can see the opportunity clearly. Let me summarize what I'm seeing and suggest the best next steps:
+
+## Current State Summary
+
+**The Convoluted System You Have:**
+- **Testguard (MCP Tool)** - Complex UUID-based approval workflow with registry database, token generation, and hook integration
+- **TMG via Clink** - Simpler, cleaner external delegation using existing Gemini/Codex CLI infrastructure
+- **Registry System** - SQLite database tracking blocked changes and single-use approval tokens (hardcoded paths, duplication)
+- **Hook System** - Pre-commit enforcement at `~/.claude/hooks/` (enforcement-level hooks, not testguard-specific)
+
+**Why It Was Convoluted:**
+1. Dual authority channels (MCP + clink) with unclear boundaries
+2. Token generation/validation spread across multiple layers
+3. Filesystem operations coupled to hardcoded paths
+4. Complex UUID detection with 4 different regex patterns
+5. Multiple approval mechanisms doing similar things
+
+**Why You Abandoned It:**
+The hook-based blocking + token-code-comment workflow was cognitively expensive and fragile.
+
+---
+
+## Issue #17 Opportunity
+
+Issue #17 is researching **testing blind spots and TDD enforcement gaps**. The core problem testguard was solving (detecting test manipulation anti-patterns) is EXACTLY what #17 needs to address systematically.
+
+---
+
+## Best Next Steps (In Order)
+
+### **Step 1: Clarify Core Capability Boundaries**
+Before reusing anything, you need to understand:
+- **What can testguard (MCP) do that TMG (clink) cannot?**
+- **What can TMG (clink) do that testguard cannot?**
+- **Are they redundant, or do they solve different problems?**
+
+**Action:** Create a comparative analysis table:
+| Capability | Testguard (MCP) | TMG (Clink) | Issue #17 Need |
+|-----------|---|---|---|
+| Detect skipped tests | ? | ? | YES |
+| Detect assertion weakening | ? | ? | YES |
+| Detect coverage gaming | ? | ? | YES |
+| Detect TDD violations | ? | ? | YES |
+| Real-time blocking | ? | ? | Maybe? |
+| CI/CD integration | ? | ? | YES |
+
+**Suggestion:** Delegate this comparison research to the codex CLI to preserve Claude Code quota:
+```bash
+mcp__hestai__clink[
+  cli_name="codex",
+  role="code-review-specialist", 
+  prompt="Compare testguard MCP tool vs TMG clink role - what's the actual capability difference?"
+]
+```
+
+---
+
+### **Step 2: Extract Core Testguard Value (What Actually Works)**
+Rather than reusing the whole convoluted system, extract what's actually valuable:
+
+**Valuable Components:**
+- **Anti-pattern detection logic** in `testguard.py:200-400` (test manipulation patterns)
+- **Enhanced file context gathering** in `testguard.py:450-550` (test framework detection)
+- **Token generation logic** (simpler than current usage)
+
+**Not Worth Reusing:**
+- Hook-based blocking system (you've already abandoned this)
+- Registry database with atomic transactions (over-engineered for this use case)
+- UUID tracking and `/tmp/blocked-*` file handling (complexity hotspot)
+
+**Action:** Create a "Core Value Extraction" plan:
+```
+1. Document what testguard actually detects (list anti-patterns)
+2. Document how TMG currently validates (vs testguard)
+3. Identify gaps #17 needs filled that neither currently addresses
+4. Design minimal component to fill those gaps
+```
+
+---
+
+### **Step 3: Design for #17 Integration Pattern (Not Reuse Pattern)**
+Instead of "reusing testguard," think about **integrating detection into #17's workflow**:
+
+**Pattern Concept:**
+```
+Issue #17 Workflow → Mutation Testing + TDD Validation
+                 ↓
+        Required: Detection at 3 points:
+        1. PR time: "Is this following TDD?"
+        2. Commit time: "Did tests precede implementation?"
+        3. CI time: "Does this pass mutation testing?"
+```
+
+**Questions to Answer:**
+- **Should detection happen in CI?** (mutation testing runs here anyway - Stryker integration point)
+- **Should detection happen at PR review time?** (GitHub Actions quality gate)
+- **Should detection be blocking or advisory?** (issue #17 talks enforcement, not blocking)
+- **What's the reporting format?** (GitHub check, annotations, PR comment?)
+
+---
+
+### **Step 4: Create Focused, Simple Capability**
+
+Rather than reusing testguard's complex registry/token system, create something aligned to #17:
+
+**Option A: TMG-Based (Recommended - You're Already Using This)**
+- Keep using `mcp__hestai__clink` with TMG role
+- Enhance TMG prompt to specifically detect #17 anti-patterns
+- Integrate into CI workflow as a quality gate (not blocking, advisory)
+- No registry/token complexity needed
+
+**Option B: Simplified testguard v2**
+- Extract anti-pattern detection into a simpler tool
+- Remove: registry, tokens, hook system, UUID tracking
+- Add: #17-specific patterns (skipped tests, assertion weakening, coverage gaming)
+- Use as CI gate that reports violations (not blocks)
+
+**Option C: Hybrid (Best of Both)**
+- Keep TMG via clink for exploratory/complex analysis
+- Add lightweight detection hook in CI pipeline (bash + regex patterns)
+- No MCP tool, no database, no approval workflow
+- Simple and auditable
+
+---
+
+## My Recommendation: Phased Approach
+
+### **Phase 1: Research & Validation (This Week)**
+- [ ] Compare testguard vs TMG capability gap using codex (Step 1)
+- [ ] Extract what testguard actually detects into a list (Step 2)
+- [ ] Review #17's mutation testing requirements (existing docs)
+- [ ] Create "Integration Points" document: where should detection live?
+
+### **Phase 2: Design (Next Week)**
+- [ ] Decide on integration pattern (CI gate vs PR check vs blocking)
+- [ ] Design reporting format (GitHub checks vs PR comments vs logs)
+- [ ] Define which #17 anti-patterns to detect first (MVP scope)
+- [ ] Create ADR: "Why we're not reusing testguard as-is"
+
+### **Phase 3: Implementation (Following Week)**
+- [ ] Build minimal detection component (Option A, B, or C)
+- [ ] Integrate into existing CI/quality gates
+- [ ] Add to mutation testing workflow
+- [ ] Document patterns detected vs #17 requirements
+
+---
+
+## Specific Questions for You
+
+Before I help you execute, clarify:
+
+1. **Blocking vs Advisory:** Should testing violations *block* PRs or just report violations?
+2. **Scope:** Are you protecting specific repos (eav-monorepo) or all HestAI projects?
+3. **Timeline:** Is this for mutation testing phase of #17, or separate initiative?
+4. **Integration Point:** Should this live in CI/GitHub Actions or in Claude Code workflow?
+5. **Risk Tolerance:** How strict should detection be? (High false-positives risk if too aggressive)
+
+These answers will determine whether you need testguard-style approval workflows or simpler advisory reporting.
+
+[user]
+SO i can tell you the key difference was that tmg has authority to look around the codebase and testguard only has the files given to them. tmg opens in a cli environment so more accessiblity to do research (we should actually add a step that they should use web/other resources to get full answer where unsure)
+
+I have this info about blcking agents in general that's worth also considering
+
+1. What “blocking agents” usually means in Claude Code
+
+In practice people make things “blocking” via:
+    •    Hooks + exit codes / JSON decisions
+    •    Command hooks (type: "command") treat non-zero exit codes as failures and can halt a pipeline or block a tool. ￼
+    •    Prompt-based hooks (type: "prompt") return a JSON decision { "decision": "approve" | "block" } for events like Stop, SubagentStop, PreToolUse, etc. A "block" decision can prevent the agent from continuing. ￼
+    •    Subagent pipelines + hooks
+Subagents do the work, and hooks on Stop / SubagentStop decide whether the next agent is allowed to run or a human needs to intervene. ￼
+
+So a “blocking agent” is really: an agent whose outputs are enforced by hooks so that Claude can’t move on until some condition is met.
+
+⸻
+
+2. Common practical blocking patterns
+
+From Anthropic’s docs and community writeups, the blocking usages that seem to stick are:
+
+A. Quality gates around code changes
+
+Pattern: run checks and block further automation if they fail.
+
+Typical hooks:
+    •    PreToolUse / PostToolUse on Write/Edit/Bash to run:
+    •    npm test, pytest, mix compile --warnings-as-errors, eslint, black…
+    •    secret scanners, simple static analysis. ￼
+    •    Exit code 0 → OK, continue; non-zero → block + print summary.
+
+Practically:
+    •    Most teams keep these fast (≤ 5–20s) and deterministic. Anything slow (full integration suite, etc.) is pushed to CI instead. ￼
+    •    They often start as non-blocking warnings and only flip to blocking once they’re stable.
+
+B. Safety / permissions around dangerous tools
+
+Pattern: “Don’t let the agent do scary things without an explicit OK.”
+
+Common examples:
+    •    PreToolUse with matchers like Bash|WebFetch, and a prompt-based hook:
+    •    Allow things like ls, cat, grep.
+    •    Block or require confirmation for:
+    •    rm -rf, docker-compose down on prod, schema-changing migrations.
+    •    Hitting external endpoints outside an allowlist. ￼
+    •    PermissionRequest hooks that auto-deny certain prompts, or auto-approve harmless ones.
+
+This is usually where blocking is most justified: it’s about real risk (data, infra), not code style nitpicks.
+
+C. Subagent pipelines with gated transitions
+
+A very common pattern is a pipeline like:
+    1.    Spec agent → produces spec, sets status READY_FOR_ARCH.
+    2.    Architecture agent → writes ADR, sets READY_FOR_BUILD.
+    3.    Implementer/tester agent → writes code & tests, sets DONE. ￼
+
+Blocking comes in via:
+    •    SubagentStop hook that reads a queue/status file:
+    •    If status isn’t valid (e.g. no ADR, or tests not green) → block further agents, tell the user what’s missing.
+    •    If everything looks good → print “Run implementer-tester on slug X next”, or trigger the next subagent.
+
+This is very feasible because:
+    •    The heavy lifting is in the agents’ prompts + simple scripts;
+    •    The blocking rule itself is trivial: “only proceed if status is READY_FOR_*.” ￼
+
+D. CI/CD blocking (outside the interactive session)
+
+Many teams also use Claude Code as a blocking check in CI, not in the REPL:
+    •    GitHub/GitLab CI step that uses Claude Code (or the Agent SDK) to:
+    •    Review a PR,
+    •    Check the diff against your spec/ADR,
+    •    Suggest tests or catch obvious bugs. ￼
+    •    That step can be required in branch protection rules, so a PR can’t merge until Claude + tests are green.
+
+This gives you “blocking agents” without slowing devs down locally.
+
+⸻
+
+3. What’s not practical (at least right now)
+
+These are ideas people try and usually dial back:
+    1.    Blocking on every user prompt
+    •    A UserPromptSubmit hook that LLM-checks every message for policy/compliance gets slow and noisy fast. Better: run it only on certain repos, directories, or commands. ￼
+    2.    LLM-only policy enforcement for everything
+    •    Prompt-based hooks are great for fuzzy judgments, but they’re:
+    •    Slower than shell hooks,
+    •    Occasionally wrong,
+    •    More expensive. ￼
+    •    Best used as a second layer over simple deterministic checks (tests, grep rules, file patterns, etc.).
+    3.    Blocking Stop hooks everywhere
+    •    Docs explicitly warn that fully blocking Stop / SubagentStop can create loops: hook fails → Claude “fixes” → Stop fires again → repeat. ￼
+    •    Most people:
+    •    Keep Stop hooks non-blocking, used for logging and “next step” hints.
+    •    Reserve blocking Stop/SubagentStop for very constrained workflows (e.g., the spec/ADR pipeline).
+
+⸻
+
+4. A sane starting point
+
+If you want to be practical and not miserable, a good rollout looks like:
+    1.    One or two deterministic blockers
+    •    PreToolUse on Write|Edit|Bash:
+    •    Run fast tests / lint / compile; block on failure, show summary.
+    •    Optional: PreToolUse on Bash that blocks obviously dangerous commands.
+    2.    One subagent pipeline with light gating
+    •    Spec → ADR → Implementation pipeline with a SubagentStop hook that:
+    •    Ensures a “definition of done” is satisfied before moving on.
+    •    Prints a command suggestion rather than auto-chaining, so a human is still in the loop. ￼
+    3.    Push the rest to CI
+    •    Use Claude Code as a blocking GitHub/GitLab check for deeper reviews instead of trying to make your interactive agent do everything synchronously. ￼
+
+⸻
+
+5. Rule of thumb
+    •    Blocking:
+    •    High risk (prod, security, data, migrations),
+    •    Cheap, reliable checks (tests, compile, lint),
+    •    Simple workflow gates (status transitions, ADR required).
+    •    Non-blocking / advisory:
+    •    UX polish, style, “nice to have” suggestions,
+    •    Anything slow or probabilistic,
+    •    Experimental LLM policies.
+
+Can you invoke the relevant agents to do investigations into this (note-  gemini is down so use codex or claude for all tasks)
+
+[assistant]
+This is excellent framing. Let me invoke a coordinated set of investigations to understand:
+
+1. **What blocking patterns already exist in HestAI** (to see what you're working with)
+2. **Testguard vs TMG detailed capability gap** (especially around codebase access + research)
+3. **Whether #17 needs blocking or advisory** (using your rule of thumb)
+
+I'll run these in parallel using codex (since gemini is down):
+
+[assistant]
+Excellent findings. Let me synthesize these three research outputs into a clear roadmap:
+
+[assistant]
+## Key Findings Synthesis
+
+### 1. **Blocking Infrastructure Already Exists (You're Not Starting from Zero)**
+
+You have 15+ PreToolUse hooks already enforcing quality gates:
+- `enforce-test-first.sh` - blocks code writes without accompanying tests
+- `supabase_migration_guard.sh` - blocks unsafe migrations
+- `validate_worktree_write.sh` - prevents cross-worktree file writes
+- `enforce-doc-governance.sh`, `enforce-hestai-doc-stewardship.sh` - document access gates
+
+**Critical gap:** No active SubagentStop hooks (they're being skipped due to workspace trust). This means you can't gate *subagent pipelines* yet, but you CAN gate *tool calls*.
+
+**Implication for #17:** You already have the hook infrastructure to add testing gates. You just need to add them to the right place.
+
+---
+
+### 2. **Testguard ≠ TMG (They Solve Different Problems)**
+
+| Aspect | Testguard (MCP) | TMG (Clink) | Impact |
+|--------|---|---|---|
+| **Codebase Access** | Files passed to it only (~4k tokens) | Full repo visibility | TMG can see patterns testguard cannot |
+| **Execution Environment** | Read files only | Full CLI environment (runs commands, fetches CI logs) | TMG can *verify* claims; testguard can only *suggest* |
+| **Authority** | Generates advisory tokens | Explicit BLOCKING authority | TMG stops work; testguard nudges |
+| **Research Capability** | None (no search/web access) | Can coordinate across roles, fetch external resources | TMG can validate against CI artifacts |
+| **Speed** | Fast (snapshot analysis) | Slower (comprehensive investigation) | TMG trades speed for confidence |
+
+**Key insight:** TMG fundamentally can't be replaced by testguard for #17 work. They're not competing tools—TMG is the superset. Testguard was designed for fast advice on isolated code snippets; TMG is designed for deep validation across suites.
+
+**Why testguard wasn't working:** The hook-based approval workflow (detect violation → generate UUID → user adds token comment → hook validates) was cognitively expensive because:
+- Required manual token injection
+- Unclear authority (MCP tool claims blocking, but hooks actually enforce)
+- Redundant with what TMG already does
+- Complex registry/database overhead for no real gain
+
+---
+
+### 3. **For Issue #17: Clear Blocking vs Advisory Decision**
+
+TMG verdict (synthesized with Anthropic blocking best practices):
+
+| Violation Type | Decision | Implementation | Authority |
+|---|---|---|---|
+| **Skipped tests** (`.skip`, `vi.todo`, `describe.only`) | BLOCKING | PreToolUse hook + PR gate | Fail PR/CI immediately |
+| **Assertion weakening** (deleted expects without replacement) | BLOCKING | Diff watcher in PR gate | Fail PR/CI; escalate if tests pass |
+| **Coverage gaming** (% padding, line exclusions) | ADVISORY only | Danger bot comment + dashboard | No merge gate; discuss in review |
+| **Mutation testing gaps** (critical paths untested) | BLOCKING (Tier-2 only) | Targeted mutation in preview pipeline | Block Tier-2 previews only; full nightly is advisory |
+
+**Why this distribution:**
+- ✅ **BLOCKING** = high risk + cheap/reliable detection (regex patterns, diff analysis)
+- ✅ **BLOCKING in preview** = slower checks that don't block devs locally (mutation testing takes time)
+- ❌ **ADVISORY** = diagnostic (coverage % doesn't guarantee behavior)
+
+---
+
+## Three Viable Next Steps (Pick One)
+
+### **Option A: TMG-Based (Recommended) – Least Disruption**
+Leverage what you're already using successfully.
+
+**What to do:**
+1. Enhance TMG prompt to specifically detect #17 anti-patterns (you're already delegating to it via clink)
+2. Add TMG validation as a GitHub workflow job (parallel with tests)
+3. Fail PRs on TMG violations (like you do with lint/typecheck)
+4. Optional: add web/resource research step to TMG prompt so it can reference mutation testing frameworks, coverage analysis tools, etc.
+
+**Pros:**
+- You already have the right authority model (TMG has BLOCKING power)
+- No new hook system to maintain
+- TMG can actually do research (unlike testguard)
+- Reuses existing clink infrastructure
+
+**Cons:**
+- Needs CI integration (not interactive)
+- Slower than local hooks
+
+---
+
+### **Option B: Lightweight CI Hook (Simplest) – Zero Complexity**
+Add simple bash hooks to your CI pipeline for fast, deterministic checks.
+
+**What to do:**
+1. Add PreToolUse hook that detects `.skip` / `vi.todo` / `describe.only` patterns in diffs
+2. Add PreToolUse hook that compares test file changes against impl file changes (did test come first?)
+3. Wire these into GitHub Actions (fail workflow on match)
+4. Keep mutation testing + assertion analysis for CI job (not interactive hook)
+
+**Pros:**
+- Dead simple (bash regex patterns)
+- Runs in CI where it belongs (not slowing local development)
+- Reuses your existing hook exit-code pattern
+- Easy to debug and iterate
+
+**Cons:**
+- Only catches syntactic patterns (not semantic analysis like TMG)
+- No coordination across roles
+
+---
+
+### **Option C: Hybrid (Best Balance) – Practical Default**
+- **Fast deterministic gates locally:** Bash hooks for `.skip`/assertion patterns
+- **Deep semantic validation in CI:** TMG job that analyzes test quality, mutation gaps, framework coherence
+- **Optional research layer:** TMG can fetch web resources on mutation testing best practices when unclear
+
+**Pros:**
+- Local dev isn't slowed by AI analysis
+- Serious violations caught in CI where they belong
+- TMG gets to do its actual job (research + synthesis)
+- Separates "simple facts" (skipped tests) from "judgment calls" (weak assertions)
+
+**Cons:**
+- More moving parts to wire together
+
+---
+
+## My Recommendation
+
+**Use Option C (Hybrid) with this sequence:**
+
+1. **Week 1: Add deterministic gates (bash)**
+   - PreToolUse hooks for `.skip`, `vi.todo`, `describe.only` detection
+   - Test-file-pairing validation (impl changes → test changes in same commit)
+   - Wire into GitHub Actions via existing quality-gates workflow
+   - These run locally + in CI
+
+2. **Week 2: Integrate TMG into CI**
+   - Add GitHub workflow job that invokes TMG via clink
+   - Runs after unit tests pass (tier-2 preview stage)
+   - Analyzes test quality, mutation coverage gaps, framework coherence
+   - Optional: enhance TMG prompt to request web research on mutation testing frameworks when needed
+
+3. **Week 3: Mutation testing integration**
+   - Wire Stryker (or similar) into Tier-2 preview pipeline
+   - Target critical paths only (don't run full suite—too slow)
+   - TMG validates mutation results, not coverage %
+
+4. **Week 4: Document + iterate**
+   - ADR: Why we didn't reuse testguard (good for future reference)
+   - Collect metrics on false positives, violations caught
+   - Refine patterns based on real PR data
+
+---
+
+## Why NOT to Reuse Testguard
+
+Create a clear ADR for future reference:
+
+**Title:** ADR-XXX: Why Testguard Isn't Reused for #17 Testing Validation
+
+**Decision:** Use TMG (clin) + bash hooks instead of extending testguard.
+
+**Rationale:**
+1. **Testguard is input-limited:** Can't see codebase patterns testguard can't access. #17 needs cross-file analysis.
+2. **Testguard has no execution environment:** Can't run tests, fetch CI logs, or verify claims. TMG's CLI access is essential.
+3. **Testguard's token/registry system was convoluted:** Manual token injection + approval workflow created friction. CI gates are simpler.
+4. **Dual authority created confusion:** Testguard claims BLOCKING but hooks actually enforce. TMG's explicit authority is clearer.
+5. **Blocking best practices favor CI gates:** Fast deterministic checks run locally; slower AI analysis runs in CI where it belongs.
+
+**Trade-offs:**
+- Testguard: fast but shallow
+- TMG: slower but deep (acceptable in CI)
+- Bash hooks: fast + deterministic (acceptable for syntax patterns)
+
+---
+
+## What to Do Right Now
+
+You have all the information. Here's what I'd recommend as your next 3 decisions:
+
+1. **Which option appeals most?** (A: TMG-only, B: Bash-only, C: Hybrid)
+2. **For #17 scope:** Are you protecting specific repos (eav-monorepo) or all HestAI projects?
+3. **Timeline:** Should this be integrated with Stryker mutation work, or separate phased approach?
+
+Once you answer those, I can help you design the actual implementation—either as PRs to add hooks, CI workflow changes, or TMG prompt enhancements.
+
+[user]
+If we decide to retire testguard, which we have, and the resistry tool, is it possible to delete these from the build? How easy is it to remove their existence so things aren't accumulating tech debt?
+
+[assistant]
+(no content)
+
+[assistant]
+## Removal Feasibility: Very Clean, Low Risk
+
+**The good news:** Testguard and registry are isolated tools with minimal coupling. You can remove them cleanly without creating cascading problems.
+
+---
+
+## Removal Checklist
+
+### **FILES TO DELETE** (11 total)
+
+**Core tools (2):**
+- `tools/testguard.py` (~700 lines)
+- `tools/registry.py` (~400 lines)
+
+**Tests (9):**
+- `tests/test_testguard.py`
+- `tests/test_testguard_enhanced.py`
+- `tests/test_testguard_token_generation.py`
+- `tests/test_registry.py`
+- `tests/test_registry_json_sync.py`
+- `tests/test_registry_schema.py`
+- `tests/test_registry_mcp_interface.py`
+- `tests/test_specialist_registry_integration.py`
+- `tests/test_stateless_token_generation.py`
+
+**Documentation (2):**
+- `docs/100-DOC-REGISTRY-USAGE.md`
+- `docs/001-DOC-REGISTRY-TOOL-REQUIREMENTS.md` (if exists)
+
+---
+
+### **FILES TO MODIFY** (4 files, ~50 lines total)
+
+| File | Changes | Scope |
+|------|---------|-------|
+| `server.py` | Remove RequirementsTool/RegistryTool imports (line 89, 101); Remove tool registry entries (lines 351-352); Remove from DOCUMENTED_TOOLS set (lines 399, 404); Remove testguard model override (lines 1043-1052) | ~20 lines |
+| `tools/__init__.py` | Remove testguard import (line 26); Remove RequirementsTool from `__all__` exports (line 52, 55) | ~5 lines |
+| `tools/critical_engineer.py` | Remove `from tools.registry import RegistryTool` import (line 292); Search/remove any RegistryTool references | ~10 lines |
+| `.env` | Remove testguard/registry from DISABLED_TOOLS list; Clean comments | ~10 lines |
+
+**Optional:**
+- `tests/test_schema_source_parity.py` - Remove schema validation entries if `testguard_schema.json` or `registry_schema.json` exist
+
+---
+
+### **DATABASE/STATE TO CLEAN**
+
+**User-level persistent state:**
+- `~/.claude/hooks/registry.db` + `.registry.db-wal` + `.registry.db-shm` (SQLite WAL files)
+- These are created at runtime but won't break anything if left behind
+- Recommend documenting cleanup step in migration notes
+
+---
+
+## Effort Estimate: **45-60 minutes total**
+
+| Phase | Time | Effort |
+|-------|------|--------|
+| Delete files (11 deletions) | 5 min | `rm` operations |
+| Modify 4 source files | 15 min | Straightforward deletions + import cleanup |
+| Update `.env` comments | 5 min | Line deletions |
+| Check schema validation | 5 min | Inspect test_schema_source_parity.py |
+| Manual verification (imports, server boot) | 10 min | `python -m py_compile` + test server startup |
+| Run remaining test suite | 10 min | Ensure no cascade failures |
+| Manual cleanup (user-level registry.db) | 5 min | Document in migration notes |
+| Commit + push | 10 min | Git operations |
+
+---
+
+## Risk Assessment: **LOW**
+
+**Why it's safe:**
+- ✅ Testguard/registry are isolated infrastructure tools
+- ✅ Only tight dependency is `critical_engineer.py` importing RegistryTool (easily removed)
+- ✅ No other tools depend on them
+- ✅ No cascade failures detected
+- ✅ Tests are all self-contained
+
+**Breaking changes (expected):**
+- ❌ `testguard` tool becomes unavailable (intentional—you're replacing with TMG + bash hooks)
+- ❌ `registry` tool becomes unavailable (intentional—approval workflow changes)
+
+**Workarounds needed:**
+- Critical-engineer's approval flow reverts to manual human decision (no automated tokens) — this is acceptable since you're moving to simpler CI gates
+
+---
+
+## Recommendation: **Safe to Remove**
+
+You can confidently delete these tools. The cleanup is straightforward with no hidden dependencies.
+
+**When to do it:**
+1. **After** you have TMG + bash hooks for #17 testing validation in place (so you're not removing gates before replacements exist)
+2. **Or** at the start of a new sprint—don't mix removal with active feature work
+
+**Next step:** Would you like me to:
+- Create a detailed PR plan for the removal?
+- Start implementing the deletion (read → modify → delete → test)?
+- Or focus back on designing the #17 replacement gates first?
+
+[user]
+Can you also check if it's the same if we remove critical_engineer tool too
+
+[user]
+[Request interrupted by user]
+
+[user]
+Can you also check if it's the same if we remove critical_engineer tool too, as that's also deprecated and used registry I believe?
+
+[assistant]
+## Critical Finding: critical_engineer is NOT Deprecated
+
+Bad news and good news:
+
+**Bad news:** critical_engineer is **actively used and NOT deprecated**
+
+**Evidence:**
+- ✅ Currently registered and enabled (not in DISABLED_TOOLS)
+- ✅ Recent commits show active development (Oct 2024)
+- ✅ Explicitly documented in CLAUDE.md for "Emergency incidents" and error handling
+- ✅ Listed as ACCOUNTABLE_TO in PROJECT-CONTEXT.md for architectural decisions
+- ✅ Active usage in governance workflows
+
+**Good news:** Removal would be technically easy if you decide to retire it
+
+---
+
+## Comparison: testguard+registry vs critical_engineer
+
+| Aspect | testguard + registry | critical_engineer |
+|--------|---|---|
+| **Deprecated?** | YES - abandoned in favor of TMG | NO - actively used |
+| **Coupling** | Isolated; only critical_engineer depends on registry | Widely integrated; referenced in governance workflows |
+| **Removal effort** | ~60 min, straightforward | ~30-45 min, straightforward |
+| **Breaking change** | None (replacing with better alternatives) | YES - breaks error handling + arch validation workflows |
+| **Why remove?** | Clear: replaced by TMG + bash hooks for #17 | Unclear: would need strategic decision |
+
+---
+
+## If You Do Want to Remove critical_engineer
+
+**Removal scope (easy):**
+- Delete 4 files: `tools/critical_engineer.py`, 3 test files, 1 snapshot
+- Modify 8 files: server.py, __init__.py, 6 test files, docs
+- ~30-45 minutes total
+
+**But breaking changes:**
+- Users leveraging `critical-engineer` MCP tool lose that capability
+- Workflow docs need updates (`.hestai/workflow/`)
+- Error handling path that delegates to critical-engineer disappears
+
+---
+
+## My Recommendation
+
+**Don't remove critical_engineer yet.** Questions first:
+
+1. **Is critical_engineer actually deprecated in your workflow?** 
+   - Or do you still use it for architectural reviews and incident response?
+   - It's actively recommended for "Emergency incidents" per your own CLAUDE.md
+
+2. **If you want to retire it, what's the replacement?**
+   - Who validates architectural decisions now?
+   - Who handles critical errors?
+   - TMG for testing, but what for architecture/incidents?
+
+3. **Focus first on the known removal:** testguard + registry are clearly superseded by TMG
+
+---
+
+## Recommended Removal Order
+
+1. **Phase 1 (clear, low-risk):** Remove testguard + registry (~60 min)
+   - Reason: Replaced by TMG + bash hooks for #17
+   - No breaking changes (improvements only)
+
+2. **Phase 2 (strategic decision needed):** Decide on critical_engineer
+   - If still needed: keep it
+   - If replaced: document replacement + remove cleanly (~30-45 min)
+
+Would you like me to proceed with **just testguard + registry removal**, or do you want to clarify critical_engineer's status first?
+
+[user]
+Actually, could we just remove the reigstry tool, and any of the convoluted links that TMG and cE have to it, and then we can leave them for now until we decide on removal?
+
+[assistant]
+Perfect. This is **very clean and surgical**. The registry is completely isolated.
+
+## Surgical Registry Removal Plan
+
+### **Key Finding: Registry is Standalone**
+
+- ✅ Testguard **already has fallback token generation** (lines 671-678) — works without registry
+- ✅ Critical_engineer's import is **marked unused** (`# noqa: F401`) — trivial to remove
+- ✅ No other tools depend on it
+- ✅ Can be deleted cleanly without breaking testguard/critical_engineer
+
+---
+
+### **What Gets Removed**
+
+**FILES TO DELETE (7 total):**
+
+1. `tools/registry.py` (618 lines) — the main tool
+2. `tests/test_registry.py` — core tests
+3. `tests/test_registry_schema.py` — schema validation tests
+4. `tests/test_registry_mcp_interface.py` — MCP interface tests
+5. `tests/test_registry_json_sync.py` — JSON sync tests
+6. `tests/test_specialist_registry_integration.py` (if exists)
+7. `tests/test_stateless_token_generation.py` (if exists)
+
+**FILES TO MODIFY (3 files, ~120 lines total):**
+
+| File | Changes | Effort |
+|------|---------|--------|
+| `server.py` | Remove `from tools.registry import RegistryTool` + remove `"registry": RegistryTool()` from TOOLS dict | 2 lines, LOW |
+| `tools/critical_engineer.py` | Remove unused import (line 292); remove blocked change workflow instructions (lines 287-331) | ~50 lines, LOW |
+| `tools/testguard.py` | Remove registry imports (lines 382, 644); simplify `prepare_prompt()` (remove lines 361-405); **keep** fallback token generation (lines 671-678) | ~60 lines, MEDIUM |
+
+---
+
+### **What's Lost vs Preserved**
+
+**LOST (acceptable losses):**
+- ✗ Approval audit trail in database (no history of who approved what)
+- ✗ Token spend validation (tokens can't be consumed/reused)
+- ✗ Blocked change UUID tracking
+
+**PRESERVED (testguard & critical_engineer still work):**
+- ✅ Token generation still works
+- ✅ Approval/rejection workflows still execute
+- ✅ Test methodology validation still works
+- ✅ Critical engineering validation still works
+- ✅ Token format still: `{SPECIALIST}-{DATE}-{UUID_PREFIX}`
+
+---
+
+### **Effort Estimate: ~50-60 minutes**
+
+| Phase | Time | Risk |
+|-------|------|------|
+| Delete 7 test files | 2 min | NONE |
+| Modify server.py (remove 2 lines) | 5 min | LOW |
+| Modify critical_engineer.py (remove import + 50 lines) | 10 min | LOW |
+| Modify testguard.py (keep fallback, remove registry calls) | 15 min | **MEDIUM** |
+| Run tests | 20 min | **MEDIUM** — testguard tests may need updates |
+
+---
+
+### **⚠️ One Critical Thing to Check**
+
+Hooks that call `registry validate` tool will fail. Need to:
+- Check if any hooks call the `registry` tool directly
+- If yes, update hooks to skip validation OR remove those hook calls
+- This is the riskiest part of the removal
+
+---
+
+## Next Steps
+
+Want me to:
+
+1. **Just provide the surgical checklist** for you to execute manually?
+2. **Execute the removal** (read files → make edits → run tests → show you results)?
+3. **First check hooks** to see if any directly call `registry` tool (safety check before removal)?
+
+I'd recommend option 3 first (check hooks for registry dependencies), then execute the removal in one go.
+
+[user]
+Can you delegate to implementaiton lead via task tool (opus)
+
+[assistant]
+Perfect. The implementation-lead has completed the surgical registry removal successfully. Here's what happened:
+
+## ✅ Surgical Registry Removal Complete
+
+### What Was Deleted
+- ✅ `tools/registry.py` (618 lines)
+- ✅ 6 test files (test_registry*.py, test_specialist_registry_integration.py, test_stateless_token_generation.py)
+
+### What Was Modified
+1. **server.py**: Removed registry imports and tool registration
+2. **critical_engineer.py**: Removed unused registry import and blocked change workflow instructions
+3. **testguard.py**: Removed registry calls but **KEPT** the fallback token generation (lines 592-599)
+
+### Test Results
+- ✅ All tests pass (exit code 0)
+- ✅ 46 tests for critical_engineer and testguard pass
+- ✅ No cascade failures
+- ✅ Files compile correctly
+
+### What testguard/critical_engineer Lost
+- ❌ Registry audit trail (approvals no longer persisted to SQLite)
+- ❌ Token spend validation (tokens not tracked as "used")
+- ❌ Blocked change orchestration through registry
+
+### What They Kept (Still Works)
+- ✅ testguard: Direct token generation (`TESTGUARD-YYYYMMDD-UUID_SHORT`)
+- ✅ critical_engineer: Normal validation functionality
+- ✅ Both tools: Full test coverage, model restrictions, operational capability
+
+### Pre-existing Issue (Not Caused by Removal)
+There's a pre-existing clink configuration issue with `conf/cli_clients/agent-model-tiers.json` missing a required `name` field. This wasn't caused by the registry removal—it's unrelated.
+
+---
+
+## Summary
+
+**You now have:**
+- ✅ Cleaner codebase (removed 618 lines + test overhead)
+- ✅ Simplified testguard/critical_engineer (no convoluted registry dependencies)
+- ✅ Clear path forward for #17 testing validation (TMG + bash hooks)
+- ✅ testguard/critical_engineer still functional (fallback token generation preserved)
+
+**Ready to move on to:**
+- Designing the #17 testing gates (bash hooks + TMG in CI)
+- Retiring testguard when #17 replacement is in place
+- Later: deciding on critical_engineer's future
+
+The codebase is now cleaner and ready for the new testing validation infrastructure.
+
+[user]
+<command-message>hestai:clockin (MCP) is running…</command-message>
+<command-name>/hestai:clockin (MCP)</command-name>
+
+[user]
+Use clockin
+
+[assistant]
+Session active. Let me document the work we've completed and establish coordination for next steps.
+
+[assistant]
+Perfect. Session is clocked in and documentation submitted. Now let me create a concise summary of what we've accomplished and the clear path forward:
+
+## Summary: Testguard/Registry Cleanup + #17 Strategy
+
+### ✅ What We Completed
+
+**1. Comprehensive Capability Analysis**
+- Mapped 15+ existing blocking hooks in your infrastructure
+- Compared testguard vs TMG: **TMG is strictly more capable** (codebase access, CLI execution, research, explicit authority)
+- Finding: You should use TMG for #17, not testguard (testguard is the subset)
+
+**2. Issue #17 Blocking Decision Framework**
+Via TMG role analysis:
+- **BLOCKING:** Skipped tests, assertion weakening, targeted mutation testing
+- **ADVISORY:** Coverage gaming (diagnostic only)
+- **Rationale:** High risk + cheap detection = block; slow/probabilistic = advise
+
+**3. Surgical Registry Removal (EXECUTED)**
+- ✅ Deleted registry.py (618 lines) + 6 test files
+- ✅ Modified testguard, critical_engineer, server.py (no breakage)
+- ✅ All tests pass
+- ✅ Preserved testguard fallback token generation
+- ✅ Cleaned up convoluted hook-registry-token workflow
+
+**4. Tech Debt Elimination**
+- Removed ~1000 lines of convoluted infrastructure
+- Removed approval audit trail (acceptable trade-off)
+- Simplified testguard/critical_engineer dependencies
+
+---
+
+### 🔄 Next Steps: Three Viable Options for #17
+
+**Option A: TMG-Based (Recommended)**
+- Enhance TMG prompt for #17 anti-patterns
+- Add TMG CI job (parallel with tests)
+- Optional: TMG can research mutation testing frameworks via web
+
+**Option B: Bash Hooks Only (Simplest)**
+- Local hooks detect `.skip`, `describe.only`, `vi.todo`
+- Test-file pairing validation
+- Minimal complexity, runs locally + CI
+
+**Option C: Hybrid (Best Balance)**
+- Fast local: bash hooks for syntax patterns
+- Deep CI: TMG for semantic analysis + mutation gaps
+- Web research: TMG can fetch frameworks when unclear
+
+---
+
+### 📋 Three Questions to Decide
+
+Before implementing #17 testing gates:
+
+1. **Which option appeals most?** (A: TMG-only | B: Bash-only | C: Hybrid)
+2. **Scope:** eav-monorepo only, or all HestAI projects?
+3. **Timeline:** Integrate with Stryker mutation work, or separate phases?
+
+Once you answer these, I can help design the actual implementation (CI workflow, bash hooks, TMG integration).
+
+[user]
+<command-message>hestai:clockout (MCP) is running…</command-message>
+<command-name>/hestai:clockout (MCP)</command-name>
+
+[user]
+Use clockout
+
+================================================================================
+End of session (25 messages)
+================================================================================
