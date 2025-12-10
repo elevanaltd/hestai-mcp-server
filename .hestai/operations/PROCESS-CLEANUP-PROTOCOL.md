@@ -54,7 +54,7 @@ PID 79999  (Today 14:36)         ← CURRENT
 pkill -f "hestai-mcp-server|mcp.*server"
 
 # Verify all killed
-ps aux | grep hestai | grep -v grep
+pgrep -fl hestai-mcp-server
 # Should return: (no output)
 ```
 
@@ -89,9 +89,9 @@ echo "Waiting for processes to exit..."
 sleep 2
 
 echo "Verifying cleanup..."
-if ps aux | grep -E "mcp.*server" | grep -v grep > /dev/null; then
+if pgrep -f "mcp.*server" > /dev/null; then
   echo "⚠️  WARNING: Some processes still running"
-  ps aux | grep "mcp.*server" | grep -v grep
+  pgrep -fl "mcp.*server"
   pkill -9 -f "hestai-mcp-server|mcp.*server"
 else
   echo "✅ All stale processes cleaned"
@@ -176,7 +176,7 @@ launchctl load ~/Library/LaunchAgents/com.hestai.mcp.cleanup.plist
 
 ```bash
 # Count how many MCP processes are running
-ps aux | grep -c "hestai-mcp-server\|mcp.*server"
+pgrep -fc "hestai-mcp-server"
 
 # Expected: 1 (or 0 if stopped)
 # Alert if: > 2 (indicates accumulation)
@@ -190,7 +190,7 @@ Create a simple health check script:
 #!/bin/bash
 # Script: mcp-health-check.sh
 
-MCP_COUNT=$(ps aux | grep "hestai-mcp-server" | grep -v grep | wc -l)
+MCP_COUNT=$(pgrep -fc "hestai-mcp-server")
 
 if [ "$MCP_COUNT" -gt 2 ]; then
   echo "⚠️  ALERT: $MCP_COUNT MCP server processes detected (expected: 1)"
@@ -222,7 +222,7 @@ Add to `.claude/hooks/startup.sh` (if you have startup hooks):
 #!/bin/bash
 # Cleanup stale MCP processes on Claude Code startup
 
-STALE_COUNT=$(ps aux | grep "hestai-mcp-server\|mcp.*server" | grep -v grep | wc -l)
+STALE_COUNT=$(pgrep -fc "hestai-mcp-server")
 
 if [ "$STALE_COUNT" -gt 1 ]; then
   echo "🧹 Cleaning $STALE_COUNT stale MCP processes..."
@@ -249,7 +249,7 @@ fi
    └── Verify: tail -f logs/mcp_server.log shows "Ready"
 
 2. ACTIVE SESSION
-   ├── Monitor: ps aux | grep hestai (should show 1 process)
+   ├── Monitor: pgrep -fl hestai-mcp-server (should show 1 process)
    └── If frozen: Run: mcp-restart.sh
 
 3. END SESSION
@@ -268,7 +268,7 @@ fi
 pkill -9 -f "hestai-mcp-server"
 
 # Or identify specific PID
-ps aux | grep hestai
+pgrep -fl hestai-mcp-server
 kill -9 <PID>
 ```
 
@@ -313,7 +313,7 @@ rm -f ~/.hestai/sessions/active/*
    - Alert if: Restarting more than weekly
 
 3. Memory Usage
-   - Check: ps aux | grep hestai (RSS column)
+   - Check: pid=$(pgrep -f hestai-mcp-server) && [ -n "$pid" ] && ps -o rss= -p $pid
    - Alert if: > 500MB (indicates memory leak)
 
 4. Log Growth
