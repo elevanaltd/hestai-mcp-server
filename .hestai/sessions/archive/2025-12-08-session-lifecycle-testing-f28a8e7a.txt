@@ -579,7 +579,7 @@ HO → error-architect-surface (diagnosis) → implementation-lead (fix)
 **Pending Changes (git status):**
 ```
  M clink/constants.py          # Earlier: circular ref fix
- M clink/parsers/claude.py     # Earlier: circular ref fix  
+ M clink/parsers/claude.py     # Earlier: circular ref fix
  M tests/test_clockout.py      # NEW: 4 test cases
  M tools/clockout.py           # NEW: content_parts fix
 ?? .hestai/context/*           # Session context files
@@ -713,7 +713,7 @@ RESOLUTION_SUMMARY::[
 ]
 ```
 
-**CRS Verdict:** 
+**CRS Verdict:**
 > "GO (Approved). Guarding `part.get("text") or ""` restores transcript parsing even when upstream JSON carries `null` text entries."
 
 **Files Ready to Commit:**
@@ -883,7 +883,7 @@ P1 Badge Fix lint issues in new edge-case test imports
 Running the configured ruff lint checks (see pyproject.toml selects F and I) will fail on the new test_clockout_edge_cases.py because the imports are unsorted (third-party pytest precedes stdlib pathlib/json) and Path is never used. This will break code_quality_checks.sh/CI despite the commit claiming quality checks pass.
 
 [assistant]
-**Comment is outdated.** 
+**Comment is outdated.**
 
 The fix was applied in commit `3644a31`:
 
@@ -941,7 +941,7 @@ Can you clockout and we can review the output
 
 [assistant]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-**CLOCK_OUT SUCCESSFUL** 
+**CLOCK_OUT SUCCESSFUL**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 **Archive:** `.hestai/sessions/archive/2025-12-08-session-orchestration-1e054106.txt`

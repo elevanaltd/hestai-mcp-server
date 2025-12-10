@@ -93,7 +93,9 @@ def validate_project_context(content: str) -> ValidationResult:
     if identity_match:
         identity_content = identity_match.group(1)
         for field in PROJECT_CONTEXT_SCHEMA["identity_required_fields"]:
-            if not re.search(rf"^{field}::", identity_content, re.MULTILINE):
+            # Check for field at start of line
+            field_pattern = rf"^{re.escape(field)}::"
+            if not re.search(field_pattern, identity_content, re.MULTILINE):
                 result.add_error(f"Missing required IDENTITY field: {field}")
 
     # Validate OCTAVE syntax if present
@@ -170,7 +172,8 @@ def validate_state_vector(content: str) -> ValidationResult:
     found_fields = []
 
     for field in required_fields:
-        pattern = rf"{field}::\s*\{{"
+        # Match "FIELD::  {{" or "FIELD::[" patterns
+        pattern = rf"{re.escape(field)}::\s*[\[{{]"
         if re.search(pattern, content):
             found_fields.append(field)
         else:
@@ -244,7 +247,8 @@ def _validate_state_vector_section(
     Returns:
         Section content if found, None otherwise
     """
-    section_pattern = rf"{section}::\s*\{{([^}}]+)\}}"
+    # Match "SECTION:: {content}" patterns
+    section_pattern = rf"{re.escape(section)}::\s*\{{([^}}]+)\}}"
     section_match = re.search(section_pattern, content, re.DOTALL)
 
     if not section_match:
@@ -253,7 +257,9 @@ def _validate_state_vector_section(
     section_content = section_match.group(1)
 
     for subfield in required_subfields:
-        if not re.search(rf"{subfield}:", section_content):
+        # Check for subfield presence
+        subfield_pattern = rf"{re.escape(subfield)}:"
+        if not re.search(subfield_pattern, section_content):
             result.add_error(f"Missing required {section} subfield: {subfield}")
 
     return section_content
@@ -336,14 +342,17 @@ def validate_context_negatives(content: str) -> ValidationResult:
     valid_severities = get_valid_severity_values()
 
     for i in range(1, anti_pattern_count + 1):
-        pattern_match = re.search(rf"ANTI_PATTERN_{i}::\s*\{{([^}}]+)\}}", content, re.DOTALL)
+        # Match "ANTI_PATTERN_N:: {content}" patterns
+        pattern_str = rf"ANTI_PATTERN_{i}::\s*\{{([^}}]+)\}}"
+        pattern_match = re.search(pattern_str, content, re.DOTALL)
 
         if pattern_match:
             pattern_content = pattern_match.group(1)
 
             # Check required fields
             for field in required_fields:
-                if not re.search(rf"{field}:", pattern_content):
+                field_pattern = rf"{re.escape(field)}:"
+                if not re.search(field_pattern, pattern_content):
                     result.add_error(f"ANTI_PATTERN_{i} missing required field: {field}")
 
             # Validate severity value

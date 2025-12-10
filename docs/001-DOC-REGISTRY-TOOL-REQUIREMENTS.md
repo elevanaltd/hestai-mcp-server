@@ -8,7 +8,7 @@ We need a new MCP tool to manage approval registries that work with Claude Code 
 
 ### Current Workflow Gap
 1. **Hook blocks operation** → Content saved to `/tmp/blocked-{type}-{timestamp}`
-2. **Claude consults specialist** → `mcp__hestai__testguard "review /tmp/blocked-test-123456"`  
+2. **Claude consults specialist** → `mcp__hestai__testguard "review /tmp/blocked-test-123456"`
 3. **Specialist analyzes and approves** → But CANNOT update registry or move files
 4. **Work remains blocked** → No mechanism to unblock approved changes
 
@@ -38,7 +38,7 @@ def approve_change(
 ) -> ApprovalResponse:
     """
     Generate a one-time approval token for blocked content.
-    
+
     Returns:
     {
         "token": "TESTGUARD-20250104-12345678-abc123",
@@ -58,7 +58,7 @@ def reject_change(
 ) -> RejectionResponse:
     """
     Record rejection in audit log and return education.
-    
+
     Returns:
     {
         "decision": "rejected",
@@ -125,7 +125,7 @@ Location: `~/.claude/hooks/lib/traced-registry.json`
   "blocked_patterns": {
     "meaningless_red": {
       "pattern": "expect\\(true\\)\\.toBe\\(false\\)",
-      "type": "test", 
+      "type": "test",
       "reason": "Meaningless placeholder - provides no specification",
       "added_by": "testguard",
       "added_date": "2025-01-04"
@@ -168,7 +168,7 @@ mcp__hestai__testguard("review /tmp/blocked-test-1234567890")
 if blocked_file_path in prompt:
     content = read_file(blocked_file_path)
     analysis = analyze_test_methodology(content)
-    
+
     if analysis.is_valid:
         # Use registry tool to approve
         result = registry.approve_change(
@@ -200,7 +200,7 @@ expect(serverInit()).rejects.toThrow('Server not configured');
 # Hook checks for approval token
 if grep -q "TESTGUARD-APPROVED:" <<< "$content"; then
   token=$(grep -oP 'TESTGUARD-APPROVED:\s*\K[\w-]+' <<< "$content")
-  
+
   # Validate via registry check
   if validate_token_in_registry "$token" "$content_hash"; then
     mark_token_used "$token"
@@ -218,7 +218,7 @@ fi
 - **Content-bound**: Token tied to specific content hash
 - **Non-transferable**: Cannot be reused for different content
 
-### Registry Integrity  
+### Registry Integrity
 - **Atomic updates**: Use file locking to prevent race conditions
 - **Backup on write**: Keep last 10 versions of registry
 - **Validation**: Check JSON validity before writing
@@ -275,7 +275,7 @@ mcp__hestai__testguard("review /tmp/blocked-test-123")
 Write("test.js", "expect(server()).rejects.toThrow('Not configured')")
 # BLOCKED by hook
 
-# Claude consults testguard  
+# Claude consults testguard
 mcp__hestai__testguard("review /tmp/blocked-test-456")
 # Returns: "APPROVED: Proper TDD... Add: // TESTGUARD-APPROVED: TESTGUARD-20250104-abc123"
 

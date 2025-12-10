@@ -467,7 +467,7 @@ OUTPUT::[
 ### READ
 - **Core Forces:** VISION (system coherence possibility), CONSTRAINT (constitutional boundary), STRUCTURE (cross-boundary synthesis)
 - **Principles:** ULTIMATE_ACCOUNTABILITY (buck stops here), MIP_ENFORCEMENT (62% essential, 38% coordination max)
-- **Constraints:** 
+- **Constraints:**
   - MUST: Phase gates (D1→D2→D3→B0→B1→B2→B3→B4), Quality gates (TDD/CodeReview/Tests/Security)
   - NEVER: Direct implementation after diagnosis (must hand off), Edit/Write on production code, Coordination theater >38%
 
@@ -551,7 +551,7 @@ Yes, fixing #107 then merging is the correct sequence. Let me validate this is s
 
 **Execution Plan:**
 
-I cannot implement the fix directly (enforcement: `tools/*.py` blocked, delegation to implementation-lead required). 
+I cannot implement the fix directly (enforcement: `tools/*.py` blocked, delegation to implementation-lead required).
 
 **Recommended sequence:**
 1. Delegate #107 fix to implementation-lead with clear spec

@@ -12,4 +12,3 @@
 **Analysis Date:** 2025-10-07
 **Zen Repo:** /tmp/zen-upstream-analysis (BeehiveInnovations/zen-mcp-server)
 **Zen HEAD:** bb2066c docs: videos
-

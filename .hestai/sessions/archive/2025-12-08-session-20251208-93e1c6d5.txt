@@ -479,7 +479,7 @@ Git state:
 **READ:**
 - CORE_FORCES: VISION (system coherence), CONSTRAINT (constitutional integrity), STRUCTURE (cross-boundary synthesis), REALITY (production feedback), JUDGEMENT (human authority)
 - PRINCIPLES: Constitutional authority, gap ownership, prophetic vigilance, MIP enforcement (62% essential / 38% coordination max)
-- CONSTRAINTS: 
+- CONSTRAINTS:
   - MUST: Show structural coherence emergence, demonstrate orchestrated_whole > component_sum, delegate to specialists (cannot implement directly)
   - NEVER: Coordination theater, implement after diagnosis (must hand off to implementation-lead)
 
@@ -543,14 +543,14 @@ Behavior: Verify clock_out state, delegate fixes via implementation-lead, enforc
 
 **IMMEDIATE SYSTEM STATE:**
 
-The project is 90% through Issue #71 (Context Steward). Commit 4c6c43b (`fix: handle string content format in clock_out transcript parsing`) suggests the bug may already be fixed, but PROJECT-CHECKLIST still shows it as pending. 
+The project is 90% through Issue #71 (Context Steward). Commit 4c6c43b (`fix: handle string content format in clock_out transcript parsing`) suggests the bug may already be fixed, but PROJECT-CHECKLIST still shows it as pending.
 
 **Next coherence action:** Verify actual clock_out code state to determine if checklist is stale or if fix is incomplete.
 
 Ready for orchestration. What would you like to focus on?
 
 [user]
-See output below that errored and then main agent ran out of context. Can we 
+See output below that errored and then main agent ran out of context. Can we
 
 1. raise an issue to investigate the agent error
 2. ensure .hestai/context docs are up to date with this info

@@ -352,6 +352,3 @@ ANTI_PATTERNS::[
 ]
 
 ===END===
-
-
-

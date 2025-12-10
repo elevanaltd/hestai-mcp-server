@@ -539,7 +539,7 @@ Modified:   server.py, tools/__init__.py (uncommitted)
 **QUALITY GATES**
 ```
 Lint:       ✅ passing
-Typecheck:  ✅ passing  
+Typecheck:  ✅ passing
 Tests:      ✅ 1213/1213 passing
 ```
 
@@ -1119,7 +1119,7 @@ Behavior: Delegate actual testing to specialists, maintain coherence view
 3. Context Steward v2 tools available: clockin, clockout, anchorsubmit, document_submit, context_update
 
 [user]
-I'd like you to test the different mcp tools that hestai has to offer. 
+I'd like you to test the different mcp tools that hestai has to offer.
 
 clockin
 clockout
