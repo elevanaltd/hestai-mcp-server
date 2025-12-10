@@ -9,8 +9,10 @@ import shutil
 from pathlib import Path
 
 import pytest
+from mcp.types import TextContent
 
 from tools.clockout import ClockOutRequest, ClockOutTool
+from tools.models import ToolOutput
 
 
 @pytest.fixture
@@ -1325,6 +1327,95 @@ More content here to make sure the OCTAVE file gets created properly.
         assert output["status"] == "error", "Verification failures should cause error status"
         assert "verification" in output.get("content", "").lower(), "Error message should mention verification"
 
+    @pytest.mark.asyncio
+    async def test_clockout_calls_context_update_after_verification_passes(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """
+        Test that clockout calls context_update with extracted OCTAVE content after verification passes.
+
+        Flow: Session work → OCTAVE compression → Verification Gate → [IF PASS] → context_update → PROJECT-CONTEXT
+
+        Issue #104 Gap: Clockout currently ends after verification without syncing to PROJECT-CONTEXT.
+        """
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Create files to pass verification
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "feature.py").write_text("# new feature")
+
+        # Mock AI to return OCTAVE with context-worthy content
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                # OCTAVE content with extractable context items
+                octave_content = """
+SESSION_SUMMARY::[
+  SESSION_ID::test-context-update,
+  ROLE::implementation-lead,
+  FOCUS::feature-implementation,
+  FILES_MODIFIED::[tools/feature.py],
+  DECISIONS::[Chose REST API over GraphQL for simplicity],
+  OUTCOMES::[Feature X implemented and tested],
+  BLOCKERS::[Need database migration approval],
+  PHASE_CHANGES::[Moved from B2 to B3]
+]
+
+TECHNICAL_CONTEXT::[
+  BRANCH::feature/new-feature,
+  QUALITY_GATES::ALL_PASSING
+]
+
+Additional padding to exceed MIN_OCTAVE_LENGTH validation requirement.
+This ensures the OCTAVE file gets created properly and verification runs.
+"""
+                return {"status": "success", "artifacts": [{"content": octave_content}]}
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        # Track context_update calls
+        context_update_called = []
+
+        async def mock_execute_context_update(self, arguments):
+            """Mock the ContextUpdateTool.execute method"""
+            context_update_called.append(arguments)
+            # Return success response
+            tool_output = ToolOutput(status="success", content="Context updated successfully", content_type="text")
+            return [TextContent(type="text", text=tool_output.model_dump_json())]
+
+        # Import and patch ContextUpdateTool
+        from tools.contextupdate import ContextUpdateTool
+
+        monkeypatch.setattr(ContextUpdateTool, "execute", mock_execute_context_update)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test context_update integration",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        # Verification should pass
+        assert output["status"] == "success"
+
+        # FAILING TEST: context_update should have been called
+        assert len(context_update_called) > 0, "context_update should be called after verification passes"
+
+        # Verify context_update was called with correct arguments
+        update_call = context_update_called[0]
+        assert update_call["target"] == "PROJECT-CONTEXT"
+        assert "intent" in update_call
+        assert "content" in update_call or "file_ref" in update_call
+        assert update_call["working_dir"] == str(working_dir)
+
 
 @pytest.mark.asyncio
 async def test_focus_sanitization_path_separators(temp_hestai_dir):
@@ -1455,3 +1546,26 @@ async def test_focus_sanitization_newlines(temp_hestai_dir):
             jsonl_path.unlink()
         if jsonl_dir.exists():
             shutil.rmtree(jsonl_dir)
+
+
+def test_extract_context_with_nested_brackets():
+    """Test that nested brackets in OCTAVE sections are preserved."""
+    from tools.clockout import ClockOutTool
+
+    tool = ClockOutTool()
+
+    octave_content = """
+DECISIONS::[Use pattern X[from ADR-003], Reject Y[too complex]]
+OUTCOMES::[Feature implemented[tested], Bug fixed[regression]]
+BLOCKERS::[Dependency Z[v2.0+] unavailable]
+PHASE_CHANGES::[B2[implementation] to B3[integration]]
+"""
+
+    extracted = tool._extract_context_from_octave(octave_content)
+
+    # Verify nested brackets preserved
+    assert "pattern X[from ADR-003]" in extracted
+    assert "Y[too complex]" in extracted
+    assert "implemented[tested]" in extracted
+    assert "Z[v2.0+]" in extracted
+    assert "B2[implementation]" in extracted
