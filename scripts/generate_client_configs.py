@@ -143,15 +143,11 @@ class ConfigGenerator:
         for agent_name, role_data in roles.items():
             model = self.get_model_for_agent(agent_name, cli_name)
 
-            # Handle explicit exclusion (null in exceptions)
+            # Handle explicit exclusion (null in exceptions OR null in tier)
             if model is None:
-                # Check if this is an explicit exclusion
-                exceptions = self.tier_mapping.get("exceptions", {})
-                if agent_name in exceptions and exceptions[agent_name].get(cli_name) is None:
-                    # Explicit exclusion - remove from config
-                    if not dry_run:
-                        changes.append(f"REMOVE {agent_name} (explicit exclusion)")
-                    continue
+                # This agent is excluded from this CLI (either by exception or tier-level null)
+                changes.append(f"REMOVE {agent_name} (model=null for {cli_name})")
+                continue
 
             # Update role_args based on CLI type
             if cli_name == "claude":
@@ -188,14 +184,13 @@ class ConfigGenerator:
                         role_data["role_args"] = new_role_args
                     changes.append(f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}")
 
-        # Remove explicitly excluded agents
-        exceptions = self.tier_mapping.get("exceptions", {})
+        # Remove agents excluded by null model (exception or tier-level)
         for agent_name in list(roles.keys()):
-            if agent_name in exceptions:
-                if exceptions[agent_name].get(cli_name) is None:
-                    if not dry_run:
-                        del roles[agent_name]
-                    changes.append(f"REMOVE {agent_name} (explicit exclusion)")
+            model = self.get_model_for_agent(agent_name, cli_name)
+            if model is None:
+                if not dry_run:
+                    del roles[agent_name]
+                # Change already logged above in the iteration loop
 
         # Add metadata
         if not dry_run:
