@@ -265,9 +265,8 @@ class TestFallbackCapabilities:
         # Critical failures: HIGH→LOW degradations
         critical_degradations = [d for d in degradation_warnings if d["degradation"] >= 2]
 
-        assert not critical_degradations, (
-            "Critical tier degradations detected (HIGH→LOW): "
-            + str([f"{d['agent']}: {d['primary']} → {d['fallback']}" for d in critical_degradations])
+        assert not critical_degradations, "Critical tier degradations detected (HIGH→LOW): " + str(
+            [f"{d['agent']}: {d['primary']} → {d['fallback']}" for d in critical_degradations]
         )
 
         # Warnings: Any degradation
