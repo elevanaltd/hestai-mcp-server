@@ -40,8 +40,9 @@ class ConfigGenerator:
             self.base_dir = base_dir
 
         self.cli_clients_dir = self.base_dir / "conf" / "cli_clients"
-        self.tier_mapping_path = self.cli_clients_dir / "agent-model-tiers.json"
-        self.fallback_hints_path = self.cli_clients_dir / "fallback_hints.json"
+        self.metadata_dir = self.cli_clients_dir / "metadata"
+        self.tier_mapping_path = self.metadata_dir / "agent-model-tiers.json"
+        self.fallback_hints_path = self.metadata_dir / "fallback_hints.json"
 
         self.tier_mapping: Dict[str, Any] = {}
         self.client_configs: Dict[str, Dict[str, Any]] = {}

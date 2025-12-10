@@ -556,7 +556,7 @@ class CLinkTool(SimpleTool):
 
         Returns empty dict if file doesn't exist (graceful degradation).
         """
-        hints_path = Path("conf/cli_clients/fallback_hints.json")
+        hints_path = Path("conf/cli_clients/metadata/fallback_hints.json")
         if not hints_path.exists():
             logger.debug("Fallback hints file not found at %s", hints_path)
             return {}

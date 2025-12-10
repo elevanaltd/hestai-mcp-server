@@ -24,7 +24,7 @@ class TestClinkFallbackHints:
     @pytest.fixture
     def fallback_hints_json(self):
         """Create a test fallback_hints.json file in the expected location."""
-        hints_path = Path("conf/cli_clients/fallback_hints.json")
+        hints_path = Path("conf/cli_clients/metadata/fallback_hints.json")
 
         # Backup existing file if it exists
         backup_path = None

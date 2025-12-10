@@ -109,10 +109,11 @@ def generator(tmp_path, mock_tier_mapping, mock_claude_config):
     """Create ConfigGenerator with mocked data."""
     # Create directory structure
     cli_clients_dir = tmp_path / "conf" / "cli_clients"
-    cli_clients_dir.mkdir(parents=True)
+    metadata_dir = cli_clients_dir / "metadata"
+    metadata_dir.mkdir(parents=True)
 
     # Write mock tier mapping
-    tier_mapping_path = cli_clients_dir / "agent-model-tiers.json"
+    tier_mapping_path = metadata_dir / "agent-model-tiers.json"
     with open(tier_mapping_path, "w") as f:
         json.dump(mock_tier_mapping, f)
 

@@ -134,14 +134,14 @@ class TestFallbackCapabilities:
     @pytest.fixture
     def tier_config(self) -> Dict:
         """Load tier configuration from agent-model-tiers.json."""
-        config_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "agent-model-tiers.json"
+        config_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "agent-model-tiers.json"
         with open(config_path) as f:
             return json.load(f)
 
     @pytest.fixture
     def fallback_hints(self) -> Dict:
         """Load fallback hints from fallback_hints.json."""
-        hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "fallback_hints.json"
+        hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "fallback_hints.json"
         with open(hints_path) as f:
             return json.load(f)
 
@@ -412,7 +412,7 @@ class TestCapabilityContracts:
     def test_capability_definitions_complete(self):
         """All agents with exceptions have capability definitions."""
         # Load fallback hints to get list of agents with special handling
-        hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "fallback_hints.json"
+        hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "fallback_hints.json"
         with open(hints_path) as f:
             fallback_hints = json.load(f)
 
@@ -459,11 +459,11 @@ class TestCapabilityContracts:
         1. Are in tiers without Gemini mappings, OR
         2. Have explicit exceptions routing them away from Gemini
         """
-        tier_config_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "agent-model-tiers.json"
+        tier_config_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "agent-model-tiers.json"
         with open(tier_config_path) as f:
             tier_config = json.load(f)
 
-        fallback_hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "fallback_hints.json"
+        fallback_hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "fallback_hints.json"
         with open(fallback_hints_path) as f:
             fallback_hints = json.load(f)
 
