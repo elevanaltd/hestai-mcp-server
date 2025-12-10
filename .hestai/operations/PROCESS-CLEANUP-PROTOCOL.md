@@ -89,7 +89,7 @@ echo "Waiting for processes to exit..."
 sleep 2
 
 echo "Verifying cleanup..."
-if ps aux | grep -f "mcp.*server" | grep -v grep > /dev/null; then
+if ps aux | grep -E "mcp.*server" | grep -v grep > /dev/null; then
   echo "⚠️  WARNING: Some processes still running"
   ps aux | grep "mcp.*server" | grep -v grep
   pkill -9 -f "hestai-mcp-server|mcp.*server"
@@ -190,7 +190,7 @@ Create a simple health check script:
 #!/bin/bash
 # Script: mcp-health-check.sh
 
-MCP_COUNT=$(ps aux | grep -c "hestai-mcp-server" | grep -v grep)
+MCP_COUNT=$(ps aux | grep "hestai-mcp-server" | grep -v grep | wc -l)
 
 if [ "$MCP_COUNT" -gt 2 ]; then
   echo "⚠️  ALERT: $MCP_COUNT MCP server processes detected (expected: 1)"
