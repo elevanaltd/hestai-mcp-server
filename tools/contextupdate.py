@@ -488,22 +488,29 @@ class ContextUpdateTool(BaseTool):
                         raise ValueError(f"AI response validation failed: {e}") from e
 
                     artifacts = result.get("artifacts", [])
-                    if artifacts and "content" in artifacts[0]:
-                        merged_content = artifacts[0]["content"]
 
-                        # Defensive check: AI must return substantial content
-                        MIN_CONTENT_LENGTH = 500  # ~10 lines minimum
-                        if len(merged_content) < MIN_CONTENT_LENGTH:
-                            logger.error(
-                                f"AI returned truncated content ({len(merged_content)} chars), "
-                                f"expected at least {MIN_CONTENT_LENGTH}. Using fallback."
-                            )
-                            merged_content = existing_content + "\n\n" + new_content
-                        else:
-                            logger.info(f"AI merge successful: {result.get('summary', 'merged')}")
-                    else:
-                        logger.warning("AI merge returned no content, using simple append")
+                    # FIX: Select artifact by type, not order
+                    # Issue: If AI returns history_archive first, we must select context_update
+                    context_artifact = next(
+                        (a["content"] for a in artifacts if a.get("type") == "context_update"), None
+                    )
+
+                    if context_artifact is None:
+                        # No context_update artifact found
+                        raise ValueError("AI response missing context_update artifact type")
+
+                    merged_content = context_artifact
+
+                    # Defensive check: AI must return substantial content
+                    MIN_CONTENT_LENGTH = 500  # ~10 lines minimum
+                    if len(merged_content) < MIN_CONTENT_LENGTH:
+                        logger.error(
+                            f"AI returned truncated content ({len(merged_content)} chars), "
+                            f"expected at least {MIN_CONTENT_LENGTH}. Using fallback."
+                        )
                         merged_content = existing_content + "\n\n" + new_content
+                    else:
+                        logger.info(f"AI merge successful: {result.get('summary', 'merged')}")
                 else:
                     logger.warning(f"AI merge failed: {result.get('error', 'unknown')}, using simple append")
                     merged_content = existing_content + "\n\n" + new_content
