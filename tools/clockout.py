@@ -162,7 +162,9 @@ class ClockOutTool(BaseTool):
             archive_dir.mkdir(parents=True, exist_ok=True)
             timestamp = datetime.now().strftime("%Y-%m-%d")
             focus = session_data.get("focus", "general")
-            archive_filename = f"{timestamp}-{focus}-{request.session_id}.txt"
+            # Sanitize focus to remove filesystem-unsafe characters
+            safe_focus = focus.replace("/", "-").replace("\\", "-").replace("\n", "-").strip("-")
+            archive_filename = f"{timestamp}-{safe_focus}-{request.session_id}.txt"
             archive_path = archive_dir / archive_filename
 
             # Format and write archive
