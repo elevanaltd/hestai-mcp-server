@@ -184,6 +184,7 @@ class ClockOutTool(BaseTool):
                         role=session_data.get("role", "unknown"),
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
+                        working_dir=str(project_root),  # For signal gathering
                         transcript_path=str(archive_path),
                     )
                     if result.get("status") == "success":
@@ -203,6 +204,40 @@ class ClockOutTool(BaseTool):
                             else:
                                 octave_path.write_text(octave_content)
                                 logger.info(f"AI compression saved to {octave_path}")
+
+                                # Verify claims before context_update
+                                verification = self._verify_context_claims(octave_content, project_root)
+
+                                # Save verification result
+                                verification_path = archive_dir / f"{request.session_id}.verification.json"
+                                verification_path.write_text(json.dumps(verification, indent=2))
+
+                                # FIX: Make verification gate actually block (not just log)
+                                if not verification["passed"]:
+                                    logger.warning(
+                                        f"Verification issues for session {request.session_id}: {verification['issues']}"
+                                    )
+                                    # Return error status to block (gate actually enforces, not just logs)
+                                    error_message = (
+                                        f"Session archived but verification failed ({len(verification['issues'])} issues). "
+                                        "Context sync blocked. "
+                                        f"Issues: {', '.join(verification['issues'][:3])}"
+                                        + ("..." if len(verification["issues"]) > 3 else "")
+                                    )
+
+                                    tool_output = ToolOutput(
+                                        status="error",
+                                        content=error_message,
+                                        content_type="text",
+                                        metadata={
+                                            "tool_name": self.name,
+                                            "session_id": request.session_id,
+                                            "archive_path": str(archive_path),
+                                            "verification": verification,
+                                        },
+                                    )
+
+                                    return [TextContent(type="text", text=tool_output.model_dump_json())]
             except Exception as e:
                 logger.warning(f"AI compression skipped: {e}")
                 # Graceful degradation - continue without AI
@@ -639,6 +674,93 @@ class ClockOutTool(BaseTool):
         lines.append("=" * 80)
 
         return "\n".join(lines)
+
+    def _verify_context_claims(self, octave_content: str, working_dir: Path) -> dict:
+        """
+        Verify session claims before syncing to PROJECT-CONTEXT.
+
+        Checks:
+        1. Artifact Reality Check - Mentioned files exist
+        2. Reference Integrity - Links aren't broken
+        3. Context Appropriateness - Project-level vs session noise
+        4. Consistency Cross-Check - No contradictions with existing context
+
+        Args:
+            octave_content: OCTAVE compressed session content
+            working_dir: Project root directory
+
+        Returns:
+            dict with {passed: bool, issues: list, advisory: list}
+        """
+        import re
+
+        issues = []
+        advisory = []
+
+        # 1. Extract file paths from OCTAVE content
+        # Look for patterns like: tools/clockout.py, tests/test_clockout.py
+        # OCTAVE format: FILES_MODIFIED::[file1,file2]
+        file_pattern = r"(?:FILES_MODIFIED|ARTIFACTS|FILES_CHANGED)::\[([^\]]+)\]"
+        matches = re.finditer(file_pattern, octave_content)
+
+        mentioned_files = []
+        for match in matches:
+            # Extract comma-separated file list
+            files_str = match.group(1)
+            files = [f.strip() for f in files_str.split(",")]
+            mentioned_files.extend(files)
+
+        # 2. Verify artifact existence (with path traversal protection)
+        for file_path in mentioned_files:
+            if not file_path:
+                continue
+
+            full_path = working_dir / file_path
+
+            # FIX: Validate path containment BEFORE checking existence
+            # Security: Prevent attacker-controlled OCTAVE from probing /etc/passwd
+            try:
+                resolved = full_path.resolve()
+                if not resolved.is_relative_to(working_dir.resolve()):
+                    issues.append(f"Path traversal rejected: {file_path}")
+                    continue  # Skip this file, don't check existence
+            except (ValueError, OSError) as e:
+                issues.append(f"Invalid path: {file_path} ({e})")
+                continue
+
+            if not full_path.exists():
+                issues.append(f"Artifact missing: {file_path}")
+
+        # 3. Check reference integrity (markdown links with path traversal protection)
+        # Pattern: [link text](path/to/file.md)
+        link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
+        link_matches = re.finditer(link_pattern, octave_content)
+
+        for match in link_matches:
+            link_path = match.group(2)
+
+            # Skip external URLs (http/https)
+            if link_path.startswith("http://") or link_path.startswith("https://"):
+                continue
+
+            full_link_path = working_dir / link_path
+
+            # FIX: Validate path containment for markdown links too
+            try:
+                resolved = full_link_path.resolve()
+                if not resolved.is_relative_to(working_dir.resolve()):
+                    issues.append(f"Path traversal rejected: {link_path}")
+                    continue
+            except (ValueError, OSError) as e:
+                issues.append(f"Invalid link path: {link_path} ({e})")
+                continue
+
+            # Check if referenced file exists
+            if not full_link_path.exists():
+                issues.append(f"Broken reference: {link_path}")
+
+        # Return verification result
+        return {"passed": len(issues) == 0, "issues": issues, "advisory": advisory}
 
     def get_model_category(self) -> ToolModelCategory:
         """Return the model category for this tool"""

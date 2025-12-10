@@ -145,7 +145,9 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged new feature section",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nUpdated content with new feature"}],
+                    "artifacts": [
+                        {"type": "context_update", "content": "# PROJECT-CONTEXT\n\nUpdated content with new feature"}
+                    ],
                 }
             )
 
@@ -185,7 +187,7 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged content from file",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged content"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged content"}],
                 }
             )
 
@@ -229,6 +231,7 @@ STATUS::Active
                     "summary": "Successfully merged content",
                     "artifacts": [
                         {
+                            "type": "context_update",
                             "content": """# PROJECT-CONTEXT
 
 ## IDENTITY
@@ -241,7 +244,7 @@ STACK::Python+FastAPI
 ## CURRENT_STATE
 STATUS::Active
 FEATURE_X::Implemented
-"""
+""",
                         }
                     ],
                 }
@@ -297,7 +300,7 @@ Modified CURRENT_STATE section
                 return_value={
                     "status": "success",
                     "summary": "Merged with conflict resolution",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nMerged content"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged content"}],
                 }
             )
 
@@ -308,6 +311,136 @@ Modified CURRENT_STATE section
             assert response["status"] == "success"
             result_data = json.loads(response["content"])
             assert result_data["conflicts_detected"] > 0
+
+    @pytest.mark.asyncio
+    async def test_same_section_conflict_returns_conflict_response(self, tool, mock_project):
+        """Test same-section conflict returns conflict status with continuation_id (Phase 2)."""
+        # Add recent changelog entry modifying CURRENT_STATE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE section**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        # New request also modifying CURRENT_STATE (conflict!)
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Update CURRENT_STATE",
+            content="## CURRENT_STATE\nPHASE::B1",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        assert response["status"] == "conflict"
+        result_data = json.loads(response["content"])
+        assert result_data["conflict_type"] == "same_section_modified"
+        assert "CURRENT_STATE" in result_data["details"]["section"]
+        assert "continuation_id" in result_data
+
+    @pytest.mark.asyncio
+    async def test_unrelated_sections_no_conflict(self, tool, mock_project):
+        """Test unrelated section changes processed without conflict (Phase 2)."""
+        # Recent change to ARCHITECTURE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update ARCHITECTURE section**
+Added new service
+
+"""
+        changelog.write_text(changelog_content)
+
+        # New change to RECENT_ACHIEVEMENTS (different section, no conflict)
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Add achievement",
+            content="## RECENT_ACHIEVEMENTS\n- Completed feature X",
+            working_dir=str(mock_project),
+        )
+
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "Merged content",
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nMerged"}],
+                }
+            )
+
+            result = await tool.run(request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed without conflict
+            assert response["status"] == "success"
+            result_data = json.loads(response["content"])
+            assert result_data.get("conflicts_detected", 0) == 0
+
+    @pytest.mark.asyncio
+    async def test_continuation_id_resolves_conflict(self, tool, mock_project):
+        """Test continuation_id allows conflict resolution (Phase 2)."""
+        # First, create a conflict
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Update CURRENT_STATE",
+            content="## CURRENT_STATE\nPHASE::B1",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+        response = json.loads(result[0].text)
+        assert response["status"] == "conflict"
+
+        # Get continuation_id
+        conflict_data = json.loads(response["content"])
+        continuation_id = conflict_data["continuation_id"]
+
+        # Now resolve with continuation_id
+        resolve_request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Confirm B2 phase",
+            content="## CURRENT_STATE\nPHASE::B2",
+            continuation_id=continuation_id,
+            working_dir=str(mock_project),
+        )
+
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "Resolved conflict",
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nResolved"}],
+                }
+            )
+
+            result = await tool.run(resolve_request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed after conflict resolution
+            assert response["status"] == "success"
 
     @pytest.mark.asyncio
     async def test_loc_compaction_when_exceeded(self, tool, mock_project):
@@ -344,7 +477,9 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Merged content",
-                    "artifacts": [{"content": long_content + "\n## NEW_SECTION\nNew content\n"}],
+                    "artifacts": [
+                        {"type": "context_update", "content": long_content + "\n## NEW_SECTION\nNew content\n"}
+                    ],
                 }
             )
 
@@ -384,7 +519,7 @@ STATUS::Active
                 return_value={
                     "status": "success",
                     "summary": "Added feature documentation",
-                    "artifacts": [{"content": "# PROJECT-CONTEXT\n\nUpdated"}],
+                    "artifacts": [{"type": "context_update", "content": "# PROJECT-CONTEXT\n\nUpdated"}],
                 }
             )
 
@@ -452,6 +587,100 @@ STATUS::Active
             response = json.loads(result[0].text)
             # Should still succeed with simple append
             assert response["status"] in ["success", "skipped"]
+
+    @pytest.mark.asyncio
+    async def test_ai_truncated_content_triggers_fallback(self, tool, mock_project):
+        """Test that AI returning truncated content triggers fallback to simple append."""
+        # Mock AI returning truncated placeholder content
+        with patch("tools.contextupdate.ContextStewardAI") as MockAI:
+            mock_ai = MockAI.return_value
+            mock_ai.is_task_enabled.return_value = True
+            # AI returns short placeholder instead of full merged content
+            mock_ai.run_task = AsyncMock(
+                return_value={
+                    "status": "success",
+                    "summary": "success_176_LOC_within_target",
+                    "artifacts": [{"type": "context_update", "content": "success_176_LOC_within_target"}],
+                }
+            )
+
+            request = ContextUpdateRequest(
+                target="PROJECT-CONTEXT",
+                intent="Add substantial feature documentation",
+                content="## NEW_FEATURE\nThis is a substantial feature with documentation",
+                working_dir=str(mock_project),
+            )
+
+            result = await tool.run(request.__dict__)
+
+            response = json.loads(result[0].text)
+            # Should succeed using fallback
+            assert response["status"] == "success"
+
+            # Verify the final content contains both existing and new content
+            context_file = mock_project / ".hestai" / "context" / "PROJECT-CONTEXT.md"
+            final_content = context_file.read_text()
+
+            # Should have original content
+            assert "## IDENTITY" in final_content
+            assert "NAME::TestProject" in final_content
+
+            # Should have new content (from fallback append)
+            assert "## NEW_FEATURE" in final_content
+
+            # Should NOT have the placeholder text
+            assert "success_176_LOC_within_target" not in final_content
+
+    @pytest.mark.asyncio
+    async def test_invalid_continuation_id_rejected(self, tool, mock_project):
+        """Test that invalid continuation_id formats are rejected (security fix)."""
+        # Attempt path traversal
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Bypass attempt",
+            content="## CURRENT_STATE\nBYPASS",
+            continuation_id="../../../etc/passwd",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        # Should return error
+        assert response["status"] == "error"
+        assert "Invalid continuation_id" in response["content"]
+
+    @pytest.mark.asyncio
+    async def test_fake_continuation_id_falls_back_to_detection(self, tool, mock_project):
+        """Test that fake continuation_id without state falls back to detection (security fix)."""
+        # Add recent changelog entry modifying CURRENT_STATE
+        changelog = mock_project / ".hestai" / "context" / "PROJECT-CHANGELOG.md"
+        recent_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+        changelog_content = f"""# PROJECT-CHANGELOG
+
+## {recent_time}
+**Update CURRENT_STATE section**
+Set PHASE to B2
+
+"""
+        changelog.write_text(changelog_content)
+
+        # Attempt bypass with valid-looking but non-existent continuation_id
+        request = ContextUpdateRequest(
+            target="PROJECT-CONTEXT",
+            intent="Bypass attempt",
+            content="## CURRENT_STATE\nPHASE::B1",
+            continuation_id="fake-bypass-12345678",
+            working_dir=str(mock_project),
+        )
+
+        result = await tool.run(request.__dict__)
+
+        response = json.loads(result[0].text)
+        # Should detect conflict (fallback to detection when state not found)
+        assert response["status"] == "conflict"
+        result_data = json.loads(response["content"])
+        assert "CURRENT_STATE" in result_data["details"]["section"]
 
 
 class TestConflictDetection:
@@ -583,3 +812,89 @@ STATUS::Active
         assert "## IDENTITY" in result
         assert "## ARCHITECTURE" in result
         assert "## CURRENT_STATE" in result
+
+
+class TestCompactionEnforcement:
+    """Test COMPACTION_ENFORCEMENT gate for archival requirements."""
+
+    @pytest.mark.asyncio
+    async def test_compaction_without_history_archive_rejected(self):
+        """Test that AI response performing compaction without history_archive artifact is rejected."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response that performed compaction but didn't include history_archive
+        ai_response_invalid = {
+            "status": "success",
+            "summary": "Compacted PROJECT-CONTEXT from 250 LOC to 150 LOC",
+            "compaction_performed": True,
+            "artifacts": [
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nCompacted content...",
+                }
+                # Missing history_archive artifact!
+            ],
+        }
+
+        # Should raise ValueError for missing archive
+        with pytest.raises(ValueError) as exc_info:
+            validate_ai_response_compaction(ai_response_invalid)
+
+        assert "history_archive" in str(exc_info.value).lower()
+        assert "compaction" in str(exc_info.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_compaction_with_history_archive_accepted(self):
+        """Test that AI response with both artifacts is accepted."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response that performed compaction correctly with both artifacts
+        ai_response_valid = {
+            "status": "success",
+            "summary": "Compacted PROJECT-CONTEXT and archived to PROJECT-HISTORY",
+            "compaction_performed": True,
+            "artifacts": [
+                {
+                    "type": "history_archive",
+                    "path": ".hestai/context/PROJECT-HISTORY.md",
+                    "action": "append_dated_section",
+                    "content": "## Archived 2025-12-10\n\nOld content...",
+                },
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nCompacted content...",
+                },
+            ],
+        }
+
+        # Should not raise
+        result = validate_ai_response_compaction(ai_response_valid)
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_no_compaction_no_archive_required(self):
+        """Test that responses without compaction don't require history_archive."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response without compaction
+        ai_response_no_compaction = {
+            "status": "success",
+            "summary": "Merged new content into PROJECT-CONTEXT",
+            "compaction_performed": False,
+            "artifacts": [
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nMerged content...",
+                }
+            ],
+        }
+
+        # Should not raise - no compaction, no archive required
+        result = validate_ai_response_compaction(ai_response_no_compaction)
+        assert result is True

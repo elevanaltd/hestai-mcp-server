@@ -39,6 +39,7 @@ class ToolOutput(BaseModel):
         "code_too_large",
         "continuation_available",
         "no_bug_found",
+        "conflict",
     ] = "success"
     content: Optional[str] = Field(None, description="The main content/response from the tool")
     content_type: Literal["text", "markdown", "json"] = "text"

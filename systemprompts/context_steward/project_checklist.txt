@@ -2,6 +2,13 @@ SYSTEM-STEWARD TASK: PROJECT_CHECKLIST_UPDATE
 
 You are updating the PROJECT-CHECKLIST.md file based on session findings.
 
+SIGNAL_CONTEXT::[
+  BRANCH::{{branch}},
+  COMMIT::{{commit}},
+  QUALITY_GATES::[lint={{lint_status}}, typecheck={{typecheck_status}}, test={{test_status}}],
+  AUTHORITY::{{authority}}
+]
+
 Current Checklist:
 {{existing_checklist}}
 

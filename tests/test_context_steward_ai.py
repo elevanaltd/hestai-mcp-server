@@ -370,3 +370,192 @@ class TestContextStewardAIRunTask:
         # Assert: Graceful degradation
         assert result["status"] == "error"
         assert "error" in result or "exception" in result
+
+
+class TestContextStewardAISignalGathering:
+    """Test signal gathering for AI context enrichment."""
+
+    @pytest.mark.asyncio
+    async def test_gather_signals_success(self, tmp_path):
+        """Test gathering runtime signals from git and state"""
+        # Arrange: Create a git repo
+        repo_dir = tmp_path / "test_repo"
+        repo_dir.mkdir()
+
+        # Initialize git repo with a commit
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, check=True)
+
+        # Create a test file and commit
+        test_file = repo_dir / "test.txt"
+        test_file.write_text("test content")
+        subprocess.run(["git", "add", "test.txt"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_dir, check=True)
+
+        # Create a branch
+        subprocess.run(["git", "checkout", "-b", "feature/test"], cwd=repo_dir, check=True)
+
+        # Act
+        from tools.context_steward.ai import gather_signals
+
+        signals = await gather_signals(str(repo_dir))
+
+        # Assert
+        assert "branch" in signals
+        assert signals["branch"] == "feature/test"
+        assert "commit" in signals
+        assert len(signals["commit"]) == 40  # Git SHA-1 hash length
+        assert "lint_status" in signals
+        assert "typecheck_status" in signals
+        assert "test_status" in signals
+        assert "authority" in signals
+
+    @pytest.mark.asyncio
+    async def test_gather_signals_no_git_repo(self, tmp_path):
+        """Test handling of missing git repo gracefully"""
+        # Arrange: Non-git directory
+        non_git_dir = tmp_path / "not_a_repo"
+        non_git_dir.mkdir()
+
+        # Act
+        from tools.context_steward.ai import gather_signals
+
+        signals = await gather_signals(str(non_git_dir))
+
+        # Assert: Should return fallback values
+        assert signals["branch"] == "unknown"
+        assert signals["commit"] == "unknown"
+        assert "lint_status" in signals
+        assert "typecheck_status" in signals
+        assert "test_status" in signals
+        assert "authority" in signals
+
+    @pytest.mark.asyncio
+    async def test_gather_signals_fallback_values(self):
+        """Test sensible fallback values for non-existent directory"""
+        # Act: Use non-existent directory
+        from tools.context_steward.ai import gather_signals
+
+        signals = await gather_signals("/nonexistent/directory")
+
+        # Assert: All required keys present with fallback values
+        assert signals["branch"] == "unknown"
+        assert signals["commit"] == "unknown"
+        assert signals["lint_status"] == "pending"
+        assert signals["typecheck_status"] == "pending"
+        assert signals["test_status"] == "pending"
+        assert signals["authority"] == "unassigned"
+
+
+class TestContextStewardAISignalInjection:
+    """Test signal injection into prompts."""
+
+    def test_build_prompt_with_signals(self, tmp_path):
+        """FAILING TEST: Should inject signals into prompt templates"""
+        # Arrange: Create config and template with signal placeholders
+        config_dir = tmp_path / "conf"
+        config_dir.mkdir()
+        config_file = config_dir / "context_steward.json"
+        template_dir = tmp_path / "systemprompts" / "context_steward"
+        template_dir.mkdir(parents=True)
+        template_file = template_dir / "test_task.txt"
+        template_file.write_text(
+            "SIGNAL_CONTEXT::[BRANCH::{{branch}}, COMMIT::{{commit}}, "
+            "QUALITY_GATES::[lint={{lint_status}}], AUTHORITY::{{authority}}]"
+        )
+
+        config_data = {
+            "enabled": True,
+            "tasks": {
+                "test_task": {
+                    "enabled": True,
+                    "prompt_template": str(template_file),
+                }
+            },
+        }
+        config_file.write_text(json.dumps(config_data))
+
+        # Act
+        with patch("tools.context_steward.ai.CONFIG_FILE", config_file):
+            ai = ContextStewardAI()
+            prompt = ai.build_prompt(
+                "test_task",
+                branch="feature/test",
+                commit="abc123def456",
+                lint_status="passing",
+                authority="implementation-lead",
+            )
+
+        # Assert: Signal values should be injected
+        assert "BRANCH::feature/test" in prompt
+        assert "COMMIT::abc123def456" in prompt
+        assert "lint=passing" in prompt
+        assert "AUTHORITY::implementation-lead" in prompt
+
+    @pytest.mark.asyncio
+    async def test_run_task_injects_signals(self, tmp_path):
+        """FAILING TEST: Should gather and inject signals when running task"""
+        # Arrange: Create git repo for signal gathering
+        repo_dir = tmp_path / "test_repo"
+        repo_dir.mkdir()
+
+        import subprocess
+
+        subprocess.run(["git", "init"], cwd=repo_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, check=True)
+
+        test_file = repo_dir / "test.txt"
+        test_file.write_text("test")
+        subprocess.run(["git", "add", "test.txt"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "commit", "-m", "Test"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "checkout", "-b", "feature/signal-test"], cwd=repo_dir, check=True)
+
+        # Create config and template
+        config_dir = tmp_path / "conf"
+        config_dir.mkdir()
+        config_file = config_dir / "context_steward.json"
+        template_dir = tmp_path / "systemprompts" / "context_steward"
+        template_dir.mkdir(parents=True)
+        template_file = template_dir / "test_task.txt"
+        template_file.write_text("Branch: {{branch}}, Commit: {{commit}}")
+
+        config_data = {
+            "enabled": True,
+            "default_cli": "gemini",
+            "tasks": {
+                "test_task": {
+                    "enabled": True,
+                    "cli": "gemini",
+                    "role": "system-steward",
+                    "prompt_template": str(template_file),
+                }
+            },
+        }
+        config_file.write_text(json.dumps(config_data))
+
+        # Mock clink execution
+        mock_octave = """RESPONSE::[STATUS::success, SUMMARY::"Test", FILES_ANALYZED::[], CHANGES::[], ARTIFACTS::[]]"""
+        mock_clink = AsyncMock()
+        mock_clink.execute.return_value = [Mock(text=json.dumps({"status": "success", "content": mock_octave}))]
+
+        # Act
+        with patch("tools.context_steward.ai.CONFIG_FILE", config_file):
+            with patch("tools.context_steward.ai.CLinkTool", return_value=mock_clink):
+                ai = ContextStewardAI()
+                result = await ai.run_task("test_task", working_dir=str(repo_dir))
+
+        # Assert: Clink should have been called with prompt containing actual git branch
+        assert result["status"] == "success"
+        call_args = mock_clink.execute.call_args[0][0]
+        prompt_sent = call_args["prompt"]
+        # Verify actual signal substitution (not just template placeholder)
+        assert "Branch: feature/signal-test" in prompt_sent, f"Expected branch signal in prompt, got: {prompt_sent}"
+        # Also verify commit hash was substituted (should be 40 chars)
+        assert "Commit: " in prompt_sent
+        # Extract commit value and verify it's a proper hash (not {{commit}} placeholder)
+        commit_match = prompt_sent.split("Commit: ")[1].split(",")[0].strip()
+        assert len(commit_match) == 40, f"Expected 40-char commit hash, got: {commit_match}"
