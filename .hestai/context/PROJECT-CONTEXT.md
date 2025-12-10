@@ -92,6 +92,12 @@ CONSTITUTION::"Adhere to System-Steward constitutional principles (Observation, 
 SPEC::".hestai/workflow/CONTEXT-STEWARD-V2-SPEC.oct.md"
 CRITICAL_ASSESSMENT::".hestai/reports/800-REPORT-CRITICAL-ENGINEER-CONTEXT-STEWARD-ASSESSMENT.md"
 
+### Audit & Operations (New - 2025-12-10)
+MCP_AUDIT_REPORT::".hestai/reports/801-REPORT-MCP-AUDIT-SESSION-F29CB14C.md"[comprehensive system health validation]
+TOOL_DEPENDENCY_MATRIX::".hestai/workflow/MCP-TOOL-DEPENDENCY-MATRIX.md"[change control checklist]
+PARALLEL_VALIDATION_PATTERN::".hestai/patterns/PARALLEL-AGENT-VALIDATION.oct.md"[orchestration pattern]
+PROCESS_CLEANUP_PROTOCOL::".hestai/operations/PROCESS-CLEANUP-PROTOCOL.md"[operational runbook]
+
 ### Context Files
 PROJECT_CONTEXT::".hestai/context/PROJECT-CONTEXT.md"[this file]
 HISTORY::".hestai/context/PROJECT-HISTORY.md"
