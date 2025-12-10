@@ -27,26 +27,46 @@ RUNTIME_DEPENDENCIES::[
 
 ## CURRENT_STATE
 DATE::2025-12-10
-ACTIVE_FOCUS::"Context Steward v2 - Coherence Gates (#107/#104) - CE BLOCKED pending history_archive fix"
+ACTIVE_FOCUS::"Context Steward v2 - Complete Clockout Flow (#104)"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
 
 RECENT_ACHIEVEMENTS::[
+  "#107 history_archive persistence FIXED (PR #111 - pending CI)",
   "#104 Clockout verification gate implemented (CE: GO)",
-  "#107 COMPACTION_ENFORCEMENT gate implemented (CE: BLOCKED - paper gate)",
-  "CRS review: 3 issues fixed (artifact type, path traversal, blocking gate)",
-  "Registry tool removal: PR #108",
-  "72 tests passing (clockout + context_update)"
+  "OCTAVE compression at clockout WORKING",
+  "1258 tests passing (full suite)",
+  "CRS review: 3 issues fixed (artifact type, path traversal, blocking gate)"
 ]
 
-BLOCKING_ITEMS::[
-  "#107 paper gate: validates presence but doesn't persist history_archive to PROJECT-HISTORY.md"
+NEXT_PRIORITY::"Complete clockout flow - AI-driven context_update to PROJECT-CONTEXT"
+
+## CLOCKOUT_FLOW_STATUS
+INTENDED_FLOW::[
+  "1. Session transcript created → WORKING",
+  "2. OCTAVE compression by AI → WORKING (see archive/{session_id}-octave.oct.md)",
+  "3. context_update by AI → NOT_IMPLEMENTED (clockout doesn't call context_update)",
+  "4. PROJECT-CONTEXT updated → NOT_IMPLEMENTED (depends on step 3)"
+]
+
+GAP_ANALYSIS::[
+  "clockout.py creates transcript + OCTAVE compression",
+  "BUT: clockout does NOT call context_update to merge session insights into PROJECT-CONTEXT",
+  "RESULT: Session wisdom stays in archive, doesn't flow to PROJECT-CONTEXT automatically"
+]
+
+IMPLEMENTATION_NEEDED::[
+  "After OCTAVE compression succeeds:",
+  "  1. Extract context-worthy items from OCTAVE (DECISIONS, OUTCOMES, BLOCKERS)",
+  "  2. Call context_update with extracted content",
+  "  3. AI merges into PROJECT-CONTEXT.md",
+  "  4. If compaction triggered, history_archive now persists (PR #111)"
 ]
 
 PHASE_STATUS::[
   "Phase 1 Foundation: COMPLETE",
   "Phase 2 AI Intelligence: COMPLETE",
   "Phase 3 Deprecation: #92 TODO",
-  "Phase 4 Validation: #93 BLOCKED by #107 fix"
+  "Phase 4 Validation: #93 UNBLOCKED (pending PR #111 merge)"
 ]
 
 ## AUTHORITY
@@ -119,18 +139,24 @@ BASE_BRANCH::"main"
 STATUS::"8 commits ahead of origin"
 
 RECENT_COMMITS::[
+  "cb06877::fix: Persist history_archive artifact to PROJECT-HISTORY.md (#107)",
   "ed48f4f::fix: Add path containment validation to prevent traversal attacks",
   "312dae7::fix: Select artifact by type, not array order in contextupdate",
   "a9af46a::feat: Implement clockout verification gate",
-  "c08628d::test: Add failing tests for COMPACTION_ENFORCEMENT gate (#107)",
   "425207b::feat: Implement COMPACTION_ENFORCEMENT gate for context_update (#107)"
+]
+
+PR_STATUS::[
+  "PR #111: feat: Context Steward v2 - Coherence Gates and Security Fixes",
+  "Status: CI running (lint, test-full 3.10/3.11/3.12)",
+  "URL: https://github.com/elevanaltd/hestai-mcp-server/pull/111"
 ]
 
 QUALITY_STATUS::[
   lint::"passing",
   typecheck::"passing",
-  test::"72/72 passing (clockout + context_update)",
-  coverage::"Verification gate and compaction enforcement covered"
+  test::"1258 passed, 11 skipped, 12 deselected, 1 xfailed",
+  coverage::"Full suite including clockout + context_update + history_archive persistence"
 ]
 
 ## INTEGRATION_GUARDRAILS

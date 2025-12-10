@@ -238,6 +238,16 @@ class ClockOutTool(BaseTool):
                                     )
 
                                     return [TextContent(type="text", text=tool_output.model_dump_json())]
+
+                                # Verification passed - extract and sync to PROJECT-CONTEXT
+                                context_content = self._extract_context_from_octave(octave_content)
+                                if context_content:
+                                    try:
+                                        await self._sync_to_project_context(context_content, session_data, project_root)
+                                        logger.info(f"Session {request.session_id} context synced to PROJECT-CONTEXT")
+                                    except Exception as e:
+                                        logger.warning(f"Context sync failed: {e}")
+                                        # Non-blocking - session already archived
             except Exception as e:
                 logger.warning(f"AI compression skipped: {e}")
                 # Graceful degradation - continue without AI
@@ -761,6 +771,95 @@ class ClockOutTool(BaseTool):
 
         # Return verification result
         return {"passed": len(issues) == 0, "issues": issues, "advisory": advisory}
+
+    def _extract_context_from_octave(self, octave_content: str) -> str:
+        """
+        Extract context-worthy content from OCTAVE compression.
+
+        Extracts sections that should flow to PROJECT-CONTEXT:
+        - DECISIONS:: - Project-level decisions made
+        - OUTCOMES:: - What was achieved
+        - BLOCKERS:: - Current blockers
+        - PHASE_CHANGES:: - Phase transitions
+
+        Args:
+            octave_content: OCTAVE compressed session content
+
+        Returns:
+            Formatted content for PROJECT-CONTEXT or empty string if nothing to extract
+        """
+        import re
+
+        sections = {}
+
+        # Extract DECISIONS
+        decisions_match = re.search(r"DECISIONS::\[([^\]]+)\]", octave_content)
+        if decisions_match:
+            sections["DECISIONS"] = decisions_match.group(1).strip()
+
+        # Extract OUTCOMES
+        outcomes_match = re.search(r"OUTCOMES::\[([^\]]+)\]", octave_content)
+        if outcomes_match:
+            sections["OUTCOMES"] = outcomes_match.group(1).strip()
+
+        # Extract BLOCKERS
+        blockers_match = re.search(r"BLOCKERS::\[([^\]]+)\]", octave_content)
+        if blockers_match:
+            sections["BLOCKERS"] = blockers_match.group(1).strip()
+
+        # Extract PHASE_CHANGES
+        phase_match = re.search(r"PHASE_CHANGES::\[([^\]]+)\]", octave_content)
+        if phase_match:
+            sections["PHASE_CHANGES"] = phase_match.group(1).strip()
+
+        # If nothing to extract, return empty
+        if not sections:
+            return ""
+
+        # Format as context update content
+        lines = []
+        for section_name, content in sections.items():
+            lines.append(f"{section_name}: {content}")
+
+        return "\n".join(lines)
+
+    async def _sync_to_project_context(self, context_content: str, session_data: dict, project_root: Path) -> None:
+        """
+        Sync extracted context content to PROJECT-CONTEXT via context_update tool.
+
+        Args:
+            context_content: Extracted context content
+            session_data: Session metadata
+            project_root: Project root directory
+        """
+        from tools.contextupdate import ContextUpdateTool
+
+        # Create context_update tool instance
+        context_update_tool = ContextUpdateTool()
+
+        # Prepare arguments for context_update
+        role = session_data.get("role", "unknown")
+        focus = session_data.get("focus", "general")
+        intent = f"Session insights from {role} ({focus})"
+
+        arguments = {
+            "target": "PROJECT-CONTEXT",
+            "intent": intent,
+            "content": context_content,
+            "working_dir": str(project_root),
+        }
+
+        # Call context_update
+        result = await context_update_tool.execute(arguments)
+
+        # Log result
+        if result:
+            result_text = result[0].text
+            output = json.loads(result_text)
+            if output.get("status") == "success":
+                logger.info("Context update successful")
+            else:
+                logger.warning(f"Context update returned non-success: {output.get('status')}")
 
     def get_model_category(self) -> ToolModelCategory:
         """Return the model category for this tool"""

@@ -1,5 +1,9 @@
 # Project Changelog
 
+## 2025-12-10 03:33
+**Document surgical registry removal completion and #17 integration strategy decision**
+Document submitted: session_note → .hestai/sessions/notes/document-surgical-registry-removal-completion-and-.oct.md
+
 ## 2025-12-09 16:07
 **Update RECENT_ACHIEVEMENTS with Claude CLI AI merge test**
 Updated PROJECT-CONTEXT (resolved 1 conflicts)
