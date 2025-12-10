@@ -266,15 +266,19 @@ class TestFallbackCapabilities:
         critical_degradations = [d for d in degradation_warnings if d["degradation"] >= 2]
 
         assert not critical_degradations, (
-            f"Critical tier degradations detected (HIGH→LOW): "
-            f"{[f'{d['agent']}: {d['primary']} → {d['fallback']}' for d in critical_degradations]}"
+            "Critical tier degradations detected (HIGH→LOW): "
+            + str([f"{d['agent']}: {d['primary']} → {d['fallback']}" for d in critical_degradations])
         )
 
         # Warnings: Any degradation
         if degradation_warnings:
             print("\nTier degradation warnings:")
             for d in degradation_warnings:
-                print(f"  {d['agent']}: {d['primary']} → {d['fallback']} (degradation: {d['degradation']})")
+                agent = d["agent"]
+                primary = d["primary"]
+                fallback = d["fallback"]
+                degradation = d["degradation"]
+                print(f"  {agent}: {primary} → {fallback} (degradation: {degradation})")
 
     def test_all_exceptions_have_valid_fallbacks(self, fallback_hints):
         """Ensure all exceptions have valid fallback or explicit null.
