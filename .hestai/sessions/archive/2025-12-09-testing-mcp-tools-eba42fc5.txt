@@ -559,7 +559,7 @@ Behavior: Delegate actual testing to specialists, maintain coherence view
 3. Context Steward v2 tools available: clockin, clockout, anchorsubmit, document_submit, context_update
 
 [user]
-I'd like you to test the different mcp tools that hestai has to offer. 
+I'd like you to test the different mcp tools that hestai has to offer.
 
 clockin
 clockout
@@ -972,7 +972,7 @@ COMPRESSION_INTEGRATION::[
 
 3. **Add Role Drift Detection:**
    - Warn when anchor.SHANK.role ≠ session.role
-   
+
 4. **Expand ROLE_ENFORCEMENT:**
    - Add rules for critical-engineer, test-methodology-guardian, etc.
 
@@ -1072,7 +1072,7 @@ The config uses `"cli": "gemini"` which then uses the model from `gemini.json`. 
 Codex timed out (180s). Let me try Claude CLI:
 
 [assistant]
-**Claude CLI works!** Now I have a working alternative. 
+**Claude CLI works!** Now I have a working alternative.
 
 [assistant]
 ---
@@ -1130,10 +1130,10 @@ Would you like me to:
 [user]
 Can you check this is correct and error free? Then I'll restart server
 
-/Volumes/HestAI-Tools/hestai-mcp-server/conf/context_steward.json /Volumes/HestAI-Tools/hestai-mcp-server/conf/cli_clients/claude.json 
+/Volumes/HestAI-Tools/hestai-mcp-server/conf/context_steward.json /Volumes/HestAI-Tools/hestai-mcp-server/conf/cli_clients/claude.json
 
 Also this is the octave compression that we could use as reference
-/Users/shaunbuswell/dev/thymos/previous-versions/thymos-mvp/projects/open/zeus-orchestra-phase3/implementation/scripts/octave_utils.py 
+/Users/shaunbuswell/dev/thymos/previous-versions/thymos-mvp/projects/open/zeus-orchestra-phase3/implementation/scripts/octave_utils.py
 
 [assistant]
 ## Configuration Review
@@ -1216,8 +1216,8 @@ Testing contextupdate with Claude CLI now:
 
 The logs show:
 ```
-AI merge successful: Updated RECENT_ACHIEVEMENTS with Claude CLI AI merge test and MCP tools audit results. 
-Consolidated 3 session-based findings into properly formatted OCTAVE entries; removed redundant inline prose. 
+AI merge successful: Updated RECENT_ACHIEVEMENTS with Claude CLI AI merge test and MCP tools audit results.
+Consolidated 3 session-based findings into properly formatted OCTAVE entries; removed redundant inline prose.
 File reduced to 176 LOC (under 200 target).
 ```
 

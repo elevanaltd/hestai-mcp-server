@@ -10,7 +10,7 @@ deployment.
 
 import json
 from pathlib import Path
-from typing import Dict, Optional, Set
+from typing import Optional
 
 import pytest
 
@@ -20,7 +20,7 @@ class TestFallbackCapabilities:
 
     # Define agent capability requirements
     # Maps agent name to required capabilities
-    AGENT_CAPABILITIES: Dict[str, Set[str]] = {
+    AGENT_CAPABILITIES: dict[str, set[str]] = {
         "system-steward": {
             "file_read",
             "file_write",
@@ -54,7 +54,7 @@ class TestFallbackCapabilities:
 
     # Define model capability profiles
     # Maps CLI+model to known capabilities
-    MODEL_CAPABILITIES: Dict[str, Set[str]] = {
+    MODEL_CAPABILITIES: dict[str, set[str]] = {
         # Claude models (via Claude CLI)
         "claude:opus": {
             "file_read",
@@ -132,20 +132,20 @@ class TestFallbackCapabilities:
     TIER_ORDER = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
     @pytest.fixture
-    def tier_config(self) -> Dict:
+    def tier_config(self) -> dict:
         """Load tier configuration from agent-model-tiers.json."""
         config_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "agent-model-tiers.json"
         with open(config_path) as f:
             return json.load(f)
 
     @pytest.fixture
-    def fallback_hints(self) -> Dict:
+    def fallback_hints(self) -> dict:
         """Load fallback hints from fallback_hints.json."""
         hints_path = Path(__file__).parent.parent / "conf" / "cli_clients" / "metadata" / "fallback_hints.json"
         with open(hints_path) as f:
             return json.load(f)
 
-    def _get_agent_tier(self, agent_name: str, tier_config: Dict) -> Optional[str]:
+    def _get_agent_tier(self, agent_name: str, tier_config: dict) -> Optional[str]:
         """Get tier for an agent from tier configuration."""
         for tier_name, tier_data in tier_config["tiers"].items():
             if agent_name in tier_data["agents"]:

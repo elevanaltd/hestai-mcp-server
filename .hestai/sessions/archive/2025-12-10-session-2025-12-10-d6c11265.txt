@@ -20,7 +20,7 @@ Clockout tool fails when `focus` field contains path separators or newlines, cre
 
 **Error observed:**
 ```
-Error archiving session: [Errno 2] No such file or directory: 
+Error archiving session: [Errno 2] No such file or directory:
 '/Volumes/HestAI-Projects/eav-monorepo/.hestai/sessions/archive/2025-12-10-fix/ci-diagnosis-337-f65d7e99.txt'
 ```
 

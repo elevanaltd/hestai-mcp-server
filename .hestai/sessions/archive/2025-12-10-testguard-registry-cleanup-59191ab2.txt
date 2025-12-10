@@ -73,7 +73,7 @@ Before reusing anything, you need to understand:
 ```bash
 mcp__hestai__clink[
   cli_name="codex",
-  role="code-review-specialist", 
+  role="code-review-specialist",
   prompt="Compare testguard MCP tool vs TMG clink role - what's the actual capability difference?"
 ]
 ```
@@ -659,7 +659,7 @@ Bad news and good news:
 
 **Don't remove critical_engineer yet.** Questions first:
 
-1. **Is critical_engineer actually deprecated in your workflow?** 
+1. **Is critical_engineer actually deprecated in your workflow?**
    - Or do you still use it for architectural reviews and incident response?
    - It's actively recommended for "Emergency incidents" per your own CLAUDE.md
 

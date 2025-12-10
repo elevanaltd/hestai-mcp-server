@@ -95,10 +95,10 @@ fa3a914 test: Add failing test for AI truncated content validation
 
 ### Quality Gates Passed
 
-✅ Linting (ruff)  
-✅ Formatting (black)  
-✅ Import sorting (isort)  
-✅ Unit tests (26/26 context_update tests pass)  
+✅ Linting (ruff)
+✅ Formatting (black)
+✅ Import sorting (isort)
+✅ Unit tests (26/26 context_update tests pass)
 ✅ Full test suite (1214/1214 tests pass)
 
 ### How It Works

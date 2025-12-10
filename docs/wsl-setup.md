@@ -25,7 +25,7 @@ npm install -g @anthropic-ai/claude-code
    ```bash
    # Navigate to your home directory or preferred location in WSL
    cd ~
-   
+
    # Clone the repository
    git clone https://github.com/elevanaltd/hestai-mcp-server.git
    cd hestai-mcp-server
@@ -42,7 +42,7 @@ npm install -g @anthropic-ai/claude-code
    ```bash
    # List configured MCP servers
    claude mcp list
-   
+
    # You should see 'zen' listed in the output
    # If not, the setup script will provide the correct configuration
    ```

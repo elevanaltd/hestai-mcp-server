@@ -15,7 +15,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 
 class ConfigGenerator:
@@ -44,8 +44,8 @@ class ConfigGenerator:
         self.tier_mapping_path = self.metadata_dir / "agent-model-tiers.json"
         self.fallback_hints_path = self.metadata_dir / "fallback_hints.json"
 
-        self.tier_mapping: Dict[str, Any] = {}
-        self.client_configs: Dict[str, Dict[str, Any]] = {}
+        self.tier_mapping: dict[str, Any] = {}
+        self.client_configs: dict[str, dict[str, Any]] = {}
 
     def load_tier_mapping(self) -> None:
         """Load agent-model-tiers.json."""
@@ -55,7 +55,7 @@ class ConfigGenerator:
         with open(self.tier_mapping_path) as f:
             self.tier_mapping = json.load(f)
 
-    def load_client_configs(self, cli_names: List[str]) -> None:
+    def load_client_configs(self, cli_names: list[str]) -> None:
         """Load existing client configurations.
 
         Args:
@@ -127,7 +127,7 @@ class ConfigGenerator:
                 return effort_level
         return None
 
-    def update_client_config(self, cli_name: str, dry_run: bool = False) -> Dict[str, Any]:
+    def update_client_config(self, cli_name: str, dry_run: bool = False) -> dict[str, Any]:
         """Update a client configuration with tier-based model assignments.
 
         Args:
@@ -200,7 +200,7 @@ class ConfigGenerator:
 
         return {"config": config, "changes": changes}
 
-    def validate_model_ids(self) -> List[str]:
+    def validate_model_ids(self) -> list[str]:
         """Validate that all model IDs used in tiers/exceptions are valid.
 
         Returns:
@@ -233,7 +233,7 @@ class ConfigGenerator:
 
         return errors
 
-    def validate_tier_degradation(self) -> List[str]:
+    def validate_tier_degradation(self) -> list[str]:
         """Check for tier degradation warnings (HIGH->LOW fallback).
 
         Returns:
@@ -250,14 +250,12 @@ class ConfigGenerator:
                 continue
 
             # Find tiers
-            primary_tier = None
-            fallback_tier = None
 
             # Check if agent is in tiers or exceptions
             agent_tier = self.find_agent_tier(agent_name)
             if agent_tier:
-                primary_model = self.tier_mapping["tiers"][agent_tier].get(primary_cli)
-                fallback_model = self.tier_mapping["tiers"][agent_tier].get(fallback_cli)
+                self.tier_mapping["tiers"][agent_tier].get(primary_cli)
+                self.tier_mapping["tiers"][agent_tier].get(fallback_cli)
 
                 # Determine tier level by model
                 tier_levels = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
@@ -274,7 +272,7 @@ class ConfigGenerator:
 
         return warnings
 
-    def validate_agent_coverage(self) -> List[str]:
+    def validate_agent_coverage(self) -> list[str]:
         """Validate that all agents in tier mapping exist in client configs.
 
         Returns:
@@ -283,15 +281,15 @@ class ConfigGenerator:
         errors = []
 
         # Collect all agents from tiers
-        tier_agents: Set[str] = set()
+        tier_agents: set[str] = set()
         for tier_data in self.tier_mapping.get("tiers", {}).values():
             tier_agents.update(tier_data.get("agents", []))
 
         # Collect all agents from exceptions
-        exception_agents: Set[str] = set(self.tier_mapping.get("exceptions", {}).keys())
+        exception_agents: set[str] = set(self.tier_mapping.get("exceptions", {}).keys())
 
         # Collect all agents from client configs
-        config_agents: Set[str] = set()
+        config_agents: set[str] = set()
         for config in self.client_configs.values():
             config_agents.update(config.get("roles", {}).keys())
 
@@ -310,7 +308,7 @@ class ConfigGenerator:
 
         return errors
 
-    def generate_fallback_hints(self) -> Dict[str, Any]:
+    def generate_fallback_hints(self) -> dict[str, Any]:
         """Generate fallback_hints.json from primary_fallback_hints.
 
         Returns:
@@ -318,7 +316,7 @@ class ConfigGenerator:
         """
         return self.tier_mapping.get("primary_fallback_hints", {})
 
-    def write_client_config(self, cli_name: str, config: Dict[str, Any]) -> None:
+    def write_client_config(self, cli_name: str, config: dict[str, Any]) -> None:
         """Write updated client configuration to disk.
 
         Args:
@@ -330,7 +328,7 @@ class ConfigGenerator:
             json.dump(config, f, indent=2)
             f.write("\n")  # Add trailing newline
 
-    def write_fallback_hints(self, hints: Dict[str, Any]) -> None:
+    def write_fallback_hints(self, hints: dict[str, Any]) -> None:
         """Write fallback_hints.json to disk.
 
         Args:
@@ -340,7 +338,7 @@ class ConfigGenerator:
             json.dump(hints, f, indent=2)
             f.write("\n")
 
-    def run(self, mode: str = "generate", cli_names: Optional[List[str]] = None) -> int:
+    def run(self, mode: str = "generate", cli_names: Optional[list[str]] = None) -> int:
         """Run the generator.
 
         Args:

@@ -13,13 +13,13 @@ Implement a phased approach to fix the MCP schema:
 ### Phase 1 (Immediate): Expose All Parameters
 Add all parameters to get_tool_fields() with descriptive documentation indicating which are required for each action.
 
-### Phase 2 (Enhancement): Conditional Schema  
+### Phase 2 (Enhancement): Conditional Schema
 Implement proper JSON Schema oneOf pattern for action-specific parameter validation.
 
 ## Rationale
 Critical-Engineer analysis identified this as a "liar schema" problem where the interface contract doesn't match the implementation. The proper solution uses JSON Schema's conditional capabilities for:
 - Machine-readable contracts
-- Client-side validation  
+- Client-side validation
 - Single source of truth
 - MCP protocol compliance
 

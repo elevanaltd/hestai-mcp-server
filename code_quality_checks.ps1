@@ -51,7 +51,7 @@ if (Test-Path ".hestai_venv") {
             $pipCmd = ".hestai_venv/bin/pip"
         }
     }
-    
+
     if ($pythonCmd) {
         Write-Emoji "✅" "Using venv" -Color Green
     }
@@ -76,7 +76,7 @@ $devTools = @("ruff", "black", "isort", "pytest")
 
 foreach ($tool in $devTools) {
     $toolFound = $false
-    
+
     # Check in venv
     if ($IsWindows -or $env:OS -eq "Windows_NT") {
         if (Test-Path ".hestai_venv\Scripts\$tool.exe") {
@@ -87,7 +87,7 @@ foreach ($tool in $devTools) {
             $toolFound = $true
         }
     }
-    
+
     # Check in PATH
     if (!$toolFound) {
         try {
@@ -97,7 +97,7 @@ foreach ($tool in $devTools) {
             # Tool not found
         }
     }
-    
+
     if (!$toolFound) {
         $devDepsNeeded = $true
         break
@@ -185,12 +185,12 @@ if (!$SkipTests) {
 
     try {
         Write-Emoji "🏃" "Running unit tests (excluding integration tests)..." -Color Yellow
-        
+
         $pytestArgs = @("tests/", "-v", "-x", "-m", "not integration")
         if ($VerboseOutput) {
             $pytestArgs += "--verbose"
         }
-        
+
         & $pythonCmd -m pytest @pytestArgs
         if ($LASTEXITCODE -ne 0) {
             throw "Unit tests failed"

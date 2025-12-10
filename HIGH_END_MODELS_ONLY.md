@@ -16,7 +16,7 @@ Simple, focused tasks are handled by Claude subagents for efficiency.
 ### 1. **thinkdeep** - Deep Investigation Workflow
 - **Purpose**: Comprehensive problem analysis with systematic investigation
 - **Model Category**: EXTENDED_REASONING
-- **Recommended Models**: 
+- **Recommended Models**:
   - `o3` - Best for complex logical problems
   - `gemini-2.5-pro` - Best for research with 1M context
   - `gpt-4.1-2025-04-14` - Best for balanced deep analysis
@@ -24,7 +24,7 @@ Simple, focused tasks are handled by Claude subagents for efficiency.
 ### 2. **consensus** - Multi-Model Consensus Building
 - **Purpose**: Complex decisions requiring multiple perspectives
 - **Model Category**: BALANCED (multiple models)
-- **Recommended Models**: 
+- **Recommended Models**:
   - Mix of `o3`, `gemini-2.5-pro`, `gpt-4.1` for diverse perspectives
   - Never use mini variants
 
@@ -74,7 +74,7 @@ Simple, focused tasks are handled by Claude subagents for efficiency.
 
 ### NEVER USE:
 - `o3-mini`
-- `o4-mini` 
+- `o4-mini`
 - `gpt-4.1-mini`
 - `claude-3.5-haiku`
 - Any "mini" or "lite" variants

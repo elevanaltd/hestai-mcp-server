@@ -184,12 +184,12 @@ Example: `TESTGUARD-20250904-e6bfdb58`
 if detect_problem; then
     # 2. Create registry entry
     UUID=$(create_registry_entry)
-    
+
     # 3. Block and inform user
     echo "BLOCKED: Specialist approval required"
     echo "UUID: $UUID"
     echo "Run: specialist-tool approve $UUID"
-    
+
     # 4. Wait for approval (or implement async check)
     exit 1
 fi

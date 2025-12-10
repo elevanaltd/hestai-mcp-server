@@ -575,7 +575,7 @@ Excellent. Anchor validated. Completing session initialization with dashboard sy
    Cognition:      LOGOS (Structure revelation through relational synthesis)
    Force:          Cross-boundary integration emerges from orchestrated component coherence
    Constraint:     MUST show structural coherence emergence; NEVER coordination theater
-   
+
    Behavioral Lock:
    • PERCEIVE→SYNTHESIZE→VALIDATE→ORCHESTRATE→CONVERGE→ENFORCE workflow
    • MIP discipline: 62% essential orchestration, 38% coordination maximum
@@ -843,12 +843,12 @@ MEMORY_ITEM_SCHEMA::[
   id::UUID,
   type::[semantic|episodic|procedural|preference],
   scope::[project, repo, environment, phase, team],
-  
+
   // Content (minimal, structured)
   title::string,
   content::string[<200_LOC],
   structured_fields::OCTAVE_block,
-  
+
   // Source and trust
   provenance::[
     source_type::[doc|code|decision|tool_output|api],
@@ -858,25 +858,25 @@ MEMORY_ITEM_SCHEMA::[
     confidence::percentage[0-100],
     verification_method::[test|review|analysis|inference]
   ],
-  
+
   // Lifecycle
   ttl::[
     soft_expires::ISO8601,
     hard_expires::ISO8601,
     invalidation_signals::[]
   ],
-  
+
   // Relationships (lineage)
   lineage::[
     parent_ids::[uuid],
     supersedes_ids::[uuid],
     related_issues::[issue_url]
   ],
-  
+
   // Searchability
   sparse_terms::[keyword],
   embeddings::[vector, model_version],
-  
+
   // Safety
   acl::scope,
   pii_redacted::boolean,
@@ -938,7 +938,7 @@ ENHANCEMENTS::[
 EXAMPLES::[
   // Update pattern (current)
   requestdoc(type:context_update, intent:log_achievement, working_dir, files:[]),
-  
+
   // New retrieval pattern
   requestdoc(type:context_retrieve, query:"Issue #76", scope:{repo:hestai-mcp-server}, confidence_min:80%)
 ]
@@ -985,14 +985,14 @@ CONTEXT_STEWARD_INTEGRATION::[
     "Load PROJECT-CONTEXT filtered by scope",
     "Pre-fetch high-confidence (>85%) facts for this session"
   ],
-  
+
   WHEN_request_doc::[
     "Agent submits fact with provenance request body",
     "ContextStewardAI verifies + extracts semantic structure",
     "Assign confidence, TTL, lineage",
     "Append to PROJECT-CONTEXT with full metadata"
   ],
-  
+
   WHEN_agent_queries::[
     "Agent submits query (optional in request_doc)",
     "Hybrid search: sparse (OCTAVE terms) + dense (embeddings)",
@@ -1229,7 +1229,7 @@ So this covers research into project context. Is there any information that's be
 3. build plans
 4. ambiguous docs which doesn't fall nicely into categories
 
-Are they all meant to be dealt with through the request docs tool and how will context steward handle them? 
+Are they all meant to be dealt with through the request docs tool and how will context steward handle them?
 
 [assistant]
 Excellent architectural question. Let me investigate how request_doc currently handles different document types and where gaps might exist in the Context Steward integration.

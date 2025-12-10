@@ -5,13 +5,12 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
-# Add scripts directory to path
+# Add scripts directory to path before importing
 scripts_dir = Path(__file__).parent.parent / "scripts"
 sys.path.insert(0, str(scripts_dir))
 
-from generate_client_configs import ConfigGenerator
+import pytest  # noqa: E402
+from generate_client_configs import ConfigGenerator  # noqa: E402
 
 
 @pytest.fixture

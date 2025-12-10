@@ -451,7 +451,7 @@ OUTPUT::[
 **Cognition:** LOGOS - The Architect of Structure
 **Archetypes:** ATLAS (ultimate accountability), ODYSSEUS (cross-boundary navigation), APOLLO (prophetic intelligence)
 **Force:** STRUCTURE - "Reveal what connects"
-**Lock:** 
+**Lock:**
 - MUST: Show how gaps + boundaries + agents → coherent system through orchestration
 - MUST NEVER: Present orchestration as task list addition (must show multiplicative system integration)
 
@@ -549,7 +549,7 @@ Authority:  COORDINATION_ONLY
 GAP-1: clockout → context_update integration incomplete
        Steps 1-2 working, steps 3-4 NOT_IMPLEMENTED
        Recent commit 54d55e5 suggests work in progress
-       
+
 GAP-2: Branch sync decision
        1 ahead (local), 2 behind (origin/main)
 ```
@@ -558,7 +558,7 @@ GAP-2: Branch sync decision
 ```
 LOGOS: The Door - connecting cross-boundary concerns
        into navigable system architecture
-       
+
 Behavior: Orchestrate investigation → delegate implementation
           Buck stops here within constitutional bounds
 ```
@@ -731,7 +731,7 @@ re.search(r"DECISIONS::\[(.*)\]", octave_content)
 
 **4 occurrences to fix:**
 - Line 798: DECISIONS
-- Line 803: OUTCOMES  
+- Line 803: OUTCOMES
 - Line 808: BLOCKERS
 - Line 813: PHASE_CHANGES
 
@@ -765,13 +765,13 @@ Yes, delegate to get fixed
 
 The branch now has:
 1. `safe_focus` sanitization (PR #112)
-2. `clockout→context_update` integration  
+2. `clockout→context_update` integration
 3. Fixed regex for nested brackets
 
 Ready for CRS re-review or next steps. What would you like to do?
 
 [user]
-Error in CI 
+Error in CI
 Run black --check .
 would reformat /home/runner/work/hestai-mcp-server/hestai-mcp-server/tests/test_clockout.py
 
@@ -830,7 +830,7 @@ The quality check completed (exit 0) but there's a local issue - the `code_quali
 **Current Branch State:**
 ```
 ✅ 2df78e0 style: Format test_clockout.py with black (pushed)
-✅ 83a9b54 fix: Preserve nested brackets in OCTAVE context extraction  
+✅ 83a9b54 fix: Preserve nested brackets in OCTAVE context extraction
 ✅ 5c1bf2a Merge origin/main (sanitization fix)
 ```
 
@@ -846,7 +846,7 @@ Done. The `code_quality_checks.sh` script has been fixed:
 
 **Changes:**
 - Added `--exclude worktrees` to ruff
-- Added `--exclude="worktrees/"` to black  
+- Added `--exclude="worktrees/"` to black
 - Added `--skip-glob="worktrees/*"` to isort
 
 The script will no longer waste time reformatting files in worktree venvs.

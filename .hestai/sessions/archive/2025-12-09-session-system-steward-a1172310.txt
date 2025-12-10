@@ -539,7 +539,7 @@ THis session will be focused on the Context Steward elements of this mcp-server.
 
 clock-in - analysing agent's clocking in info against the context files and rpoviding them with the relevant context (either by giving them links to the context files, or providing concise octave based info that's focused)
 clocking out - looking at the whole session jsonl (the session should automatically save in the relevant folder) and creating a version using octave compression (load octave compression skill) and saving it in the same location)
-request doc - this is where I'm most unsure. The premise is that all documentation would flow through you to save, but how do we do this properly? Where are you saving things? Updates to context are easy, but what about other bits? @.hestai/rules/VISIBILITY-RULES.md give you insight into where things would be saved, but hat is the practical nature of this? For example, If any agent has a large report to produce, is it practical for them to provide you with the whole info via the tool? Will that cause problems? Should we set up an "inbox" and the request docs tool actually works differently so that agents submit their request via it, and then you review the request and move the file to the right location? So you curate the folders, update the docs using octave, save them in the right place? Maybe move their doc from an active folder in inbox to processed folder? 
+request doc - this is where I'm most unsure. The premise is that all documentation would flow through you to save, but how do we do this properly? Where are you saving things? Updates to context are easy, but what about other bits? @.hestai/rules/VISIBILITY-RULES.md give you insight into where things would be saved, but hat is the practical nature of this? For example, If any agent has a large report to produce, is it practical for them to provide you with the whole info via the tool? Will that cause problems? Should we set up an "inbox" and the request docs tool actually works differently so that agents submit their request via it, and then you review the request and move the file to the right location? So you curate the folders, update the docs using octave, save them in the right place? Maybe move their doc from an active folder in inbox to processed folder?
 
 I would like your full assessment of the current workflow va the proposed workflow above, any questions you have or knowledge gaps, and any suggestions you have for improvement.
 
@@ -653,7 +653,7 @@ Agent writes file → .hestai/inbox/ → request_doc(type, file_ref) → system-
 ### Current Pattern Problems
 
 ```
-[Agent with report] 
+[Agent with report]
     → MCP call with full content (10KB in JSON param)
         → request_doc processes
             → Writes to destination
@@ -672,7 +672,7 @@ Agent writes file → .hestai/inbox/ → request_doc(type, file_ref) → system-
     → Writes to .hestai/inbox/{uuid}-{type}.md
     → MCP call: request_doc(type, intent, file_ref="{uuid}-{type}.md")
         → Returns: "Queued for processing"
-    
+
 [system-steward session OR background process]
     → Scans .hestai/inbox/
     → For each file:
@@ -853,19 +853,19 @@ Answers to your questions:
     - End-of-session (clock_out triggers inbox processing)?
     - Real-time (hook on inbox file creation)?
     - Manual (system-steward invoked explicitly)?
-I see this working in a few ways. I think leaving until end of session is dangerous. If there's conflicts, we'd cause more issues. It should be updated realtime. So I think one option would be a. agents submit request to inbox then b. run the "whatever we call it" mcp tool and system-steward invoked explicitly. That's actually probably the only way to get visibilty for the session. However, I love the idea on the future that we could set something up that would monitor and deal with this in real time. Like an add-on to the current hestai-mcp-server, if it was something that could run in the background and monitor requests coming in, placing things where they need to go. I envisage a futre where Context Steward is an app where all documentation/updates come and humans can review or look at things. so you pick a dropdown and see the inbox and everyhting that's been processed and where it's going, and you configure all the settings so you can change routing or manage it effectively. But this future idea requires significant thought (maybe this is a good exmaple where we could set up a project in github to investigate and plan for a future app/work) 
+I see this working in a few ways. I think leaving until end of session is dangerous. If there's conflicts, we'd cause more issues. It should be updated realtime. So I think one option would be a. agents submit request to inbox then b. run the "whatever we call it" mcp tool and system-steward invoked explicitly. That's actually probably the only way to get visibilty for the session. However, I love the idea on the future that we could set something up that would monitor and deal with this in real time. Like an add-on to the current hestai-mcp-server, if it was something that could run in the background and monitor requests coming in, placing things where they need to go. I envisage a futre where Context Steward is an app where all documentation/updates come and humans can review or look at things. so you pick a dropdown and see the inbox and everyhting that's been processed and where it's going, and you configure all the settings so you can change routing or manage it effectively. But this future idea requires significant thought (maybe this is a good exmaple where we could set up a project in github to investigate and plan for a future app/work)
 3. Conflict handling: If two agents submit to inbox for same destination (e.g., both want to update PROJECT-CONTEXT), how to merge? That's entirely why system-steward exists. If we deal with things realtime/manual, then realistically that's two SS agents being invoked in different sessions. Let's walk it through. SCENARIO 1: Agent A submits request to update project context, then uses MCP tool at the same time as Agent B requesting a change to project context. The work they're doing is unrelated/doesn't affect each other, but adding at the same time will cause conflicts. Whichever agent processes first should have a record in CHANGELOG or somewhere. So when the second SS agent goes to process the request and update the document, they'll see the updated version anyway and if just provide info where appropriate. It shouldn't block, but they could note something by replying something like "PROJECT CONTEXT updated, but worth noting that Agent A submitted a change since your request and that was added first", just for visibility.
 SCENARIO 2: Agent A submits request to change point X in PROEJCT-CONTEXT and Agent B submits request to change point X at the same time. Whichever agent gets their request processed first will show in git. So when second SS agent goes to update, it should flag it's already done/different to request. Their reply should be to deny the request until confirmation given. So they would reply something like "you've asked to update re point X, but this has already been done by agent A in branch A. Can you confirm next steps?" and then agent has to review, figure out the solution, and submit a response. It could be that SS Agent B actually provides a suggested solution based on their holistic view of things (SS agents should have ability to look up and read and search directories as well as just writing the docs. They could resolve a lot of these things). What it shows us though, is we need to make sure this tool to submit things works in the same way as clink and chat does in hestai, in that we give continuation_id and there's an ability to add that to the request and keep talking. Dialogue between the agents via the tool is paramount.
 4. Priority levels: The current priority field (blocking,
 end_of_session, background) - how does this map to inbox
-processing? I'm honestly not sure. this would requre more research.understanding. 
+processing? I'm honestly not sure. this would requre more research.understanding.
 5. RULE_5 (Claude Config): Should .claude/ modifications
 also flow through inbox, or is that a separate workflow? I think it should come thorugh here too. Makes perfect sense to update things through this when needed. The system's ability to update it's own config is powerful.
 
-Option B: Hybrid (small content inline, large by reference) is optimal. We just need to ensure agents know this. I know we can put in something that limits the size of the rwquest and forces them to use file references, but we want to avoid waste of tokens by them writing it in the tool, getting rejected, then rewriting it into inbox and referencing it (all large file requests should still appear in inbox and not be saved elswhere). So this is just a training/visibility thing. 
+Option B: Hybrid (small content inline, large by reference) is optimal. We just need to ensure agents know this. I know we can put in something that limits the size of the rwquest and forces them to use file references, but we want to avoid waste of tokens by them writing it in the tool, getting rejected, then rewriting it into inbox and referencing it (all large file requests should still appear in inbox and not be saved elswhere). So this is just a training/visibility thing.
 
 1. Should I (system-steward) always be the processor, or can other agents process inbox items for their domain?
- - E.g., could test-infrastructure-steward process test-related docs? 
+ - E.g., could test-infrastructure-steward process test-related docs?
 SS should be the only agent processing. Agents are specialists in their domain, SS is specialist of documentation. So the content is provided by TIS, for exmaple, but the way it's presented and formatted is SS's final authority. We could have other agent's in contorl over the templates/formatting that's used, but I can attest that when you let other agents write documentation, it has no consistency, gets messy and is disorganised fairly quickly.
 
 2. For very large reports (>100KB), should we:
@@ -1114,7 +1114,7 @@ VISIBILITY_RULES_V2 = {
         "compress": False,
         "requires_validation": True  # Extra safety for config
     },
-    
+
     # context_update targets (merge, not place)
     "PROJECT-CONTEXT": {
         "path": ".hestai/context/PROJECT-CONTEXT.md",
@@ -1139,7 +1139,7 @@ VISIBILITY_RULES_V2 = {
 ```
 COMPRESSION_PROTOCOL::[
   THRESHOLD::1KB[compress_if_larger],
-  
+
   INBOX_HANDLING::[
     IF[submission_size>1KB]::[
       1::save_original_to_inbox/pending/,
@@ -1149,7 +1149,7 @@ COMPRESSION_PROTOCOL::[
       5::archive_original_to_processed/
     ]
   ],
-  
+
   CONTEXT_HANDLING::[
     IF[target_file>200_LOC_after_merge]::[
       1::identify_stale_items,
@@ -1185,13 +1185,13 @@ CONTEXT_STEWARD_APP_VISION::[
       PUT /resolve/{conflict_id}
     ]
   ],
-  
+
   HUMAN_OVERSIGHT::[
     review_before_placement::optional_approval_gate,
     routing_overrides::manual_destination_selection,
     conflict_resolution::human_arbitration_option
   ],
-  
+
   INTEGRATION::[
     MCP_BRIDGE::tools_submit_to_app_API,
     WEBHOOK::notify_on_completion,
@@ -1254,11 +1254,11 @@ This would be a separate project, but the inbox architecture we're designing now
 
 ## IMMEDIATE QUESTIONS BEFORE IMPLEMENTATION
 
-1. **Tool naming:** 
+1. **Tool naming:**
    - `document_submit` + `context_update` (your suggestion)
-   - `inbox_submit` + `context_update`  
+   - `inbox_submit` + `context_update`
    - `doc_route` + `context_merge`
-   
+
    Which resonates?
 
 2. **What happens to `request_doc`?**
@@ -1486,7 +1486,7 @@ PROJECT: Context Steward v2
 │   ├── Create inbox structure
 │   ├── Update clock_in for State Vector
 │   └── Implement document_submit
-├── 🔧 Phase 2: Context Management  
+├── 🔧 Phase 2: Context Management
 │   ├── Implement context_update
 │   ├── Enrich AI prompts with signals
 │   └── Conflict detection
@@ -1845,7 +1845,7 @@ mv .hestai/context/PROJECT-CHECKLIST.md .hestai/context/.archive/PROJECT-CHECKLI
 **Shall I execute this migration?** I'll:
 1. Add #66, #67, #68 to Project #4
 2. Update PROJECT-CONTEXT.md
-3. Update PROJECT-ROADMAP.md  
+3. Update PROJECT-ROADMAP.md
 4. Archive PROJECT-CHECKLIST.md
 5. Commit with clear rationale
 
@@ -1894,7 +1894,7 @@ BEFORE:                              AFTER:
 Total: 248 LOC + duplication         │   + Phase 1 issue breakdown
                                      ├── .archive/PROJECT-CHECKLIST-...
                                      └── GitHub Projects #4 (real-time)
-                                     
+
                                      Total: 187 LOC + Projects (no duplication)
 ```
 
