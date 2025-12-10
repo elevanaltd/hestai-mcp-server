@@ -37,6 +37,32 @@ COMMITS_THIS_SESSION::[
 
 ---
 
+## [2025-12-10] Context Compaction Archive
+
+COMPACTION_CONTEXT::PROJECT-CONTEXT.md exceeded 200 LOC target (was 205, reduced to 114)
+
+SECTIONS_ARCHIVED::[
+  "PHASE_STATUS" → keep_at_historical_level_Phases_1-2_complete,
+  "INTEGRATION_GUARDRAILS" → validation_patterns_now_standard_infrastructure,
+  "BRANCH_HEALTH" → detailed_metrics_consolidated_to_CURRENT_CI_STATUS,
+  "PR_STATUS" → detail_moved_to_changelog_entries,
+  "QUALITY_STATUS" → consolidated_to_quality_gates,
+  "DETAILED_REFERENCE_SECTIONS" → consolidated_QUICK_REFERENCES
+]
+
+ACTIVE_CONTEXT_PRESERVED::[
+  "IDENTITY + ARCHITECTURE" → core_system_definition,
+  "CURRENT_STATE" → active_focus_and_achievements,
+  "CLOCKOUT_FLOW_STATUS" → blocking_active_work,
+  "AUTHORITY" → role_and_accountability,
+  "QUALITY_GATES" → CI_status,
+  "DEVELOPMENT_GUIDELINES" → team_standards"
+]
+
+COMPACTION_RATIONALE::"Focus PROJECT-CONTEXT on current phase (B2) active work, keep historical context in PROJECT-HISTORY for reference"
+
+---
+
 ## [2025-12-09] Archived Achievements
 - PR #77 P1 fixes: placeholder mapping, file write, content field in templates
 - Fixed test fixture to mock AI helper for template path tests

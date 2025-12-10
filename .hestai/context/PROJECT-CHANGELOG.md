@@ -1,5 +1,9 @@
 # Project Changelog
 
+## 2025-12-10 06:30
+**Compact PROJECT-CONTEXT from 205→114 LOC via system-steward context lifecycle**
+Archived PHASE_STATUS, INTEGRATION_GUARDRAILS, BRANCH_HEALTH, and consolidated QUICK_REFERENCES. Preserved active B2 focus. Sections moved to PROJECT-HISTORY[2025-12-10].
+
 ## 2025-12-10 03:33
 **Document surgical registry removal completion and #17 integration strategy decision**
 Document submitted: session_note → .hestai/sessions/notes/document-surgical-registry-removal-completion-and-.oct.md
