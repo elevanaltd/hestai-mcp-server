@@ -26,23 +26,27 @@ RUNTIME_DEPENDENCIES::[
 ]
 
 ## CURRENT_STATE
-DATE::2025-12-09
-ACTIVE_FOCUS::"Context Steward v2 - Phase 2 Complete, Phase 3 Next"
+DATE::2025-12-10
+ACTIVE_FOCUS::"Context Steward v2 - Coherence Gates (#107/#104) - CE BLOCKED pending history_archive fix"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
 
 RECENT_ACHIEVEMENTS::[
-  "Updated global HestAI docs with MCP session tools (CLAUDE.md, HESTAI-SYSTEM-OVERVIEW.md)",
-  "#91 Conflict detection with continuation_id dialogue (CLOSED)",
-  "#90 AI prompt enrichment with git/test/authority signals (CLOSED)",
-  "Fixed 3 pre-existing test failures (DISABLED_TOOLS, session UUID collision)",
-  "Phase 2 AI Intelligence complete (#90-91 Done)"
+  "#104 Clockout verification gate implemented (CE: GO)",
+  "#107 COMPACTION_ENFORCEMENT gate implemented (CE: BLOCKED - paper gate)",
+  "CRS review: 3 issues fixed (artifact type, path traversal, blocking gate)",
+  "Registry tool removal: PR #108",
+  "72 tests passing (clockout + context_update)"
+]
+
+BLOCKING_ITEMS::[
+  "#107 paper gate: validates presence but doesn't persist history_archive to PROJECT-HISTORY.md"
 ]
 
 PHASE_STATUS::[
   "Phase 1 Foundation: COMPLETE",
   "Phase 2 AI Intelligence: COMPLETE",
   "Phase 3 Deprecation: #92 TODO",
-  "Phase 4 Validation: #93 BLOCKING for rollout"
+  "Phase 4 Validation: #93 BLOCKED by #107 fix"
 ]
 
 ## AUTHORITY
@@ -50,11 +54,10 @@ CURRENT_OWNER::implementation-lead
 PHASE::B2[Build Phase - Implementation]
 ACCOUNTABLE_TO::critical-engineer[via holistic-orchestrator]
 
-BLOCKING_ITEMS::none
 QUALITY_GATES::[
   lint::"passing",
   typecheck::"passing",
-  test::"1213/1213 passing (full suite)"
+  test::"72/72 passing (clockout + context_update)"
 ]
 
 ## DEVELOPMENT_GUIDELINES
@@ -113,21 +116,21 @@ DEBUG::"Replaced by domain-specific error routing"[deprecated]
 
 CURRENT_BRANCH::"feature/context-steward-octave"
 BASE_BRANCH::"main"
-STATUS::"clean working tree"
+STATUS::"8 commits ahead of origin"
 
 RECENT_COMMITS::[
-  "9baea58::docs: Update PROJECT-CONTEXT.md with Phase 2 completion status",
-  "188c1bc::feat: Add section-aware conflict detection with continuation_id (#91)",
-  "b7e64c8::fix: Exclude decision-records from linting",
-  "1716a70::fix: Clear DISABLED_TOOLS in test config",
-  "601892d::chore: Archive session transcripts"
+  "ed48f4f::fix: Add path containment validation to prevent traversal attacks",
+  "312dae7::fix: Select artifact by type, not array order in contextupdate",
+  "a9af46a::feat: Implement clockout verification gate",
+  "c08628d::test: Add failing tests for COMPACTION_ENFORCEMENT gate (#107)",
+  "425207b::feat: Implement COMPACTION_ENFORCEMENT gate for context_update (#107)"
 ]
 
 QUALITY_STATUS::[
   lint::"passing",
   typecheck::"passing",
-  test::"1213/1213 passing",
-  coverage::"Context Steward v2 components fully covered"
+  test::"72/72 passing (clockout + context_update)",
+  coverage::"Verification gate and compaction enforcement covered"
 ]
 
 ## INTEGRATION_GUARDRAILS
