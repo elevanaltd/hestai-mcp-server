@@ -19,8 +19,8 @@ Now I'll compile the comprehensive audit report:
 
 # `.coord/` → `.hestai/` Migration Feasibility Audit
 
-**Date:** 2025-12-09  
-**Authority:** system-steward  
+**Date:** 2025-12-09
+**Authority:** system-steward
 **Scope:** EAV Monorepo (10-app ecosystem, 3.4MB coordination infrastructure)
 
 ---
@@ -129,20 +129,20 @@ apps/
    ```bash
    # Context files
    mv .coord/PROJECT-*.md .hestai/context/
-   
+
    # Workflow documentation
    mv .coord/workflow-docs/* .hestai/workflow/
-   
+
    # Decisions
    mv .coord/DECISIONS.md .hestai/workflow/decisions/
    mv .coord/architecture-decisions/* .hestai/workflow/decisions/
-   
+
    # Test context
    mv .coord/test-context/* .hestai/workflow/test-context/
-   
+
    # Apps
    mv .coord/apps/* .hestai/context/apps/
-   
+
    # Reports
    mv .coord/reports/* .hestai/reports/
    ```

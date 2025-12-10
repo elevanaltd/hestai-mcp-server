@@ -1,33 +1,33 @@
 --- /tmp/zen-upstream-analysis/utils/conversation_memory.py	2025-10-06 13:16:45
 +++ utils/conversation_memory.py	2025-08-18 00:30:09
 @@ -3,8 +3,8 @@
- 
+
  This module provides conversation persistence and context reconstruction for
  stateless MCP (Model Context Protocol) environments. It enables multi-turn
 -conversations between the agent and downstream models by storing conversation
 -state in memory across independent request cycles.
 +conversations between Claude and Gemini by storing conversation state in memory
 +across independent request cycles.
- 
+
  CRITICAL ARCHITECTURAL REQUIREMENT:
  This conversation memory system is designed for PERSISTENT MCP SERVER PROCESSES.
 @@ -97,7 +97,7 @@
  - Excludes: Turn 2, Turn 1 (oldest, dropped due to token limits)
- 
+
  Presentation Phase (Chronological Order):
 -- LLM sees: "--- Turn 3 (Agent) ---", "--- Turn 4 (Model) ---", "--- Turn 5 (Agent) ---"
 +- LLM sees: "--- Turn 3 (Claude) ---", "--- Turn 4 (Gemini) ---", "--- Turn 5 (Claude) ---"
  - Natural conversation flow maintained despite prioritizing recent context
- 
+
  This enables true AI-to-AI collaboration across the entire tool ecosystem with optimal
 @@ -112,28 +112,24 @@
- 
+
  from pydantic import BaseModel
- 
+
 -from utils.env import get_env
 -
  logger = logging.getLogger(__name__)
- 
+
  # Configuration constants
  # Get max conversation turns from environment, default to 20 turns (10 exchanges)
  try:
@@ -46,7 +46,7 @@
      )
 -    MAX_CONVERSATION_TURNS = 50
 +    MAX_CONVERSATION_TURNS = 20
- 
+
  # Get conversation timeout from environment (in hours), default to 3 hours
  try:
 -    timeout_raw = (get_env("CONVERSATION_TIMEOUT_HOURS", "3") or "3").strip()
@@ -63,10 +63,10 @@
 +        f"Invalid CONVERSATION_TIMEOUT_HOURS value ('{os.getenv('CONVERSATION_TIMEOUT_HOURS')}'), using default of 3 hours"
      )
      CONVERSATION_TIMEOUT_HOURS = 3
- 
+
 @@ -156,7 +152,7 @@
      the content and metadata needed for cross-tool continuation.
- 
+
      Attributes:
 -        role: "user" (Agent request) or "assistant" (model response)
 +        role: "user" (Claude) or "assistant" (Gemini/O3/etc)
@@ -74,7 +74,7 @@
          timestamp: ISO timestamp when this turn was created
          files: List of file paths referenced in this specific turn
 @@ -325,7 +321,7 @@
- 
+
      Args:
          thread_id: UUID of the conversation thread
 -        role: "user" (Agent request) or "assistant" (model response)
@@ -83,20 +83,20 @@
          files: Optional list of files referenced in this turn
          images: Optional list of images referenced in this turn
 @@ -711,7 +707,7 @@
- 
+
          <turn_content>
- 
+
 -        --- Turn 2 (gemini-2.5-flash using analyze via google) ---
 +        --- Turn 2 (Gemini using analyze via google/gemini-2.5-flash) ---
          Files used in this turn: file3.py
- 
+
          <turn_content>
 @@ -925,12 +921,8 @@
      for idx in range(len(all_turns) - 1, -1, -1):
          turn = all_turns[idx]
          turn_num = idx + 1
 +        role_label = "Claude" if turn.role == "user" else "Gemini"
- 
+
 -        if turn.role == "user":
 -            role_label = "Agent"
 -        else:
@@ -104,10 +104,10 @@
 -
          # Build the complete turn content
          turn_parts = []
- 
+
 @@ -940,13 +932,8 @@
              turn_header += f" using {turn.tool_name}"
- 
+
          # Add model info if available
 -        if turn.model_provider:
 -            provider_descriptor = turn.model_provider
@@ -118,15 +118,14 @@
 -            turn_header += f" via {turn.model_name}"
 +        if turn.model_provider and turn.model_name:
 +            turn_header += f" via {turn.model_provider}/{turn.model_name}"
- 
+
          turn_header += ") ---"
          turn_parts.append(turn_header)
 @@ -983,7 +970,7 @@
      turn_entries.reverse()
- 
+
      # Add the turns in chronological order for natural LLM comprehension
 -    # The LLM will see: "--- Turn 1 (Agent) ---" followed by "--- Turn 2 (Model) ---" etc.
 +    # The LLM will see: "--- Turn 1 (Claude) ---" followed by "--- Turn 2 (Gemini) ---" etc.
      for _, turn_content in turn_entries:
          history_parts.append(turn_content)
- 

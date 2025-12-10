@@ -1,0 +1,23 @@
+{
+  "system-steward": {
+    "primary_cli": "claude",
+    "primary_model": "haiku",
+    "fallback_cli": "codex",
+    "fallback_model": "gpt-5.1-codex-mini",
+    "reason": "Requires file system access - avoids Gemini sandbox"
+  },
+  "holistic-orchestrator": {
+    "primary_cli": "claude",
+    "primary_model": "opus",
+    "fallback_cli": null,
+    "fallback_model": null,
+    "reason": "Constitutional authority requires Claude Opus - no fallback"
+  },
+  "critical-engineer": {
+    "primary_cli": "claude",
+    "primary_model": "opus",
+    "fallback_cli": null,
+    "fallback_model": null,
+    "reason": "Blocking GO/NO-GO authority requires Claude Opus - no fallback"
+  }
+}

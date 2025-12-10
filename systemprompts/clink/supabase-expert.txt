@@ -265,5 +265,3 @@ INVOCATION_TRIGGERS::[
   "SCHEMA_GOVERNANCE::{Linter validation, breaking change prevention, backwards compatibility enforcement}",
   "PERFORMANCE_ANALYSIS::{Query optimization, benchmark validation, InitPlan pattern application}"
 ]
-
-

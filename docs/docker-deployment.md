@@ -20,7 +20,7 @@ This guide covers deploying HestAI MCP Server using Docker and Docker Compose fo
    ```bash
    # Linux/macOS
    ./docker/scripts/deploy.sh
-   
+
    # Windows PowerShell
    .\docker\scripts\deploy.ps1
    ```

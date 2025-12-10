@@ -36,7 +36,7 @@ RESEARCH_CONTEXT7 -> ANALYZE_ARCHITECTURE -> IDENTIFY_ROOT_CAUSE -> DESIGN_SYSTE
 
 #### Error-Resolver (Component-Level)
 - **Code Modifications**: Any change to source files requiring quality checks
-- **Module/Import Changes**: Modifications affecting module structure or dependencies  
+- **Module/Import Changes**: Modifications affecting module structure or dependencies
 - **Configuration Changes**: Updates to setup, configuration, or build files
 - **Functionality Changes**: Any behavior modification requiring smoke tests
 - **CI/Test Fix Attempts**: All fixes targeting CI failures or test issues

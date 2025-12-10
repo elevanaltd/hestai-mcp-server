@@ -91,115 +91,24 @@ CONSTITUTION::"Adhere to System-Steward constitutional principles (Observation, 
 ### Specifications
 SPEC::".hestai/workflow/CONTEXT-STEWARD-V2-SPEC.oct.md"
 CRITICAL_ASSESSMENT::".hestai/reports/800-REPORT-CRITICAL-ENGINEER-CONTEXT-STEWARD-ASSESSMENT.md"
-VISIBILITY_RULES::".hestai/rules/VISIBILITY-RULES.md"
 
 ### Context Files
 PROJECT_CONTEXT::".hestai/context/PROJECT-CONTEXT.md"[this file]
-STATE_VECTOR::".hestai/context/current_state.oct"[Phase 0 deliverable]
-CONTEXT_NEGATIVES::".hestai/context/CONTEXT-NEGATIVES.oct"[Phase 0 deliverable]
-CHANGELOG::".hestai/context/PROJECT-CHANGELOG.md"
-ROADMAP::".hestai/context/PROJECT-ROADMAP.md"
 HISTORY::".hestai/context/PROJECT-HISTORY.md"
+CHANGELOG::".hestai/context/PROJECT-CHANGELOG.md"
 
-### Validator Components (Kernel)
-VALIDATOR::"/tools/context_steward/context_validator.py"
-SCHEMAS::"/tools/context_steward/schemas.py"
-TESTS::"/tests/test_context_validator.py"
-
-### Quality Commands
+### Essential Commands
 CODE_QUALITY::"./code_quality_checks.sh"
 INTEGRATION_TESTS::"./run_integration_tests.sh"
-UNIT_TESTS::"pytest tests/ -v -m 'not integration'"
 
 ## MCP_TOOL_STATUS
 
-### Active Tools
-CLOCKIN::"Session registration and context initialization"[implemented]
-CLOCKOUT::"Session archival and transcript extraction"[implemented]
-ANCHORSUBMIT::"Agent anchor validation"[implemented]
-REQUESTDOC::"Documentation routing and placement"[deprecated→use_document_submit]
-CHAT::"Multi-model conversation orchestration"[implemented]
-CLINK::"External CLI delegation"[implemented]
-CONSENSUS::"Multi-model consensus building"[implemented]
+ACTIVE::[clockin, clockout, anchorsubmit, chat, clink, consensus, document_submit, context_update, changelog_parser, gather_signals]
+DEPRECATED::[thinkdeep, debug, requestdoc]
 
-### Context Steward v2 Tools
-DOCUMENT_SUBMIT::"Document routing and placement"[implemented]
-CONTEXT_UPDATE::"AI-driven context file merging with conflict detection"[implemented]
-CHANGELOG_PARSER::"Section-aware conflict detection with continuation_id"[implemented]
-GATHER_SIGNALS::"Runtime signal gathering (git, test, authority)"[implemented]
+## CURRENT_CI_STATUS
 
-### Deprecated Tools
-THINKDEEP::"Replaced by HestAI phase progression (D1-D2-B0)"[deprecated]
-DEBUG::"Replaced by domain-specific error routing"[deprecated]
-
-## BRANCH_HEALTH
-
-CURRENT_BRANCH::"feature/context-steward-octave"
-BASE_BRANCH::"main"
-STATUS::"8 commits ahead of origin"
-
-RECENT_COMMITS::[
-  "cb06877::fix: Persist history_archive artifact to PROJECT-HISTORY.md (#107)",
-  "ed48f4f::fix: Add path containment validation to prevent traversal attacks",
-  "312dae7::fix: Select artifact by type, not array order in contextupdate",
-  "a9af46a::feat: Implement clockout verification gate",
-  "425207b::feat: Implement COMPACTION_ENFORCEMENT gate for context_update (#107)"
-]
-
-PR_STATUS::[
-  "PR #111: feat: Context Steward v2 - Coherence Gates and Security Fixes",
-  "Status: CI running (lint, test-full 3.10/3.11/3.12)",
-  "URL: https://github.com/elevanaltd/hestai-mcp-server/pull/111"
-]
-
-QUALITY_STATUS::[
-  lint::"passing",
-  typecheck::"passing",
-  test::"1258 passed, 11 skipped, 12 deselected, 1 xfailed",
-  coverage::"Full suite including clockout + context_update + history_archive persistence"
-]
-
-## INTEGRATION_GUARDRAILS
-
-### Context Steward Integration Points
-CLOCKIN_INTEGRATION::"Must validate session directory structure before registration"
-REQUESTDOC_INTEGRATION::"Must validate templates before rendering"
-ANCHORSUBMIT_INTEGRATION::"Must validate anchor structure before acceptance"
-
-### Validation Flow
-REQUEST→VALIDATOR→[VALID→PROCEED|INVALID→REJECT|CORRUPTED→LKG_RECOVERY]
-
-### LKG (Last Known Good) Protection
-SNAPSHOT_TRIGGER::"After successful validation"
-RECOVERY_TRIGGER::"On validation failure with corruption detected"
-LOCATION::".lkg/ directory (per context directory)"
-
-### Quality Gate Enforcement
-PRE_COMMIT::"All quality gates must pass (lint+typecheck+test)"
-PRE_MERGE::"CI pipeline must be green"
-PRE_DEPLOY::"Integration tests must pass"
-
-## CONTEXT_LIFECYCLE
-TARGET::<200_LOC[current_file]
-FORMAT::mixed_prose+OCTAVE[context_efficiency]
-ON_UPDATE::[
-  "1. Merge new information into PROJECT-CONTEXT.md",
-  "2. Append change record to PROJECT-CHANGELOG.md",
-  "3. Check LOC count after merge"
-]
-ON_EXCEED_200_LOC::[
-  IDENTIFY::stale_items[
-    "old_RECENT_ACHIEVEMENTS[keep_last_5]",
-    "completed_phases",
-    "resolved_issues",
-    "deprecated_notes"
-  ]
-  ARCHIVE::move_to_PROJECT-HISTORY.md[under_dated_section]
-  COMPACT::keep_PROJECT-CONTEXT_focused[
-    "current_phase",
-    "active_work",
-    "recent_achievements[last_5]",
-    "current_architecture"
-  ]
-  LOG::note_compaction_in_CHANGES
-]
+BRANCH::"feature/context-steward-octave"
+COMMITS_AHEAD::8
+QUALITY_GATES::[lint::"passing", typecheck::"passing", test::"1258 passed"]
+LAST_MERGE::"PR #111 merged (coherence gates + security fixes)"

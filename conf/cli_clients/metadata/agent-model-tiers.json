@@ -1,0 +1,154 @@
+{
+  "_schema_version": "1.0.0",
+  "_description": "Agent model tier mapping with hybrid architecture (tiers + exceptions)",
+  "_generated_by": "Manual creation based on agent-tier-categorization.json analysis",
+
+  "tiers": {
+    "HIGH": {
+      "description": "Constitutional authority agents - GO/NO-GO decisions, blocking authority, complex workflows",
+      "claude": "opus",
+      "gemini": null,
+      "codex": null,
+      "agents": [
+        "holistic-orchestrator",
+        "critical-engineer",
+        "critical-design-validator",
+        "critical-implementation-validator",
+        "error-architect",
+        "security-specialist",
+        "requirements-steward",
+        "north-star-architect",
+        "synthesizer",
+        "edge-optimizer",
+        "test-methodology-guardian",
+        "universal-test-engineer",
+        "coherence-oracle",
+        "build-plan-checker",
+        "completion-architect",
+        "hestai-doc-steward"
+      ]
+    },
+    "MEDIUM": {
+      "description": "Standard agents - implementation, domain specialists, validators",
+      "claude": "sonnet",
+      "gemini": "gemini-3-pro-preview",
+      "codex": "gpt-5.1-codex",
+      "agents": [
+        "implementation-lead",
+        "technical-architect",
+        "design-architect",
+        "visual-architect",
+        "workspace-architect",
+        "solution-steward",
+        "principal-engineer",
+        "code-review-specialist",
+        "test-infrastructure-steward",
+        "octave-specialist",
+        "octave-validator",
+        "semantic-optimizer",
+        "compression-fidelity-validator",
+        "documentation-compressor",
+        "subagent-creator",
+        "directory-curator",
+        "error-architect-surface",
+        "smartsuite-expert",
+        "supabase-expert",
+        "skills-expert",
+        "validator",
+        "task-decomposer",
+        "task-decomposer-validator",
+        "blind-assessor",
+        "vibe-coder"
+      ]
+    },
+    "LOW": {
+      "description": "Exploration & discovery agents - research, observation, advisory only",
+      "claude": "haiku",
+      "gemini": "gemini-3-pro-preview",
+      "codex": "gpt-5.1-codex-mini",
+      "agents": [
+        "surveyor",
+        "quality-observer",
+        "ho-liaison",
+        "ideator",
+        "ideator-catalyst",
+        "complexity-guard",
+        "idea-clarifier",
+        "research-analyst",
+        "research-curator",
+        "default",
+        "planner",
+        "codereviewer"
+      ]
+    }
+  },
+
+  "exceptions": {
+    "system-steward": {
+      "claude": "haiku",
+      "gemini": null,
+      "codex": "gpt-5.1-codex-mini",
+      "reason": "Documentation management and git operations - needs fast responses, file system access (avoid Gemini sandbox)"
+    }
+  },
+
+  "primary_fallback_hints": {
+    "system-steward": {
+      "primary_cli": "claude",
+      "primary_model": "haiku",
+      "fallback_cli": "codex",
+      "fallback_model": "gpt-5.1-codex-mini",
+      "reason": "Requires file system access - avoids Gemini sandbox"
+    },
+    "holistic-orchestrator": {
+      "primary_cli": "claude",
+      "primary_model": "opus",
+      "fallback_cli": null,
+      "fallback_model": null,
+      "reason": "Constitutional authority requires Claude Opus - no fallback"
+    },
+    "critical-engineer": {
+      "primary_cli": "claude",
+      "primary_model": "opus",
+      "fallback_cli": null,
+      "fallback_model": null,
+      "reason": "Blocking GO/NO-GO authority requires Claude Opus - no fallback"
+    }
+  },
+
+  "model_mappings": {
+    "_description": "Valid model IDs per CLI client",
+    "claude": {
+      "opus": "opus",
+      "sonnet": "sonnet",
+      "haiku": "haiku"
+    },
+    "gemini": {
+      "gemini-3-pro-preview": "gemini-3-pro-preview",
+      "gemini-2.5-flash": "gemini-2.5-flash"
+    },
+    "codex": {
+      "gpt-5.1-codex": "gpt-5.1-codex",
+      "gpt-5.1-codex-mini": "gpt-5.1-codex-mini",
+      "o3-mini": "o3-mini"
+    }
+  },
+
+  "reasoning_effort_mappings": {
+    "_description": "Reasoning effort levels per agent (Codex-specific)",
+    "high": [
+      "code-review-specialist",
+      "critical-engineer",
+      "security-specialist"
+    ],
+    "medium": [
+      "holistic-orchestrator",
+      "ho-liaison",
+      "technical-architect",
+      "test-methodology-guardian",
+      "universal-test-engineer",
+      "test-infrastructure-steward"
+    ],
+    "low": []
+  }
+}

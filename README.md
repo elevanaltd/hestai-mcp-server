@@ -455,11 +455,11 @@ migrate from REST to GraphQL for our API. I need a definitive answer.
 **[📖 Read More](docs/tools/consensus.md)** - Multi-model orchestration and decision analysis
 
 ### 6. `debug` - Expert Debugging Assistant
-Systematic investigation-guided debugging that walks Claude through step-by-step root cause analysis. This workflow 
-tool enforces a structured investigation process where Claude performs methodical code examination, evidence collection, 
-and hypothesis formation across multiple steps before receiving expert analysis from the selected AI model. When Claude's 
-confidence reaches **100% certainty** during the investigative workflow, expert analysis via another model is skipped to 
-save on tokens and cost, and Claude proceeds directly to fixing the issue. 
+Systematic investigation-guided debugging that walks Claude through step-by-step root cause analysis. This workflow
+tool enforces a structured investigation process where Claude performs methodical code examination, evidence collection,
+and hypothesis formation across multiple steps before receiving expert analysis from the selected AI model. When Claude's
+confidence reaches **100% certainty** during the investigative workflow, expert analysis via another model is skipped to
+save on tokens and cost, and Claude proceeds directly to fixing the issue.
 
 ```
 See logs under /Users/me/project/diagnostics.log and related code under the sync folder.

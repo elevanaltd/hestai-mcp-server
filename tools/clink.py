@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from datetime import datetime, timezone
@@ -71,6 +72,7 @@ class CLinkTool(SimpleTool):
         else:
             self._default_cli_name = self._cli_names[0] if self._cli_names else None
         self._active_system_prompt: str = ""
+        self._fallback_hints = self._load_fallback_hints()
         super().__init__()
 
     def get_name(self) -> str:
@@ -181,6 +183,20 @@ class CLinkTool(SimpleTool):
         try:
             role_config = client_config.get_role(request.role)
         except KeyError as exc:
+            # Extract available agents from the error message
+            error_str = str(exc)
+            # KeyError format: "Role 'X' not configured for CLI 'Y'. Available roles: a, b, c"
+            if "Available roles:" in error_str:
+                # Extract available agents list
+                available_agents = error_str.split("Available roles:")[-1].strip()
+                # Format enhanced error with fallback hints
+                enhanced_error = self._format_fallback_hint_message(
+                    agent_name=request.role or "default",
+                    cli_name=selected_cli,
+                    available_agents=available_agents,
+                )
+                return [self._error_response(enhanced_error)]
+            # If error format doesn't match, return original error
             return [self._error_response(str(exc))]
 
         # Get explicitly requested files
@@ -534,3 +550,60 @@ class CLinkTool(SimpleTool):
             except OSError:
                 references.append(f"- {file_path} (unavailable)")
         return "\n".join(references)
+
+    def _load_fallback_hints(self) -> dict[str, Any]:
+        """Load fallback hints from configuration file.
+
+        Returns empty dict if file doesn't exist (graceful degradation).
+        """
+        hints_path = Path("conf/cli_clients/metadata/fallback_hints.json")
+        if not hints_path.exists():
+            logger.debug("Fallback hints file not found at %s", hints_path)
+            return {}
+
+        try:
+            with open(hints_path, encoding="utf-8") as f:
+                hints = json.load(f)
+            logger.debug("Loaded fallback hints for %d agents", len(hints))
+            return hints
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning("Failed to load fallback hints from %s: %s", hints_path, exc)
+            return {}
+
+    def _format_fallback_hint_message(self, agent_name: str, cli_name: str, available_agents: str) -> str:
+        """Format error message with fallback hints if available.
+
+        Args:
+            agent_name: The requested agent name
+            cli_name: The CLI that doesn't have this agent
+            available_agents: Comma-separated list of available agents
+
+        Returns:
+            Formatted error message with fallback hints if available
+        """
+        if not self._fallback_hints or agent_name not in self._fallback_hints:
+            # No hints available - return basic error
+            return f"Agent '{agent_name}' is not available for CLI '{cli_name}'. Available agents: {available_agents}"
+
+        hint = self._fallback_hints[agent_name]
+        primary_cli = hint.get("primary_cli")
+        primary_model = hint.get("primary_model")
+        fallback_cli = hint.get("fallback_cli")
+        fallback_model = hint.get("fallback_model")
+        reason = hint.get("reason", "")
+
+        # Build enhanced error message
+        lines = [f"Agent '{agent_name}' unavailable on {cli_name}."]
+
+        if primary_cli and primary_model:
+            lines.append(f"→ Primary: {primary_cli} ({primary_model})")
+
+        if fallback_cli and fallback_model:
+            lines.append(f"→ Fallback: {fallback_cli} ({fallback_model})")
+
+        if reason:
+            lines.append(f"→ Reason: {reason}")
+
+        lines.append(f"Available agents: {available_agents}")
+
+        return "\n".join(lines)

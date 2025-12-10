@@ -15,7 +15,7 @@
    - Replaced `genai.Client()` with `genai.configure()` and `genai.GenerativeModel()`
    - Fixed generation config to use `genai.GenerationConfig` instead of `types.GenerateContentConfig`
    - Removed unsupported `thinking_config` parameter
-   
+
 2. Fixed import references across codebase:
    - `google.genai` → `google.generativeai` in tests and healthchecks
    - Updated test mocks to match new API structure
@@ -43,11 +43,11 @@
 class ProviderAdapter:
     def __init__(self, api_key):
         self._configure_api(api_key)
-    
+
     def _configure_api(self, api_key):
         # Isolate API-specific initialization
         pass
-    
+
     def generate(self, prompt):
         # Consistent interface regardless of underlying API
         pass
@@ -72,7 +72,7 @@ except ImportError:
 - Mock at the provider interface level, not external API level
 - Test provider initialization separately from API calls
 
-#### Integration Tests  
+#### Integration Tests
 - Use real APIs with test keys in CI/CD
 - Detect API breaking changes early
 - Run nightly to catch upstream changes
@@ -147,7 +147,7 @@ class ProviderCircuitBreaker:
         self._failures = 0
         self._threshold = threshold
         self._open = False
-    
+
     def call(self, func):
         if self._open:
             raise ProviderUnavailable()

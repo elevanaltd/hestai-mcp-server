@@ -525,7 +525,7 @@ IMMEDIATE OBSERVATIONS
 Ready for orchestration. What would you like me to coordinate?
 
 [user]
-Assess merge risk. uncommtted docs are just archive from last sessions and can join next commit. 
+Assess merge risk. uncommtted docs are just archive from last sessions and can join next commit.
 
 Please then proceed with project, based on next steps in https://github.com/orgs/elevanaltd/projects/4
 
@@ -595,7 +595,7 @@ I will delegate **#90 - Enrich AI prompts with branch/test/authority signals** t
 - **File:** `tools/context_steward/ai_helper.py` (ContextStewardAI class)
 - **Prompts:** `systemprompts/context_steward/*.txt`
 - **Cause:** AI prompts lack runtime signals (branch, test status, authority)
-- **Fix approach:** 
+- **Fix approach:**
   1. Create signal gathering function in ai_helper.py
   2. Update prompt templates with signal placeholders
   3. Inject signals before AI calls
@@ -919,7 +919,7 @@ COMPLETED THIS SESSION
 PHASE 2 STATUS (AI Intelligence)
    ✅ #90 - Enrich AI prompts with signals
    ✅ #91 - Conflict detection with continuation_id
-   
+
    Phase 2 COMPLETE!
 
 PHASE 3 STATUS (Deprecation)

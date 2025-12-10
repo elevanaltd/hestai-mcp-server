@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-**CRITICAL DISCOVERY:** Previous "HestAI canonical" assertion was **data-free assumption**. 
+**CRITICAL DISCOVERY:** Previous "HestAI canonical" assertion was **data-free assumption**.
 Evidence shows **HestAI and Zen are nearly identical** in core infrastructure with only cosmetic divergence.
 
 ## File Comparison Evidence

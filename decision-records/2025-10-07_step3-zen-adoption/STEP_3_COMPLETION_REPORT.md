@@ -23,7 +23,7 @@ Successfully completed **evidence-based selective adoption** of Zen infrastructu
 - **Benefit:** More robust environment variable handling
 
 ### STEP 3b: utils/conversation_memory.py (REPLACED)
-**Source:** `/tmp/zen-upstream-analysis/utils/conversation_memory.py`  
+**Source:** `/tmp/zen-upstream-analysis/utils/conversation_memory.py`
 **Verdict:** Zen version objectively superior
 
 **Key Improvements:**
@@ -74,11 +74,11 @@ Successfully completed **evidence-based selective adoption** of Zen infrastructu
 
 ## Critical Learning
 
-**Original Plan:** "Assert HestAI dominance" - **WRONG**  
-**Evidence Showed:** Zen has superior infrastructure in key areas  
+**Original Plan:** "Assert HestAI dominance" - **WRONG**
+**Evidence Showed:** Zen has superior infrastructure in key areas
 **Correct Strategy:** **Best-of-both** - adopt Zen improvements, preserve HestAI innovations
 
-**Key Insight:**  
+**Key Insight:**
 Even specialist consultations (critical-engineer) require evidence validation. The "canonical" assertion was architecturally sound in **principle** (don't break mission-critical features) but factually wrong in **application** (assumed HestAI version was superior without comparison).
 
 ## Next Steps
@@ -104,16 +104,16 @@ Even specialist consultations (critical-engineer) require evidence validation. T
 
 ## Risks Mitigated
 
-✅ **Null-safety:** `get_env()` handles missing env vars gracefully  
-✅ **Model-agnostic:** Works with O3, GPT-5, future models  
-✅ **Conversation capacity:** 2.5x more turns (20→50)  
+✅ **Null-safety:** `get_env()` handles missing env vars gracefully
+✅ **Model-agnostic:** Works with O3, GPT-5, future models
+✅ **Conversation capacity:** 2.5x more turns (20→50)
 ✅ **Env override:** Better .env vs system env conflict handling
 
 ## Constitutional Compliance Evidence
 
-**Line 22: EVIDENCE_INTEGRATION** - Synthesized critical-engineer insights with actual code diffs  
-**Line 73: VERIFY::ARTIFACTS** - Created comprehensive evidence trail  
-**Line 166: EVIDENCE_BASED** - Prioritized codebase over assumptions  
+**Line 22: EVIDENCE_INTEGRATION** - Synthesized critical-engineer insights with actual code diffs
+**Line 73: VERIFY::ARTIFACTS** - Created comprehensive evidence trail
+**Line 166: EVIDENCE_BASED** - Prioritized codebase over assumptions
 **Line 171: ERROR_RESOLUTION_PROTOCOL** - Mandatory specialist consultation completed
 
 **Behavioral Integration:**
