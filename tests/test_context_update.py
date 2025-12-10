@@ -807,3 +807,89 @@ STATUS::Active
         assert "## IDENTITY" in result
         assert "## ARCHITECTURE" in result
         assert "## CURRENT_STATE" in result
+
+
+class TestCompactionEnforcement:
+    """Test COMPACTION_ENFORCEMENT gate for archival requirements."""
+
+    @pytest.mark.asyncio
+    async def test_compaction_without_history_archive_rejected(self):
+        """Test that AI response performing compaction without history_archive artifact is rejected."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response that performed compaction but didn't include history_archive
+        ai_response_invalid = {
+            "status": "success",
+            "summary": "Compacted PROJECT-CONTEXT from 250 LOC to 150 LOC",
+            "compaction_performed": True,
+            "artifacts": [
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nCompacted content...",
+                }
+                # Missing history_archive artifact!
+            ],
+        }
+
+        # Should raise ValueError for missing archive
+        with pytest.raises(ValueError) as exc_info:
+            validate_ai_response_compaction(ai_response_invalid)
+
+        assert "history_archive" in str(exc_info.value).lower()
+        assert "compaction" in str(exc_info.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_compaction_with_history_archive_accepted(self):
+        """Test that AI response with both artifacts is accepted."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response that performed compaction correctly with both artifacts
+        ai_response_valid = {
+            "status": "success",
+            "summary": "Compacted PROJECT-CONTEXT and archived to PROJECT-HISTORY",
+            "compaction_performed": True,
+            "artifacts": [
+                {
+                    "type": "history_archive",
+                    "path": ".hestai/context/PROJECT-HISTORY.md",
+                    "action": "append_dated_section",
+                    "content": "## Archived 2025-12-10\n\nOld content...",
+                },
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nCompacted content...",
+                },
+            ],
+        }
+
+        # Should not raise
+        result = validate_ai_response_compaction(ai_response_valid)
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_no_compaction_no_archive_required(self):
+        """Test that responses without compaction don't require history_archive."""
+        from tools.contextupdate import validate_ai_response_compaction
+
+        # Mock AI response without compaction
+        ai_response_no_compaction = {
+            "status": "success",
+            "summary": "Merged new content into PROJECT-CONTEXT",
+            "compaction_performed": False,
+            "artifacts": [
+                {
+                    "type": "context_update",
+                    "path": ".hestai/context/PROJECT-CONTEXT.md",
+                    "action": "merged",
+                    "content": "# PROJECT-CONTEXT\n\nMerged content...",
+                }
+            ],
+        }
+
+        # Should not raise - no compaction, no archive required
+        result = validate_ai_response_compaction(ai_response_no_compaction)
+        assert result is True
