@@ -67,16 +67,16 @@ echo "📋 Step 1: Running Linting and Formatting Checks"
 echo "--------------------------------------------------"
 
 echo "🔧 Running ruff linting with auto-fix..."
-$RUFF check --fix --exclude test_simulation_files --exclude decision-records
+$RUFF check --fix --exclude test_simulation_files --exclude decision-records --exclude worktrees --exclude ".hestai_venv" --exclude "venv"
 
 echo "🎨 Running black code formatting..."
-$BLACK . --exclude="test_simulation_files/" --exclude="decision-records/"
+$BLACK . --exclude="test_simulation_files/" --exclude="decision-records/" --exclude="worktrees/" --exclude=".hestai_venv/" --exclude="venv/"
 
 echo "📦 Running import sorting with isort..."
-$ISORT . --skip-glob=".hestai_venv/*" --skip-glob="test_simulation_files/*" --skip-glob="decision-records/*"
+$ISORT . --skip-glob=".hestai_venv/*" --skip-glob="venv/*" --skip-glob="worktrees/*" --skip-glob="test_simulation_files/*" --skip-glob="decision-records/*"
 
 echo "✅ Verifying all linting passes..."
-$RUFF check --exclude test_simulation_files --exclude decision-records
+$RUFF check --exclude test_simulation_files --exclude decision-records --exclude worktrees --exclude ".hestai_venv" --exclude "venv"
 
 echo "✅ Step 1 Complete: All linting and formatting checks passed!"
 echo ""
