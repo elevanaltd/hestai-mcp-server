@@ -737,6 +737,131 @@ class TestTranscriptPathResolution:
         assert result == jsonl_path
 
 
+class TestOctaveContentValidation:
+    """Test suite for OCTAVE content length validation"""
+
+    @pytest.mark.asyncio
+    async def test_octave_content_validation_rejects_short_content(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that short OCTAVE content is rejected and file is not created"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Mock ContextStewardAI to return short stub content
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                # Return short stub content (AI returned placeholder)
+                return {
+                    "status": "success",
+                    "artifacts": [
+                        {"content": "See created file - 60% compression"}  # Only 36 chars, < MIN_OCTAVE_LENGTH
+                    ],
+                }
+
+        # Patch ContextStewardAI using monkeypatch
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test OCTAVE validation",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        archive_path = Path(content["archive_path"])
+
+        # Verify .txt archive was created
+        assert archive_path.exists()
+
+        # Verify .oct.md file was NOT created (short content rejected)
+        octave_path = archive_path.with_suffix(".oct.md")
+        assert not octave_path.exists(), "OCTAVE file should not be created for short content"
+
+    @pytest.mark.asyncio
+    async def test_octave_content_validation_accepts_long_content(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that substantial OCTAVE content is accepted and file is created"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Create long OCTAVE content (> MIN_OCTAVE_LENGTH)
+        long_octave_content = """
+SESSION_SUMMARY::[
+  SESSION_ID::test-session-123,
+  ROLE::implementation-lead,
+  FOCUS::b2-implementation,
+  DURATION::45m,
+  KEY_ACTIVITIES::[feature_implementation,test_creation,code_review],
+  OUTCOMES::[tests_passing,feature_complete,pr_ready]
+]
+
+TECHNICAL_CONTEXT::[
+  BRANCH::feature/octave-validation,
+  FILES_CHANGED::[tools/clockout.py,tests/test_clockout.py],
+  QUALITY_GATES::ALL_PASSING
+]
+
+ARTIFACTS_GENERATED::[
+  ARCHIVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.txt,
+  OCTAVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.oct.md
+]
+"""
+
+        # Mock ContextStewardAI to return substantial content
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                return {"status": "success", "artifacts": [{"content": long_octave_content}]}
+
+        # Patch ContextStewardAI using monkeypatch
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test OCTAVE acceptance",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        archive_path = Path(content["archive_path"])
+
+        # Verify .txt archive was created
+        assert archive_path.exists()
+
+        # Verify .oct.md file WAS created (substantial content accepted)
+        octave_path = archive_path.with_suffix(".oct.md")
+        assert octave_path.exists(), "OCTAVE file should be created for substantial content"
+
+        # Verify content matches what we provided
+        saved_content = octave_path.read_text()
+        assert saved_content == long_octave_content
+
+
 class TestContentFormatHandling:
     """Test suite for handling different Claude JSONL content formats"""
 

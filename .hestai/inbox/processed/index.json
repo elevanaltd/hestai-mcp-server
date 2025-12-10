@@ -1,0 +1,40 @@
+{
+  "processed_items": [
+    {
+      "uuid": "217cdd2e-3b4e-4f2e-b7a0-8c36f38cfd71",
+      "doc_type": "session_note",
+      "session_id": "direct",
+      "timestamp": "2025-12-09T15:14:36.012567",
+      "processed_at": "2025-12-09T15:14:36.012821"
+    },
+    {
+      "uuid": "fef2f208-8b3c-4b92-b7a1-1d993b2c08c6",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-09T15:15:35.315886",
+      "processed_at": "2025-12-09T15:15:38.638304"
+    },
+    {
+      "uuid": "41f153c9-d9e6-4839-8dbb-a51e72192214",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-09T15:16:13.558544",
+      "processed_at": "2025-12-09T15:16:16.302260"
+    },
+    {
+      "uuid": "347d84f6-e84f-40de-a128-4ae09b9acf81",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-09T16:00:42.495314",
+      "processed_at": "2025-12-09T16:00:46.494874"
+    },
+    {
+      "uuid": "d419ba20-3455-4028-bc8a-8cfbd385555b",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-09T16:06:33.601342",
+      "processed_at": "2025-12-09T16:07:13.609847"
+    }
+  ],
+  "last_updated": "2025-12-09T16:07:13.610056"
+}

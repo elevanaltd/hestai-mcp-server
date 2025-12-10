@@ -45,6 +45,11 @@ CONTEXT_LIFECYCLE::[
   ]
 ]
 
+CRITICAL OUTPUT REQUIREMENTS:
+1. You MUST output the COMPLETE updated file content - not a summary or placeholder
+2. The content field MUST contain ALL lines of the merged file (typically 150-200 lines)
+3. NEVER output labels like "UPDATED_FILE_CONTENT" or summaries - output the actual file
+
 Output your response in this exact OCTAVE format:
 
 RESPONSE::[
@@ -60,7 +65,7 @@ RESPONSE::[
   CHANGELOG_ENTRY::"One-line summary for PROJECT-CHANGELOG.md",
   COMPACTION_PERFORMED::true|false,
   ARTIFACTS::[
-    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged, content::"UPDATED_FILE_CONTENT"}
+    {type::context_update, path::".hestai/context/PROJECT-CONTEXT.md", action::merged, content::"<<<PASTE THE COMPLETE UPDATED FILE CONTENT HERE - ALL 150-200 LINES OF THE MERGED MARKDOWN FILE>>>"}
   ]
 ]
 
@@ -71,4 +76,5 @@ Guidelines:
 - CHANGELOG_ENTRY is a concise one-liner for the audit trail
 - COMPACTION_PERFORMED indicates if items were moved to PROJECT-HISTORY.md
 - If compaction occurred, include PROJECT-HISTORY.md in ARTIFACTS
+- The content field in ARTIFACTS is THE MOST IMPORTANT FIELD - it must contain the entire merged file
 - Do not include conversational text outside the RESPONSE block

@@ -1,0 +1,9 @@
+{
+  "uuid": "217cdd2e-3b4e-4f2e-b7a0-8c36f38cfd71",
+  "doc_type": "session_note",
+  "session_id": "direct",
+  "content": "This is a test session note to verify the documentsubmit tool is working correctly. It contains details about the current MCP tool testing session including decisions made and blockers encountered.",
+  "timestamp": "2025-12-09T15:14:36.012567",
+  "status": "processed",
+  "processed_at": "2025-12-09T15:14:36.012821"
+}

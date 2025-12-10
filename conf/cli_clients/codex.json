@@ -103,50 +103,6 @@
       "prompt_path": "systemprompts/clink/implementation-lead.txt",
       "role_args": []
     },
-    "test-baseline-role": {
-      "prompt_path": "systemprompts/clink/test-baseline-role.txt",
-      "role_args": []
-    },
-    "test-control-role": {
-      "prompt_path": "systemprompts/clink/test-control-role.txt",
-      "role_args": []
-    },
-    "test-logos-role": {
-      "prompt_path": "systemprompts/clink/test-logos-role.txt",
-      "role_args": []
-    },
-    "test-ethos-role": {
-      "prompt_path": "systemprompts/clink/test-ethos-role.txt",
-      "role_args": []
-    },
-    "test-pathos-role": {
-      "prompt_path": "systemprompts/clink/test-pathos-role.txt",
-      "role_args": []
-    },
-    "test-ethos-role-semantic": {
-      "prompt_path": "systemprompts/clink/test-ethos-role-semantic.txt",
-      "role_args": []
-    },
-    "test-ethos-role-no-label": {
-      "prompt_path": "systemprompts/clink/test-ethos-role-no-label.txt",
-      "role_args": []
-    },
-    "ethos-rules-only": {
-      "prompt_path": "systemprompts/clink/ethos-rules-only.txt",
-      "role_args": []
-    },
-    "ethos-label-only": {
-      "prompt_path": "systemprompts/clink/ethos-label-only.txt",
-      "role_args": []
-    },
-    "ethos-priming-only": {
-      "prompt_path": "systemprompts/clink/ethos-priming-only.txt",
-      "role_args": []
-    },
-    "ethos-label-priming": {
-      "prompt_path": "systemprompts/clink/ethos-label-priming.txt",
-      "role_args": []
-    },
     "octave-specialist": {
       "prompt_path": "systemprompts/clink/octave-specialist.txt",
       "role_args": []

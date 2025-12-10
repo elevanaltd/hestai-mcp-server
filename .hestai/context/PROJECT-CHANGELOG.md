@@ -1,5 +1,29 @@
 # Project Changelog
 
+## 2025-12-09 16:07
+**Update RECENT_ACHIEVEMENTS with Claude CLI AI merge test**
+Updated PROJECT-CONTEXT (resolved 1 conflicts)
+
+## 2025-12-09 16:06
+**Update RECENT_ACHIEVEMENTS with Claude CLI AI merge test validation and MCP tools audit results**
+Consolidated 3 session findings into properly formatted OCTAVE entries. Removed redundant inline prose. Validated contextupdate tool AI-driven merging, confirmed Gemini CLI fix, and documented documentsubmit OCTAVE compression gap. File: 176 LOC (under 200 target).
+
+## 2025-12-09 16:00
+**Update RECENT_ACHIEVEMENTS with Gemini fix confirmation**
+Updated PROJECT-CONTEXT
+
+## 2025-12-09 15:16
+**Add another item to RECENT_ACHIEVEMENTS section**
+Updated PROJECT-CONTEXT (resolved 1 conflicts)
+
+## 2025-12-09 15:15
+**Add MCP tool testing session to RECENT_ACHIEVEMENTS**
+Updated PROJECT-CONTEXT
+
+## 2025-12-09 15:14
+**Test session note for MCP audit**
+Document submitted: session_note → .hestai/sessions/notes/test-session-note-for-mcp-audit.oct.md
+
 ## 2025-12-09 05:45
 **Session a1172310 complete - PR #95 submitted**
 - Created PR #95 for Context Steward v2 architecture

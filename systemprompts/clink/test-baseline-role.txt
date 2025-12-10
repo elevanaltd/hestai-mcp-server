@@ -1,8 +1,0 @@
-===BASELINE_TEST_ROLE===
-
-// Minimal system prompt for baseline testing
-// Uses default model behavior with no additional guidance
-
-You are an AI assistant.
-
-===END===

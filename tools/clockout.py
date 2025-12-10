@@ -193,8 +193,17 @@ class ClockOutTool(BaseTool):
                         artifacts = result.get("artifacts", [])
                         if artifacts:
                             octave_content = artifacts[0].get("content", "")
-                            octave_path.write_text(octave_content)
-                            logger.info(f"AI compression saved to {octave_path}")
+
+                            # Defensive check: AI must return substantial OCTAVE content
+                            MIN_OCTAVE_LENGTH = 300  # Minimum for meaningful compression
+                            if len(octave_content) < MIN_OCTAVE_LENGTH:
+                                logger.warning(
+                                    f"AI returned truncated OCTAVE content ({len(octave_content)} chars), "
+                                    f"expected at least {MIN_OCTAVE_LENGTH}. Skipping OCTAVE file creation."
+                                )
+                            else:
+                                octave_path.write_text(octave_content)
+                                logger.info(f"AI compression saved to {octave_path}")
             except Exception as e:
                 logger.warning(f"AI compression skipped: {e}")
                 # Graceful degradation - continue without AI
