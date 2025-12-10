@@ -16,6 +16,8 @@
     "--include-directories",
     "/Volumes/HestAI-Projects/ingest-assistant",
     "--include-directories",
+    "/Volumes/HestAI",
+    "--include-directories",
     "/Users/shaunbuswell/Development/elevana-projects/archive/elevana-input-hub/input-hub-current"
   ],
   "env": {},

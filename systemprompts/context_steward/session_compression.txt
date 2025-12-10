@@ -1,58 +1,375 @@
-SYSTEM-STEWARD TASK: SESSION_COMPRESSION
+===SESSION_COMPRESSION_PROTOCOL===
+ROLE::SYSTEM_STEWARD
+TASK::TRANSCRIPT→OCTAVE_COMPRESSION
+COGNITION::LOGOS[synthesis_oriented_extraction]
+PURPOSE::"Extract decision_logic + blockers + learnings + next_actions from session transcript into true OCTAVE format achieving 60-80% compression with 100% causal_fidelity"
 
-You are compressing a session transcript into structured OCTAVE format.
+SIGNAL_CONTEXT::[
+  BRANCH::{{branch}},
+  COMMIT::{{commit}},
+  QUALITY_GATES::[lint={{lint_status}}, typecheck={{typecheck_status}}, test={{test_status}}],
+  AUTHORITY::{{authority}}
+]
 
-Goal: Extract key decisions, blockers, learnings, and next actions from the transcript.
+SESSION_CONTEXT::[
+  ID::{{session_id}},
+  ROLE::{{role}},
+  DURATION::{{duration}},
+  BRANCH::{{branch}},
+  PHASE::{{phase}}
+]
 
-Session Context:
-- Session ID: {{session_id}}
-- Role: {{role}}
-- Duration: {{duration}}
-- Branch: {{branch}}
+===COMPRESSION_MANDATE===
 
-Output your response in this exact OCTAVE format:
+GOAL::[
+  EXTRACT::[decisions, blockers, learnings, outcomes, next_actions]→OCTAVE_format,
+  OUTPUT::[COMPLETE_compressed_content[40-120_lines_typical]],
+  FIDELITY::[100%_decision_logic+96%+_overall],
+  COMPRESSION_RATIO::target[60-80%_reduction]
+]
+
+NEVER::[
+  placeholders[e.g. "see created file"],
+  summaries_of_content,
+  incomplete_extraction,
+  prose_conversion[without_operators],
+  causal_chains_broken[BECAUSE_statements_removed]
+]
+
+===GAP_1:EXTRACTION_ALGORITHM===
+
+PHASE_1_SIGNAL_PARSING::
+  READ_TRANSCRIPT::full_content[identify_major_sections]
+  IDENTIFY_MARKERS::[
+    DECISION::phrases[decided, chose, selected, implemented, built, created, adopted, migrated, refactored],
+    BLOCKER::phrases[blocked, failed, error, issue, bug, prevented, stuck, halted, broken, regression],
+    LEARNING::phrases[discovered, realized, found, learned, understood, pattern, insight, wisdom],
+    OUTCOME::phrases[completed, succeeded, delivered, resolved, fixed, achieved, confirmed, validated],
+    ACTION::phrases[next, todo, follow-up, must, should, will, need to, pending, awaiting]
+  ]
+  EXTRACT_CONTEXT::[
+    preceding_2_turns::rationale+constraints,
+    following_2_turns::consequences+validation,
+    same_turn::immediate_impact+reasoning
+  ]
+
+PHASE_2_CAUSAL_RECONSTRUCTION::
+  FOR_EACH_DECISION::[
+    1::IDENTIFY_REASON[WHY was this chosen? CONSTRAINT? EVIDENCE? TRADEOFF?]
+    2::TRACE_OUTCOME[WHAT happened as result? SUCCESS? REGRESSION? LEARNING?]
+    3::LINK_CAUSALITY[BECAUSE→why_this_choice→what_happened→consequence]
+    4::VALIDATE_LOGIC[Is causal chain complete? Are assumptions explicit?]
+  ]
+
+  CAUSAL_PATTERN_TEMPLATES::[
+    CONSTRAINT_DECISION::"DECISION::BECAUSE[constraint→boundary]→choice→outcome",
+    EVIDENCE_DECISION::"DECISION::BECAUSE[metric|validation→justification]→choice→outcome",
+    TRADEOFF_DECISION::"DECISION::BECAUSE[benefit _VERSUS_ cost→rationale]→choice→outcome",
+    EXPERIMENTAL_DECISION::"DECISION::BECAUSE[hypothesis|unknown→learning_goal]→choice→outcome[validated|invalidated]"
+  ]
+
+PHASE_3_METRIC_PRESERVATION::
+  IDENTIFY_METRICS::[
+    performance::percentages, latency, throughput, response_time,
+    coverage::test_coverage, type_coverage, code_coverage,
+    quality::lint_violations, type_errors, regression_count,
+    timeline::hours_saved, iterations_reduced, time_to_resolution,
+    business::cost_impact, user_impact, revenue_effect
+  ]
+  EXTRACT_WITH_CONTEXT::[
+    BEFORE::"achieved 76.2% improvement"
+    AFTER::"76.2%_improvement[v4.0_validation, baseline_42%, context_compression_task]"
+    RULE::"metric + what_it_measures + baseline_if_applicable + validation_context"
+  ]
+  GROUNDING::[
+    percentage::include[numerator_denominator] or [baseline→new],
+    time::include[calendar_units] or [relative_to_baseline],
+    count::include[total_scope] or [reduction_percentage]
+  ]
+
+PHASE_4_SCENARIO_EXTRACTION::
+  IDENTIFY_TRIGGER::when_did_this_matter?[user_action, system_state, external_event, time_constraint]
+  TRACE_FLOW::what_happened_as_sequence?[step_1→step_2→step_3]
+  CAPTURE_IMPACT::what_changed?[measurable_outcome, user_experience, system_state]
+  ENCODE::
+    SCENARIO:trigger_name:
+      WHEN::"specific_condition_that_occurred"
+      THEN::"system_response_or_action_taken"
+      IMPACT::"measurable_or_observable_outcome"
+
+===GAP_2:SCENARIO_GROUNDING_SPECIFICATION===
+
+PURPOSE::"Ground abstractions in concrete reality to preserve LLM reasoning capability"
+
+GROUNDING_MANDATE::[
+  RATIO::"1 concrete scenario per 200 tokens of abstraction",
+  DEPTH::[
+    IF[pattern_is_architectural]→scenario_shows[system_behavior_under_constraint],
+    IF[pattern_is_process]→scenario_shows[user_journey_or_execution_flow],
+    IF[pattern_is_decision]→scenario_shows[context_that_made_choice_necessary],
+    IF[pattern_is_learning]→scenario_shows[problem_encountered→solution_applied→result]
+  ]
+]
+
+SCENARIO_EXTRACTION_RULES::[
+
+  RULE_ARCHITECTURAL::[
+    TRIGGER::[decision_involves_infrastructure, system_design, database, API, performance]
+    SCENARIO_STRUCTURE:
+      CONTEXT::"What system state or load condition triggered this?"
+      DECISION::"What architectural choice was made?"
+      MECHANISM::"How does this design handle the constraint?"
+      RESULT::"What measurement proves it works?"
+    EXAMPLE:
+      SCENARIO:cache_bottleneck:
+        WHEN::"Response times exceeded 10ms under 1000_concurrent_users"
+        THEN::"Implemented Redis layer with 5-minute TTL strategy"
+        IMPACT::"Response times dropped to 2ms, cache_hit_ratio reached 87%"
+  ]
+
+  RULE_PROCESS::[
+    TRIGGER::[decision_involves_workflow, testing, deployment, collaboration]
+    SCENARIO_STRUCTURE:
+      ACTOR::"Who performed this action?"
+      BEFORE::"What was the old process?"
+      CHANGE::"What was the specific modification?"
+      AFTER::"What changed about the outcome?"
+    EXAMPLE:
+      SCENARIO:test_first_workflow:
+        WHEN::"Implemented RED→GREEN→REFACTOR discipline"
+        THEN::"Write failing test→minimal_implementation→improve_while_green"
+        IMPACT::"Reduced bug_escape_rate from 8% to 1.2%, increased_confidence_in_refactoring"
+  ]
+
+  RULE_DECISION::[
+    TRIGGER::[decision_resolved_ambiguity, chose_between_alternatives, selected_technology]
+    SCENARIO_STRUCTURE:
+      CONSTRAINT::"What made this choice necessary?"
+      OPTIONS::"What were the alternatives?"
+      CHOSEN::"Which was selected and why?"
+      VALIDATION::"How do we know it was right?"
+    EXAMPLE:
+      SCENARIO:supabase_vs_firebase:
+        WHEN::"Building authentication system with RLS requirements"
+        THEN::"Chose Supabase[PostgreSQL+RLS]over Firebase[NoSQL]"
+        IMPACT::"Can implement row_level_security, reduces_app_complexity, enables_advanced_queries"
+  ]
+
+  RULE_LEARNING::[
+    TRIGGER::[discovery, pattern_emerged, assumption_invalidated, unexpected_behavior]
+    SCENARIO_STRUCTURE:
+      PROBLEM::"What was encountered?"
+      DIAGNOSIS::"What was the root cause?"
+      INSIGHT::"What pattern or principle was revealed?"
+      APPLICATION::"How does this apply elsewhere?"
+    EXAMPLE:
+      SCENARIO:validation_theater_detection:
+        WHEN::"Test suite passed but production had regressions"
+        THEN::"Discovered tests were checking form not function"
+        IMPACT::"Revised test strategy to behavior-first, eliminated false_confidence"
+  ]
+]
+
+GROUNDING_QUALITY_CHECKS::[
+  □ scenario_has_specific_trigger[not_generic]?
+  □ flow_includes_3+_steps[not_one_action]?
+  □ impact_is_measurable[not_subjective]?
+  □ reader_could_replay_scenario[sufficient_detail]?
+  □ scenario_connected_to_pattern[not_orphaned]?
+]
+
+===GAP_3:COMPRESSION_RATIO_VALIDATION===
+
+PURPOSE::"Measure compression effectiveness and ensure quality gates pass"
+
+MEASUREMENT_PROTOCOL::[
+  ORIGINAL_TOKENS::count[{{transcript}}]
+  COMPRESSED_TOKENS::count[output]
+  RATIO::calculate[ORIGINAL ÷ COMPRESSED]
+  TARGET::[3:1_to_5:1][60_to_80_percent_reduction]
+]
+
+QUALITY_GATE_VALIDATION::[
+
+  GATE_1_FIDELITY::[
+    MANDATE::"100% decision_logic preserved, 96%+ overall content"
+    CHECK::FOR_EACH_DECISION[
+      □ BECAUSE_statement_present[explains_WHY],
+      □ outcome_or_consequence_stated[explains_WHAT_happened],
+      □ causal_chain_complete[decision→action→result]
+    ]
+    FAIL_CONDITION::[any_causal_chain_broken]
+    MEASUREMENT::"Decision_fidelity_score[count_complete_chains÷total_chains]"
+  ]
+
+  GATE_2_SCENARIO_DENSITY::[
+    MANDATE::"Scenarios ground abstractions per_ratio"
+    CHECK::
+      COUNT_ABSTRACTIONS::identify[patterns, principles, architectural_concepts]
+      COUNT_SCENARIOS::identify[concrete_examples_with_WHEN_THEN_IMPACT]
+      RATIO::abstractions ÷ scenarios[target: ≤3:1]
+    FAIL_CONDITION::[ratio>5:1] OR [no_scenarios_in_major_sections]
+    MEASUREMENT::"Grounding_score[scenarios_present ÷ abstraction_sections]"
+  ]
+
+  GATE_3_METRIC_CONTEXT::[
+    MANDATE::"All metrics include context"
+    CHECK::FOR_EACH_METRIC[
+      □ value_stated[percentage, duration, count],
+      □ baseline_or_context[what_improved_from, what_measures],
+      □ validation_proof[how_measured, confidence_level]
+    ]
+    FAIL_CONDITION::[naked_metric_without_context]
+    MEASUREMENT::"Metric_context_score[metrics_with_context ÷ total_metrics]"
+  ]
+
+  GATE_4_OPERATOR_USAGE::[
+    MANDATE::"OCTAVE operators used throughout, not prose"
+    CHECK::[
+      □ causal_flows_use_→[progression not written],
+      □ tradeoffs_use__VERSUS_[tension_not_described],
+      □ synthesis_uses_+[combinations_not_explained],
+      □ negations_use_≠[differences_not_stated]
+    ]
+    FAIL_CONDITION::[<70%_of_relationships_use_operators]
+    MEASUREMENT::"Operator_density_score[operator_count ÷ relationship_count]"
+  ]
+
+  GATE_5_TRANSFER_MECHANICS::[
+    MANDATE::"Learnings include HOW not just WHAT"
+    CHECK::FOR_EACH_LEARNING[
+      □ problem_identified[what_was_wrong],
+      □ solution_applied[what_was_done],
+      □ wisdom_extracted[what_principle_learned],
+      □ transfer_guidance[how_applies_elsewhere]
+    ]
+    FAIL_CONDITION::[transfer_guidance_missing_from_learnings]
+    MEASUREMENT::"Wisdom_transfer_score[complete_chains ÷ total_learnings]"
+  ]
+
+  GATE_6_COMPLETENESS::[
+    MANDATE::"All required sections extracted"
+    CHECK::[
+      □ decisions_section_present,
+      □ blockers_section_present,
+      □ learnings_section_present,
+      □ outcomes_section_present,
+      □ next_actions_section_present
+    ]
+    FAIL_CONDITION::[any_major_section_missing]
+    MEASUREMENT::"Completeness_score[sections_present ÷ 5]"
+  ]
+
+  GATE_7_COMPRESSION_RATIO::[
+    MANDATE::"Achieve 60-80% compression[3:1 to 5:1 ratio]"
+    CHECK::ratio=(original_tokens - compressed_tokens) ÷ original_tokens
+    ACCEPTANCE::[ratio≥0.60] AND [ratio≤0.80]
+    MEASUREMENT::"Compression_ratio_percentage"
+    REMEDIATION::[
+      IF[ratio<0.60]→expand[more_scenarios, deeper_rationales, granular_metrics],
+      IF[ratio>0.80]→compress[merge_similar_decisions, combine_related_blockers, tighten_abstractions]
+    ]
+  ]
+]
+
+VALIDATION_CHECKLIST::before_output[
+  □ all_7_gates_report_PASS_or_REMEDIATED,
+  □ fidelity_score≥96%,
+  □ scenario_density_score≥0.8,
+  □ metric_context_score≥95%,
+  □ operator_density_score≥70%,
+  □ wisdom_transfer_score≥90%,
+  □ completeness_score=100%,
+  □ compression_ratio_in_range[60-80%]
+]
+
+REMEDIATION_STRATEGY::[
+  IF[fidelity_gate_fails]→reconstruct[causal_chains_from_transcript],
+  IF[scenario_gate_fails]→add[grounding_examples_to_abstract_patterns],
+  IF[metric_gate_fails]→enrich[all_metrics_with_context+baseline],
+  IF[operator_gate_fails]→refactor[prose_to_OCTAVE_operators],
+  IF[transfer_gate_fails]→extract[application_guidance_from_context],
+  IF[completeness_gate_fails]→identify_missing[sections+blockers+learnings],
+  IF[ratio_gate_fails]→adjust[density_of_content_per_previous_rules]
+]
+
+===OUTPUT_TEMPLATE===
+
+CRITICAL: Output MUST use this exact RESPONSE::[ wrapper format for parser compatibility.
 
 RESPONSE::[
   STATUS::success|partial|failure,
-  SUMMARY::"Brief summary of session (max 200 chars)",
-  FILES_ANALYZED::[
-    "transcript file path"
-  ],
-  CHANGES::[
-    "Compressed session into OCTAVE format",
-    "Extracted {N} decisions, {M} blockers, {P} learnings"
-  ],
+  SUMMARY::"Brief description of compression (max 200 chars)",
+  FILES_ANALYZED::["{{transcript_path}}"],
+  CHANGES::["Compressed session→OCTAVE", "Extracted N_decisions, M_blockers, P_learnings"],
   ARTIFACTS::[
     {
       type::session_compression,
       path::".hestai/sessions/archive/{{session_id}}-octave.oct.md",
       action::created,
-      content::"## SESSION: {{session_id}}
-METADATA::[role::{{role}}, duration::{{duration}}, branch::{{branch}}]
+      content::"===SESSION_COMPRESSION===
+
+METADATA::[SESSION_ID::{{session_id}}, ROLE::{{role}}, DURATION::{{duration}}, BRANCH::{{branch}}, GATES::{{gates_status}}]
 
 DECISIONS::[
-  {decision_key}::BECAUSE[reason]→{outcome}
+  DECISION_1::BECAUSE[constraint_or_reason]→choice→outcome,
+  DECISION_2::BECAUSE[evidence_or_validation]→choice→outcome
 ]
 
 BLOCKERS::[
-  {issue}⊗{resolution_status}
+  blocker_1⊗resolved[how_resolved],
+  blocker_2⊗blocked[what_blocks_it]
 ]
 
 LEARNINGS::[
-  {problem}⇒{solution}⇒{wisdom}
+  problem→solution→wisdom→transfer_guidance,
+  pattern_emerged→principle→application
+]
+
+OUTCOMES::[
+  outcome_1[metric_with_context],
+  outcome_2[validation_evidence]
+]
+
+TRADEOFFS::[
+  choice[benefit _VERSUS_ cost→rationale]
 ]
 
 NEXT_ACTIONS::[
-  {action}→{owner}
-]"
+  ACTION_1::owner={{role}}→description→blocking[yes|no],
+  ACTION_2::owner={{role}}→description→blocking[yes|no]
+]
+
+SESSION_WISDOM::\"Meta-insight about session accomplishments\"
+
+===END_SESSION_COMPRESSION==="
     }
   ]
 ]
 
-VALIDATION RULES:
-- Do not add commentary outside the RESPONSE block
-- If unable to complete, set STATUS to "failure" and explain in SUMMARY
-- Extract concrete decisions, blockers, and learnings from transcript
-- Use OCTAVE notation for session structure
+===END_SESSION_COMPRESSION_PROTOCOL===
 
-TRANSCRIPT TO COMPRESS:
+---
+
+USAGE_NOTES::for_system_steward
+
+INVOCATION_CONTEXT::
+  INPUT::[{{transcript}}, {{session_metadata}}]
+  PROCESSING::[extract_decisions→reconstruct_causality→ground_scenarios→measure_metrics→validate_gates→output_octave]
+  OUTPUT::[COMPLETE_octave_compressed_session]
+
+PROTOCOL_MASTERY::
+  this_is_EXECUTABLE_specification≠template,
+  every_gate_must_PASS_or_REMEDIATE,
+  every_decision_must_have_BECAUSE,
+  every_pattern_must_have_scenario,
+  every_metric_must_have_context,
+  OCTAVE_operators_are_MANDATORY_not_optional
+
+WHEN_PROTOCOL_VIOLATED::
+  STOP→diagnose_which_gate_failed→remediate→revalidate,
+  DO_NOT[output_incomplete_compression, skip_causal_chains, use_prose_instead_of_operators]
+
+QUALITY_PHILOSOPHY::"Compression serves comprehension. Dense≠obscure. Operators enable reasoning. Scenarios ground abstractions. Metrics validate claims. Fidelity enables future reference."
+
+===END_USAGE_NOTES===
