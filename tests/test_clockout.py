@@ -1415,3 +1415,133 @@ This ensures the OCTAVE file gets created properly and verification runs.
         assert "intent" in update_call
         assert "content" in update_call or "file_ref" in update_call
         assert update_call["working_dir"] == str(working_dir)
+
+@pytest.mark.asyncio
+async def test_focus_sanitization_path_separators(temp_hestai_dir):
+    """Test that focus field with path separators is sanitized in archive filename"""
+    hestai_dir, session_id = temp_hestai_dir
+
+    # Update session data with focus containing path separators
+    session_dir = hestai_dir / "sessions" / "active" / session_id
+    session_data = json.loads((session_dir / "session.json").read_text())
+    session_data["focus"] = "fix/ci-diagnosis-337"  # Contains forward slash
+    (session_dir / "session.json").write_text(json.dumps(session_data))
+
+    # Create mock JSONL with session content
+    claude_projects = Path.home() / ".claude" / "projects"
+    encoded_path = str(session_data["working_dir"]).replace("/", "-").lstrip("-")
+    jsonl_dir = claude_projects / encoded_path
+    jsonl_dir.mkdir(parents=True, exist_ok=True)
+    jsonl_path = jsonl_dir / f"{session_id}.jsonl"
+
+    # Write minimal JSONL content
+    jsonl_content = [
+        {
+            "type": "user",
+            "message": {"role": "user", "content": [{"type": "text", "text": "Test message"}]},
+        }
+    ]
+    with open(jsonl_path, "w") as f:
+        for entry in jsonl_content:
+            f.write(json.dumps(entry) + "\n")
+
+    try:
+        # Execute clockout
+        tool = ClockOutTool()
+        arguments = {
+            "session_id": session_id,
+            "description": "Test session with path separator in focus",
+            "_session_context": type("obj", (), {"project_root": session_data["working_dir"]})(),
+        }
+
+        result = await tool.execute(arguments)
+
+        # Verify success
+        assert result[0].text
+        output = json.loads(result[0].text)
+        assert output["status"] == "success"
+
+        # Verify archive file was created with sanitized filename
+        archive_dir = hestai_dir / "sessions" / "archive"
+        archive_files = list(archive_dir.glob("*.txt"))
+        assert len(archive_files) == 1
+
+        # Archive filename should NOT contain path separators
+        archive_filename = archive_files[0].name
+        assert "/" not in archive_filename, f"Archive filename contains '/': {archive_filename}"
+        assert "\\" not in archive_filename, f"Archive filename contains '\\': {archive_filename}"
+
+        # Verify the sanitized focus is present (with dashes instead of slashes)
+        assert "fix-ci-diagnosis-337" in archive_filename
+
+    finally:
+        # Cleanup
+        if jsonl_path.exists():
+            jsonl_path.unlink()
+        if jsonl_dir.exists():
+            shutil.rmtree(jsonl_dir)
+
+
+@pytest.mark.asyncio
+async def test_focus_sanitization_newlines(temp_hestai_dir):
+    """Test that focus field with newlines is sanitized in archive filename"""
+    hestai_dir, session_id = temp_hestai_dir
+
+    # Update session data with focus containing newlines
+    session_dir = hestai_dir / "sessions" / "active" / session_id
+    session_data = json.loads((session_dir / "session.json").read_text())
+    session_data["focus"] = "multi\nline\nfocus"  # Contains newlines
+    (session_dir / "session.json").write_text(json.dumps(session_data))
+
+    # Create mock JSONL with session content
+    claude_projects = Path.home() / ".claude" / "projects"
+    encoded_path = str(session_data["working_dir"]).replace("/", "-").lstrip("-")
+    jsonl_dir = claude_projects / encoded_path
+    jsonl_dir.mkdir(parents=True, exist_ok=True)
+    jsonl_path = jsonl_dir / f"{session_id}.jsonl"
+
+    # Write minimal JSONL content
+    jsonl_content = [
+        {
+            "type": "user",
+            "message": {"role": "user", "content": [{"type": "text", "text": "Test message"}]},
+        }
+    ]
+    with open(jsonl_path, "w") as f:
+        for entry in jsonl_content:
+            f.write(json.dumps(entry) + "\n")
+
+    try:
+        # Execute clockout
+        tool = ClockOutTool()
+        arguments = {
+            "session_id": session_id,
+            "description": "Test session with newlines in focus",
+            "_session_context": type("obj", (), {"project_root": session_data["working_dir"]})(),
+        }
+
+        result = await tool.execute(arguments)
+
+        # Verify success
+        assert result[0].text
+        output = json.loads(result[0].text)
+        assert output["status"] == "success"
+
+        # Verify archive file was created with sanitized filename
+        archive_dir = hestai_dir / "sessions" / "archive"
+        archive_files = list(archive_dir.glob("*.txt"))
+        assert len(archive_files) == 1
+
+        # Archive filename should NOT contain newlines
+        archive_filename = archive_files[0].name
+        assert "\n" not in archive_filename, f"Archive filename contains newline: {archive_filename}"
+
+        # Verify the sanitized focus is present (with dashes instead of newlines)
+        assert "multi-line-focus" in archive_filename
+
+    finally:
+        # Cleanup
+        if jsonl_path.exists():
+            jsonl_path.unlink()
+        if jsonl_dir.exists():
+            shutil.rmtree(jsonl_dir)
