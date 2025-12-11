@@ -1,0 +1,794 @@
+================================================================================
+Claude Code Session Export
+Session ID: 163bc14b
+Role: holistic-orchestrator
+Focus: general
+Started: 2025-12-10T19:13:48.742007
+Exported: 2025-12-10T20:26:39.206458
+Description: Workflow analysis session - identified session lifecycle gaps
+Working Directory: /Volumes/HestAI-Tools/hestai-mcp-server
+================================================================================
+
+[user]
+<command-message>load is running…</command-message>
+<command-name>/load</command-name>
+<command-args>ho</command-args>
+
+[user]
+# Load: ho
+
+Combined role activation with Context Steward integration for session lifecycle management.
+
+**Flow**: Micro-RAPH → clock_in → Context Load → Full RAPH → anchor_submit → Dashboard
+
+## COMMAND_INTERFACE
+```octave
+INVOCATION::"/load {role} [--quick|--context-only]"
+EXAMPLES::[
+  "/load ho"→full_session_lifecycle,
+  "/load implementation-lead"→full_session_lifecycle,
+  "/load ho --quick"→micro_RAPH_only[no_clock_in],
+  "/load --context-only"→context_only[no_role]
+]
+```
+
+## SESSION_LIFECYCLE_INTEGRATION
+```octave
+CONTEXT_STEWARD_FLOW::[
+  1::MICRO_RAPH→constitutional_anchor_before_context,
+  2::CLOCK_IN→register_session+get_context_paths,
+  3::READ_CONTEXT→load_files_from_context_paths,
+  4::FULL_RAPH→grounded_in_actual_project_state,
+  5::ANCHOR_SUBMIT→validate_anchor+get_enforcement_rules,
+  6::DASHBOARD→show_session_id+enforcement+ready_state
+]
+```
+
+---
+
+## STEP 1: Parse Arguments and Create Todo
+
+```bash
+FULL_ARGS="ho"
+ROLE_NAME=""
+QUICK_MODE=false
+CONTEXT_ONLY=false
+
+# Parse flags
+if echo "$FULL_ARGS" | grep -q -- "--quick"; then
+  QUICK_MODE=true
+  FULL_ARGS=$(echo "$FULL_ARGS" | sed 's/--quick//g' | xargs)
+fi
+
+if echo "$FULL_ARGS" | grep -q -- "--context-only"; then
+  CONTEXT_ONLY=true
+  FULL_ARGS=$(echo "$FULL_ARGS" | sed 's/--context-only//g' | xargs)
+fi
+
+ROLE_NAME=$(echo "$FULL_ARGS" | xargs)
+ROLE_NAME=$(echo "$ROLE_NAME" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+
+# Common aliases
+case "$ROLE_NAME" in
+  "ce") ROLE_NAME="critical-engineer" ;;
+  "ea") ROLE_NAME="error-architect" ;;
+  "ta") ROLE_NAME="technical-architect" ;;
+  "ca") ROLE_NAME="completion-architect" ;;
+  "il") ROLE_NAME="implementation-lead" ;;
+  "td") ROLE_NAME="task-decomposer" ;;
+  "wa") ROLE_NAME="workspace-architect" ;;
+  "ss") ROLE_NAME="system-steward" ;;
+  "rs") ROLE_NAME="requirements-steward" ;;
+  "ho") ROLE_NAME="holistic-orchestrator" ;;
+  "tis"|"test-steward") ROLE_NAME="test-infrastructure-steward" ;;
+  "tmg"|"testguard") ROLE_NAME="test-methodology-guardian" ;;
+  "crs"|"cr") ROLE_NAME="code-review-specialist" ;;
+  "ute"|"test") ROLE_NAME="universal-test-engineer" ;;
+esac
+```
+
+**Create TodoWrite for tracking:**
+
+```octave
+IF[QUICK_MODE=false AND CONTEXT_ONLY=false]::[
+  TodoWrite([
+    {content:"1. Read constitution + Micro-RAPH", status:"in_progress", activeForm:"Locking constitutional anchor"},
+    {content:"2. Clock in session", status:"pending", activeForm:"Registering session"},
+    {content:"3. Load context files", status:"pending", activeForm:"Loading PROJECT-CONTEXT, CHECKLIST, ROADMAP"},
+    {content:"4. Load git state", status:"pending", activeForm:"Getting git state"},
+    {content:"5. Full RAPH (context-grounded)", status:"pending", activeForm:"Grounding tensions in project reality"},
+    {content:"6. Submit anchor", status:"pending", activeForm:"Validating anchor, getting enforcement"},
+    {content:"7. Dashboard synthesis", status:"pending", activeForm:"Generating session HUD"}
+  ])
+]
+
+IF[QUICK_MODE=true]::[
+  TodoWrite([
+    {content:"1. Read constitution", status:"in_progress", activeForm:"Reading constitution"},
+    {content:"2. Micro-RAPH anchor", status:"pending", activeForm:"Locking constraints"},
+    {content:"3. Quick summary", status:"pending", activeForm:"Summarizing activation"}
+  ])
+]
+```
+
+---
+
+## STEP 2: Read Constitution + Micro-RAPH - Todo Item 1
+
+**Lock constitutional anchor BEFORE any context enters the window.**
+
+```octave
+READ::".claude/agents/{ROLE_NAME}.oct.md"
+
+EXTRACT::[
+  COGNITION::ETHOS|LOGOS|PATHOS,
+  ARCHETYPES::from_COGNITIVE_FOUNDATION,
+  KEY_CONSTRAINTS::MUST_ALWAYS[top_2]+MUST_NEVER[top_2]
+]
+
+MICRO_RAPH::[
+  KEY_FORCE::"Primary cognitive force: {COGNITION} - {one_sentence}",
+  TOP_TENSION::"Key tension: {MUST_X} vs {operational_reality}"
+]
+
+OUTPUT::[
+  "🔒 CONSTITUTIONAL ANCHOR:",
+  "   Cognition: {COGNITION}",
+  "   Force: {synthesis}",
+  "   Lock: {MUST_ALWAYS} ↔ {MUST_NEVER}"
+]
+
+THEN::mark_todo_1_complete→mark_todo_2_in_progress
+```
+
+---
+
+## STEP 3: Clock In Session - Todo Item 2
+
+**Register session with Context Steward, get context paths.**
+
+```octave
+CLOCK_IN::mcp__hestai__clockin(
+  role::{ROLE_NAME},
+  focus::"session-{timestamp}",
+  working_dir::"{cwd}"
+)
+
+CAPTURE::[
+  SESSION_ID::response.session_id,
+  CONTEXT_PATHS::response.context_paths,
+  CONFLICT::response.conflict
+]
+
+IF[CONFLICT]::[
+  WARN::"⚠️ Session conflict detected: {conflict.existing_session}",
+  SHOW::conflict.resolution_suggestion
+]
+
+OUTPUT::[
+  "📋 SESSION REGISTERED:",
+  "   ID: {SESSION_ID}",
+  "   Context: {CONTEXT_PATHS}"
+]
+
+THEN::mark_todo_2_complete→mark_todo_3_in_progress
+```
+
+---
+
+## STEP 4: Load Context Files - Todo Item 3
+
+**Read context files from paths returned by clock_in.**
+
+```octave
+CONTEXT_LOAD::[
+  TRY::Read(CONTEXT_PATHS.project_context),
+  TRY::Read(CONTEXT_PATHS.checklist),
+  TRY::Read(".hestai/context/PROJECT-ROADMAP.md"),
+  FALLBACK::SKIP["Context file not found - proceeding tactically"]
+]
+
+EXTRACT::[
+  CURRENT_PHASE::from_PROJECT-CONTEXT,
+  ACTIVE_WORK::from_PROJECT-CONTEXT,
+  IMMEDIATE_TASKS::from_CHECKLIST,
+  ROADMAP_POSITION::from_ROADMAP
+]
+
+THEN::mark_todo_3_complete→mark_todo_4_in_progress
+```
+
+---
+
+## STEP 5: Load Git State - Todo Item 4
+
+```octave
+GIT_STATE::[
+  COMMAND::"git log --oneline -5",
+  COMMAND::"git status --short",
+  COMMAND::"git branch --show-current"
+]
+
+BRANCH_SYNC::[
+  FETCH::"git fetch origin main --quiet 2>/dev/null || true",
+  BEHIND::$(git rev-list --count HEAD..origin/main 2>/dev/null || echo "0"),
+  AHEAD::$(git rev-list --count origin/main..HEAD 2>/dev/null || echo "0")
+]
+
+THEN::mark_todo_4_complete→mark_todo_5_in_progress
+```
+
+---
+
+## STEP 6: Full RAPH (Context-Grounded) - Todo Item 5
+
+**Now perform full RAPH with actual project context loaded.**
+
+```octave
+FULL_RAPH::[
+  READ::[
+    CORE_FORCES::[{name}::L{N}],
+    PRINCIPLES::[{name}::L{N}],
+    CONSTRAINTS::[MUST::{items}, NEVER::{items}]
+  ],
+
+  ABSORB::[
+    // Tensions reference ACTUAL project context
+    T1::{constitutional_element} vs {PROJECT-CONTEXT.current_state},
+    T2::{principle} vs {CHECKLIST.immediate_task},
+    T3::{constraint} vs {ROADMAP.next_phase}
+  ],
+
+  PERCEIVE::[
+    // Scenarios use real project decisions
+    S1::edge_case_from_ACTIVE_WORK,
+    S2::ambiguity_from_IMMEDIATE_TASKS
+  ],
+
+  HARMONISE::[
+    // Behaviors grounded in this session's context
+    B1::GENERIC[would_do] → I_WILL[specific_to_this_project],
+    B2::..., B3::...
+  ]
+]
+
+THEN::mark_todo_5_complete→mark_todo_6_in_progress
+```
+
+---
+
+## STEP 7: Submit Anchor - Todo Item 6
+
+**Validate anchor and receive enforcement rules.**
+
+```octave
+ANCHOR_SUBMIT::mcp__hestai__anchorsubmit(
+  session_id::{SESSION_ID},
+  working_dir::"{cwd}",
+  anchor::{
+    SHANK::{
+      role::{ROLE_NAME},
+      cognition::{COGNITION},
+      archetypes::{ARCHETYPES},
+      key_constraints::{MUST+NEVER}
+    },
+    ARM::{
+      phase_context::{CURRENT_PHASE},
+      current_focus::{ACTIVE_WORK},
+      blockers::{from_CHECKLIST.blocked}
+    },
+    FLUKE::{
+      skills_loaded::{active_skills},
+      patterns_active::{from_HARMONISE}
+    }
+  }
+)
+
+CAPTURE::[
+  VALIDATED::response.validated,
+  DRIFT_WARNING::response.drift_warning,
+  ENFORCEMENT::response.enforcement
+]
+
+IF[DRIFT_WARNING]::[
+  WARN::"⚠️ DRIFT DETECTED: {drift_warning}"
+]
+
+OUTPUT::[
+  "🔐 ANCHOR VALIDATED:",
+  "   Blocked paths: {ENFORCEMENT.blocked_paths}",
+  "   Delegation: {ENFORCEMENT.delegation_required}"
+]
+
+THEN::mark_todo_6_complete→mark_todo_7_in_progress
+```
+
+---
+
+## STEP 8: Dashboard Synthesis - Todo Item 7
+
+**Final output showing session state and enforcement.**
+
+```octave
+OUTPUT::[
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "✅ LOAD COMPLETE",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "",
+  "🎭 ROLE",
+  "   Identity:   {ROLE_NAME} ({COGNITION})",
+  "   Archetypes: {ARCHETYPES}",
+  "",
+  "📋 SESSION",
+  "   ID:         {SESSION_ID}",
+  "   Focus:      {ACTIVE_WORK}",
+  "   Anchor:     {VALIDATED ? '✅ Validated' : '❌ Invalid'}",
+  "",
+  "📊 PROJECT STATE",
+  "   Phase:      {CURRENT_PHASE}",
+  "   Branch:     {git_branch} ({AHEAD}↑ {BEHIND}↓)",
+  "   Tasks:      {IMMEDIATE_TASKS.count} immediate",
+  "",
+  "🔒 ENFORCEMENT",
+  "   Blocked:    {ENFORCEMENT.blocked_paths}",
+  "   Delegate:   {ENFORCEMENT.delegation_required}",
+  "",
+  "🔑 COGNITIVE LOCK",
+  "   {COGNITION}: {one_line_synthesis}",
+  "   Behavior: {context_grounded_behavior}",
+  "",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+]
+
+THEN::mark_todo_7_complete
+```
+
+---
+
+## QUICK MODE (--quick)
+
+Abbreviated - constitutional anchor only, no session registration:
+
+```octave
+1. Read constitution → extract COGNITION, ARCHETYPES, CONSTRAINTS
+2. Micro-RAPH → lock key force and tension
+3. Quick summary → output anchor only
+
+OUTPUT::[
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "⚡ QUICK LOAD: {ROLE_NAME}",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "",
+  "🔒 COGNITIVE LOCK",
+  "   Cognition:  {COGNITION}",
+  "   Force:      {synthesis}",
+  "   Constraint: {key_MUST_ALWAYS}",
+  "",
+  "Ready (no session, constitutional anchor only).",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+]
+
+NOTE::"No session registered. Use full /load for session tracking."
+```
+
+---
+
+## CONTEXT-ONLY MODE (--context-only)
+
+Context load without role activation:
+
+```octave
+1. Clock in (role="context-load")
+2. Load context files
+3. Git state
+4. Dashboard (no RAPH, no enforcement)
+
+OUTPUT::[
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "📁 CONTEXT LOADED",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+  "",
+  "📋 SESSION: {SESSION_ID}",
+  "",
+  "📊 PROJECT STATE",
+  "   Phase:   {CURRENT_PHASE}",
+  "   Branch:  {git_branch}",
+  "   Tasks:   {IMMEDIATE_TASKS.count}",
+  "",
+  "Ready (context only, no role binding).",
+  "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+]
+```
+
+---
+
+## Aliases Reference
+
+| Alias | Role |
+|-------|------|
+| ho | holistic-orchestrator |
+| ce | critical-engineer |
+| il | implementation-lead |
+| ta | technical-architect |
+| ea | error-architect |
+| wa | workspace-architect |
+| ss | system-steward |
+| rs | requirements-steward |
+| td | task-decomposer |
+| cr | code-review-specialist |
+| tmg/testguard | test-methodology-guardian |
+| tis | test-infrastructure-steward |
+| ute/test | universal-test-engineer |
+
+---
+
+## Session Lifecycle Summary
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ /load {role}                                            │
+│                                                         │
+│  1. Constitution + Micro-RAPH  ← anchor BEFORE context  │
+│  2. clock_in                   ← register session       │
+│  3. Context files              ← PROJECT-CONTEXT, etc   │
+│  4. Git state                  ← branch, sync status    │
+│  5. Full RAPH                  ← grounded in context    │
+│  6. anchor_submit              ← validate + enforcement │
+│  7. Dashboard                  ← session HUD            │
+│                                                         │
+│ Session ends with: clock_out (extracts transcript)      │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+**Execute load for: ho**
+
+
+[assistant]
+**🔒 CONSTITUTIONAL ANCHOR:**
+- **Cognition:** LOGOS (The Architect of Structure)
+- **Archetypes:** ATLAS (ultimate accountability) + ODYSSEUS (cross-boundary navigation) + APOLLO (prophetic intelligence)
+- **Key Lock:** "Show how gaps + boundaries + agents → coherent system through orchestration structure" ↔ "Never present orchestration as task list addition (must show multiplicative system integration)"
+
+**MICRO-RAPH:**
+- **Key Force:** LOGOS - Reveal relational order in apparent contradiction; integration transcends addition through emergent structure
+- **Top Tension:** "Ultimate accountability (buck stops here)" vs "Cannot directly implement (must delegate to specialists)"
+
+[assistant]
+**📋 SESSION REGISTERED:**
+- **ID:** 163bc14b
+- **Context Paths:** PROJECT-CONTEXT.md, PROJECT-CHECKLIST.md
+- **Conflict:** None
+
+[assistant]
+**Context Loaded:**
+- **Current Phase:** B2 (Build Phase - Implementation)
+- **Active Focus:** Context Steward v2 - Complete Clockout Flow (#104)
+- **Next Priority:** Complete clockout flow - AI-driven context_update to PROJECT-CONTEXT
+- **Key Gap:** clockout creates transcript + OCTAVE compression but does NOT call context_update
+
+[assistant]
+**Git State:**
+- **Branch:** main (up to date with origin)
+- **Sync:** 0↑ 0↓ (fully synchronized)
+- **Last Merge:** PR #118 (pgrep process management refactor)
+- **Working State:** Modified context files + untracked session archives
+
+[assistant]
+**FULL RAPH (Context-Grounded):**
+
+**READ:**
+- **Core Forces:** VISION (coherence possibility), CONSTRAINT (boundary integrity), STRUCTURE (cross-boundary synthesis), REALITY (production feedback), JUDGEMENT (human authority)
+- **Principles:** Constitutional Authority, System Coherence, Gap Ownership, Prophetic Vigilance, MIP Enforcement
+- **Constraints:** MUST[orchestrate structure showing emergence] + NEVER[implement directly, coordination theater]
+
+**ABSORB (Tensions with Project Reality):**
+1. **T1:** "Ultimate accountability" vs "Clockout flow incomplete - session wisdom trapped in archives"
+2. **T2:** "Cross-boundary coherence" vs "Gap between OCTAVE compression and context_update call"
+3. **T3:** "Prophetic vigilance" vs "Working tree has uncommitted session archives (3 OCTAVE files)"
+
+**PERCEIVE (Edge Cases from Active Work):**
+- **S1:** If I orchestrate clockout flow completion, I must delegate to implementation-lead (cannot implement myself)
+- **S2:** Uncommitted session archives represent knowledge leakage - system coherence gap
+
+**HARMONISE (Context-Grounded Behaviors):**
+- **B1:** GENERIC[coordinate work] → I_WILL[delegate clockout→context_update integration to implementation-lead with precise gap analysis]
+- **B2:** GENERIC[track gaps] → I_WILL[own the "session archives uncommitted" gap - assign system-steward for cleanup]
+- **B3:** GENERIC[enforce gates] → I_WILL[validate clockout flow completion evidence before marking #104 done]
+
+[assistant]
+**🔐 ANCHOR VALIDATED:**
+- **Blocked Paths:** src/**, apps/**, packages/**, tools/*.py (cannot edit directly)
+- **Delegation Required:** implementation-lead (for any code changes)
+- **Anchor Stored:** .hestai/sessions/active/163bc14b/anchor.json
+
+[assistant]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ **LOAD COMPLETE**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎭 **ROLE**
+   Identity:   holistic-orchestrator (LOGOS)
+   Archetypes: ATLAS + ODYSSEUS + APOLLO
+
+📋 **SESSION**
+   ID:         163bc14b
+   Focus:      Context Steward v2 - Complete Clockout Flow (#104)
+   Anchor:     ✅ Validated
+
+📊 **PROJECT STATE**
+   Phase:      B2 (Build Phase - Implementation)
+   Branch:     main (0↑ 0↓)
+   Recent:     PR #118 merged (pgrep refactor)
+   Tests:      1258 passing
+
+🔒 **ENFORCEMENT**
+   Blocked:    src/**, apps/**, packages/**, tools/*.py
+   Delegate:   implementation-lead (required for code changes)
+
+🔑 **COGNITIVE LOCK**
+   LOGOS: Reveal relational order - integration transcends addition
+   Behavior: Own clockout→context_update gap, delegate implementation, track session archive coherence
+
+📌 **IDENTIFIED GAPS**
+   1. Clockout creates OCTAVE but doesn't call context_update
+   2. 3 uncommitted session archives in working tree
+   3. Modified context files need commit/review
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ready for orchestration. How may I help with system coherence?
+
+[user]
+I'd like to discuss the process we have for doing work and stremaling/improving it.
+
+What currently happens is we load role (as we did here) and then often move to a branch and sometimes the sessions/active files disappear or aren't where you'd expect them to be and clocking out doesn't happen. Other times we end up with context files just orphansed from the work, like now, and other times it's just not as coherent or clear what's happening. project contexct no longer seems like the place where the whole context is shown holistically and more of an immediate todo list which is overwritten by each clockout/context update and not a larger vision.
+
+Can you look at this holistically, lisaise with ho-liaison via gemini and look at the issues we have in git and see if there's a clear roadmap and plan to fix this. I'm find slowing down and doing tings one by one now to refine what we have as there is potential but at the moment, the workflow process (also split between being explained in /Users/shaunbuswell/.claude/HESTAI-SYSTEM-OVERVIEW.md /Users/shaunbuswell/.claude/CURRENT-WORKING-STATE.md /Volumes/HestAI/docs/workflow/000-SYSTEM-HESTAI-NORTH-STAR-SUMMARY.oct.md /Volumes/HestAI/.coord/logs/session-logs ) IS A MESS.
+
+[assistant]
+You've identified a critical system coherence problem. Let me analyze this holistically.
+
+**The Core Issue:** The Context Steward workflow has fragmented - sessions lose coherence across branches, clockout rarely happens, PROJECT-CONTEXT has become tactical rather than strategic, and the workflow documentation itself is scattered across 4+ locations.
+
+Let me launch parallel investigations to synthesize a clear picture:
+
+[assistant]
+Excellent analysis from ho-liaison. Let me check the GitHub issues directly and examine the session file structure:
+
+[assistant]
+This confirms the problem. Let me check the clockin.py to verify the branch-agnostic issue:
+
+[assistant]
+Confirmed: **No branch field in session.json**. This is exactly the root cause ho-liaison identified.
+
+[assistant]
+---
+
+## SYNTHESIS: Coherent Improvement Roadmap
+
+### **ROOT CAUSE DIAGNOSIS**
+
+The Context Steward system has **three fundamental architectural gaps**:
+
+| Gap | Symptom | Root Cause | Evidence |
+|-----|---------|------------|----------|
+| **Git-Agnostic Sessions** | Sessions orphan across branches | `session.json` has no `branch` field | Line 142-153 of clockin.py |
+| **Passive Lifecycle** | clockout never happens | System requires explicit action users don't take | 7 orphaned sessions in `active/` |
+| **Overloaded Context** | PROJECT-CONTEXT is tactical mess | Single file serving strategic + tactical purposes | File mixes "IDENTITY" with "Complete Clockout Flow" |
+
+### **EXISTING ISSUES MAPPED TO FIXES**
+
+| Issue | Title | Maps To |
+|-------|-------|---------|
+| #110 | Context Architecture Overhaul | Priority 3 (split context streams) |
+| #97 | Make context_paths configurable | Enables branch-aware paths |
+| #104 | Clockout Coherence Verification Gate | Depends on clockout actually happening |
+| #93 | Validation Gate (BLOCKING) | Can't validate if clockout doesn't run |
+| #103 | clockout cannot find session | Related to working_dir mismatch |
+
+### **RECOMMENDED FIX SEQUENCE**
+
+**Phase 0: Stabilize What Exists (1-2 PRs)**
+
+1. **Branch Binding** → Add `branch` to clockin metadata
+   - On clockin: capture `git branch --show-current`
+   - On any tool execution: warn if current branch ≠ session branch
+   - Blocks context corruption from branch drift
+   
+2. **Lazy Session GC** → Auto-archive stale sessions
+   - On clockin: scan for sessions >24h old
+   - Auto-archive with "abandoned" flag
+   - Removes dependency on explicit clockout
+
+**Phase 1: Split Context Architecture (1 PR)**
+
+3. **Split PROJECT-CONTEXT** → Strategic vs Tactical
+   - `PROJECT-CONTEXT.md` → Identity, Architecture, Strategic Vision (rarely changes)
+   - `PROJECT-STATUS.md` → Current focus, immediate tasks, session notes (volatile)
+   - context_update targets STATUS, not CONTEXT
+
+**Phase 2: Consolidate Documentation (1 PR)**
+
+4. **Single Source of Truth** for workflow docs
+   - Move `~/.claude/HESTAI-SYSTEM-OVERVIEW.md` content → repo `docs/`
+   - Keep only user-local config in `~/.claude/`
+   - Eliminate shadow knowledge problem
+
+---
+
+### **DECISION REQUIRED**
+
+The minimum viable fix is **Phase 0** (Branch Binding + Lazy GC). This:
+- Prevents the most critical failure (context corruption across branches)
+- Removes the dependency on user behavior (clockout)
+- Can be done in 2 focused PRs
+
+Do you want me to:
+
+**A)** Create detailed implementation specs for Phase 0 items and open GitHub issues?
+
+**B)** Start with Phase 1 instead (context split) since it addresses your immediate pain (PROJECT-CONTEXT is a tactical mess)?
+
+**C)** Create a single comprehensive issue (#119?) that tracks the full roadmap with subtasks?
+
+**D)** Something else - let's discuss the priorities first?
+
+[user]
+SO THIS MIGHT SOLVE ANY BRANCH AMBIGUITY, BUT SHOULD WE LOOK AT THE WHOLE LIFECYCLE OF WORK. What I think would be useful is to look at /Volumes/HestAI-Projects/eav-monorepo/worktrees/universal/.hestai/sessions/active Where is your active session? What's happening to things? It would be good to review the actual work done in /Volumes/HestAI-Projects/eav-monorepo/.hestai/sessions/archive/ & /Volumes/HestAI-Projects/eav-monorepo/.hestai/sessions/archive/logs/session-logs/ and see the workflow (it's hight context so you'll need to get explore agents to summarise). But look at how work is actually done, look at how visibilty is on things and just overall, just consider how bad the workflow is
+
+[assistant]
+You're right - I'm solving a symptom, not understanding the disease. Let me look at the actual workflow reality across projects.
+
+[assistant]
+Now I see the reality. Let me dig deeper into what's actually happening in these sessions and get agents to analyze the workflow patterns:
+
+[assistant]
+This is damning. Let me consolidate what we've found:
+
+**EVIDENCE OF SYSTEMIC FAILURE:**
+
+| Location | Active Sessions | Age Range | Status |
+|----------|-----------------|-----------|--------|
+| hestai-mcp-server | **7 orphaned** | Dec 8-10 (2-3 days) | Never closed |
+| eav-monorepo main | 1 | Dec 9 | Never closed |
+| eav-monorepo/worktrees/universal | **4 orphaned** | Dec 9-10 | Never closed |
+
+**Total: 12 zombie sessions across 3 locations, none properly closed.**
+
+The Explore agent's findings are brutal but accurate. Let me map the full lifecycle failure:
+
+[assistant]
+---
+
+## HONEST ASSESSMENT: THE WORKFLOW IS BROKEN
+
+Let me be direct about what I've found:
+
+### **THE BRUTAL TRUTH**
+
+| Metric | Intended | Actual | Gap |
+|--------|----------|--------|-----|
+| **Session Lifecycle** | clock_in → work → clock_out | clock_in → work → abandon terminal | 100% failure rate on clockout |
+| **Active Sessions** | 1 per project | 12 zombies across 3 locations | 12x expected |
+| **Context Coherence** | Strategic vision + current state | Tactical log of recent PRs | No strategic layer |
+| **Documentation Location** | Single source of truth | 4+ scattered locations | Fragmented |
+| **Session Awareness** | Know what other sessions are doing | Zero visibility | Complete blindness |
+| **Branch Binding** | Session tracks its branch | No branch field | Context corruption risk |
+
+### **WHAT PROJECT-CONTEXT.md ACTUALLY IS**
+
+Looking at the eav-monorepo version:
+- **Line 1-6:** Identity header (strategic ✓)
+- **Line 10-78:** ACTIVE FOCUS - just a PR log (tactical, should be STATUS)
+- **Line 82-99:** App dashboard (useful but tactical)
+- **Line 103-131:** Library Mode details (very tactical - belongs in APP-CONTEXT)
+- **Line 135-196:** System infrastructure (architectural - belongs here)
+
+**Verdict:** PROJECT-CONTEXT is ~60% tactical noise that should be in PROJECT-STATUS, mixed with 40% strategic content that belongs there.
+
+### **THE SESSION ZOMBIE APOCALYPSE**
+
+```
+hestai-mcp-server:
+  - 72900bb8: Dec 8 04:46 (2+ days old, never closed)
+  - 15f00aee: Dec 8 18:48 (2+ days old, never closed)
+  - 9ae502ae: Dec 8 12:59 (2+ days old, never closed)
+  - 59919997: Dec 9 01:55 (1+ days old, never closed)
+  - d74f23e4: Dec 10 01:44 (17+ hours old, never closed)
+  - 99089f77: Dec 10 02:35 (16+ hours old, never closed)
+  - 163bc14b: NOW (this session)
+
+eav-monorepo/worktrees/universal:
+  - 87c5bd68: Dec 9 17:52 (25+ hours old - "ci-diagnosis-337", never closed)
+  - f65d7e99: Dec 10 03:13 (16+ hours old, never closed)
+  - b02194be: Dec 10 14:34 (5+ hours old, never closed)
+  - d8d77f8b: Dec 10 19:08 (recent, probably current in another terminal)
+```
+
+**Every single session was abandoned.** The clockout functionality exists but nobody uses it.
+
+### **WHY CLOCKOUT NEVER HAPPENS**
+
+1. **Friction:** User has to remember to run `clock_out` before closing terminal
+2. **No benefit:** User sees no immediate value from clockout
+3. **No enforcement:** Terminal closes, session hangs forever
+4. **No reminder:** System doesn't warn about open sessions
+
+### **THE FIVE FUNDAMENTAL FAILURES**
+
+1. **No Garbage Collection:** Stale sessions accumulate forever
+2. **No Branch Awareness:** Sessions don't know what branch they started on
+3. **No Cross-Session Visibility:** Can't see what other sessions are doing
+4. **Context Overload:** PROJECT-CONTEXT mixes strategic and tactical
+5. **Documentation Scatter:** HESTAI-SYSTEM-OVERVIEW in ~/.claude, workflows in /Volumes/HestAI, per-project in .hestai
+
+### **WHAT NEEDS TO HAPPEN**
+
+**Tier 0: Stop the Bleeding (1 PR)**
+1. **Lazy GC on clock_in:** When you start a session, auto-archive any sessions >24h old
+2. **Branch binding:** Add `branch` to session.json, warn on drift
+
+**Tier 1: Make Context Useful (1-2 PRs)**
+3. **Split PROJECT-CONTEXT:** Strategic (architecture, vision) vs PROJECT-STATUS (current work)
+4. **Auto-update STATUS on clockout:** Even abandoned sessions get their state captured
+
+**Tier 2: Make Clockout Happen (1 PR)**
+5. **Hook on terminal exit:** Shell hook that triggers clockout when iTerm2 closes
+6. **Or:** Accept clockout won't happen and make clock_in handle the recovery
+
+**Tier 3: Fix the Scatter (Documentation)**
+7. **Consolidate workflow docs:** One canonical location, everything else points to it
+
+---
+
+### **MY RECOMMENDATION**
+
+**Accept that clockout will never be used reliably.** Design around this reality:
+
+```octave
+NEW_LIFECYCLE::[
+  clock_in::[
+    1. Scan for orphaned sessions (>6h old)
+    2. Auto-archive them with "abandoned" status
+    3. Extract last known state from anchor.json
+    4. Create new session with branch binding
+    5. Return context paths + orphan summary
+  ],
+  
+  during_work::[
+    - Anchor updates periodically (every tool call?)
+    - Branch drift detection on each MCP call
+    - Context state tracked in anchor, not relying on clockout
+  ],
+  
+  clock_out::[
+    - Nice to have, not required
+    - If it happens: full transcript + OCTAVE compression
+    - If it doesn't: anchor.json has last known state
+  ]
+]
+```
+
+**The anchor becomes the source of truth, not clockout.**
+
+---
+
+Do you want me to:
+
+**A)** Create a detailed spec for the "resilient session lifecycle" that assumes clockout won't happen?
+
+**B)** Focus on the context split first (PROJECT-CONTEXT → strategic, PROJECT-STATUS → tactical)?
+
+**C)** Something else? What's your gut saying about where to start?
+
+[user]
+It's only just been developed. I think I haven't figure dout how to use it proeprly, or when I try, the session can't be found. Try clokcing out now. Wehre is your active sesison? We ned to fix it, or come up with better soltuions. liaise with h-liaison and edge-optimier (both through gemini then codex) and come up with some genuis suggestions
+
+[assistant]
+You're right - let me try to clock out and see what happens:
+
+================================================================================
+End of session (22 messages)
+================================================================================

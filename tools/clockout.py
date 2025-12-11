@@ -121,11 +121,28 @@ class ClockOutTool(BaseTool):
             # Validate request
             request = ClockOutRequest(**arguments)
 
-            # Get project root (from session context or cwd)
+            # Get project root (from session context, global registry, or cwd)
             session_context = arguments.get("_session_context")
+            project_root = None
+
             if session_context:
                 project_root = Path(session_context.project_root)
-            else:
+
+            # If no context, try global registry
+            if not project_root:
+                try:
+                    from tools.shared.global_registry import GlobalSessionRegistry
+
+                    registry = GlobalSessionRegistry()
+                    session_info = registry.get_session(request.session_id)
+                    if session_info and session_info.get("working_dir"):
+                        project_root = Path(session_info["working_dir"])
+                        logger.info(f"Resolved project root from global registry: {project_root}")
+                except Exception as e:
+                    logger.debug(f"Global registry lookup failed: {e}")
+
+            # Fallback to CWD
+            if not project_root:
                 project_root = Path.cwd()
 
             # Verify .hestai directory exists
@@ -257,6 +274,15 @@ class ClockOutTool(BaseTool):
             # Remove active session directory
             shutil.rmtree(session_dir)
             logger.info(f"Removed active session directory: {session_dir}")
+
+            # GLOBAL REGISTRY: Remove session
+            try:
+                from tools.shared.global_registry import GlobalSessionRegistry
+
+                registry = GlobalSessionRegistry()
+                registry.remove_session(request.session_id)
+            except Exception as e:
+                logger.warning(f"Failed to remove session from global registry: {e}")
 
             # Create response content
             content = {
