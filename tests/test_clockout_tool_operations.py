@@ -11,11 +11,39 @@ from pathlib import Path
 
 import pytest
 
-# Import fixtures from test_clockout
-# F401: imported but unused (fixture injection)
-# F811: redefinition (temp_hestai_dir used as function parameter)
-from tests.test_clockout import clockout_tool, temp_hestai_dir  # noqa: F401, F811
 from tools.clockout import ClockOutTool
+
+
+@pytest.fixture
+def temp_hestai_dir(tmp_path):
+    """Create a temporary .hestai directory structure"""
+    hestai_dir = tmp_path / ".hestai"
+    sessions_dir = hestai_dir / "sessions"
+    active_dir = sessions_dir / "active"
+    archive_dir = sessions_dir / "archive"
+
+    # Create directory structure
+    active_dir.mkdir(parents=True)
+    archive_dir.mkdir(parents=True)
+
+    # Create active session - use unique session_id for testing
+    session_id = "test-tool-ops-00000000-0000-0000-0000-000000000002"
+    session_dir = active_dir / session_id
+    session_dir.mkdir()
+
+    session_data = {
+        "session_id": session_id,
+        "role": "implementation-lead",
+        "focus": "b2-implementation",
+        "working_dir": str(tmp_path),
+        "started_at": "2025-12-08T10:00:00",
+    }
+    (session_dir / "session.json").write_text(json.dumps(session_data))
+
+    yield hestai_dir, session_id
+
+    # Cleanup
+    shutil.rmtree(hestai_dir, ignore_errors=True)
 
 
 @pytest.fixture
