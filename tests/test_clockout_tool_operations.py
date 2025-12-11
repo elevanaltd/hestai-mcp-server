@@ -133,7 +133,7 @@ class TestToolOperationExtraction:
         EXPECTED BEHAVIOR: tool_use entries should be extracted with tool name and params
         """
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(temp_jsonl_with_tools)
+        messages, model_history = tool._parse_session_transcript(temp_jsonl_with_tools)
 
         # Find tool_use entries
         tool_uses = [msg for msg in messages if msg.get("type") == "tool_use"]
@@ -159,7 +159,7 @@ class TestToolOperationExtraction:
         EXPECTED BEHAVIOR: tool_result entries should be extracted with status and output summary
         """
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(temp_jsonl_with_tools)
+        messages, model_history = tool._parse_session_transcript(temp_jsonl_with_tools)
 
         # Find tool_result entries
         tool_results = [msg for msg in messages if msg.get("type") == "tool_result"]
@@ -177,7 +177,7 @@ class TestToolOperationExtraction:
         This ensures we don't break existing functionality.
         """
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(temp_jsonl_with_tools)
+        messages, model_history = tool._parse_session_transcript(temp_jsonl_with_tools)
 
         # Find user/assistant messages
         user_msgs = [msg for msg in messages if msg.get("role") == "user"]
@@ -202,7 +202,7 @@ class TestToolOperationExtraction:
         8. assistant: "All tests passed successfully!"
         """
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(temp_jsonl_with_tools)
+        messages, model_history = tool._parse_session_transcript(temp_jsonl_with_tools)
 
         # Should have all 8 entries in order
         assert len(messages) == 8
@@ -225,7 +225,7 @@ class TestToolOperationExtraction:
         EXPECTED BEHAVIOR: Tool operations appear as [TOOL: name] with params/results
         """
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(temp_jsonl_with_tools)
+        messages, model_history = tool._parse_session_transcript(temp_jsonl_with_tools)
 
         session_data = {
             "session_id": "test-123",
@@ -271,7 +271,7 @@ class TestToolOperationExtraction:
                 f.write(json.dumps(entry) + "\n")
 
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(jsonl_path)
+        messages, model_history = tool._parse_session_transcript(jsonl_path)
 
         # Tool result should be summarized, not 10KB
         tool_result = next((msg for msg in messages if msg.get("type") == "tool_result"), None)
@@ -306,7 +306,7 @@ class TestToolOperationExtraction:
                 f.write(json.dumps(entry) + "\n")
 
         tool = ClockOutTool()
-        messages = tool._parse_session_transcript(jsonl_path)
+        messages, model_history = tool._parse_session_transcript(jsonl_path)
 
         tool_use = next((msg for msg in messages if msg.get("type") == "tool_use"), None)
         assert tool_use is not None

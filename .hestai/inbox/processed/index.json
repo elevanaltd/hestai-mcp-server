@@ -48,7 +48,21 @@
       "session_id": "direct",
       "timestamp": "2025-12-10T19:10:23.617832",
       "processed_at": "2025-12-10T19:11:01.914072"
+    },
+    {
+      "uuid": "b8bb26a6-2386-45dc-b881-6046df97eed1",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-11T18:27:34.301378",
+      "processed_at": "2025-12-11T18:28:34.437550"
+    },
+    {
+      "uuid": "52852911-fc62-44dc-adc8-965c998d566e",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-11T21:36:46.436488",
+      "processed_at": "2025-12-11T21:37:47.918937"
     }
   ],
-  "last_updated": "2025-12-10T19:11:01.914416"
+  "last_updated": "2025-12-11T21:37:47.919293"
 }

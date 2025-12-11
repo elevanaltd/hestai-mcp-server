@@ -182,7 +182,10 @@ class ClockOutTool(BaseTool):
                 # Non-fatal - continue with parsing
 
             # Parse session transcript
-            messages = self._parse_session_transcript(jsonl_path)
+            messages, model_history = self._parse_session_transcript(jsonl_path)
+
+            # Add model_history to session_data for archive and AI compression
+            session_data["model_history"] = model_history
 
             # Generate summary
             summary = self._generate_summary(messages, session_data, request.description)
@@ -214,6 +217,8 @@ class ClockOutTool(BaseTool):
                     result = await ai.run_task(
                         "session_compression",
                         session_id=request.session_id,
+                        model=session_data.get("model", "unknown"),
+                        model_history=session_data.get("model_history", []),
                         role=session_data.get("role", "unknown"),
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
@@ -238,6 +243,10 @@ class ClockOutTool(BaseTool):
                                 octave_path.write_text(octave_content)
                                 octave_path_created = octave_path  # Track for response
                                 logger.info(f"AI compression saved to {octave_path}")
+
+                                # Extract learnings/decisions/blockers and append to learnings index
+                                learnings_keys = self._extract_learnings_keys(octave_content)
+                                self._append_to_learnings_index(session_data, learnings_keys, archive_dir)
 
                                 # Verify claims before context_update
                                 verification = self._verify_context_claims(octave_content, project_root)
@@ -613,23 +622,29 @@ class ClockOutTool(BaseTool):
         # Return most recently modified
         return max(jsonl_files, key=lambda p: p.stat().st_mtime)
 
-    def _parse_session_transcript(self, jsonl_path: Path) -> list[dict]:
+    def _parse_session_transcript(self, jsonl_path: Path) -> tuple[list[dict], list[dict]]:
         """
-        Extract user/assistant messages and tool operations from session JSONL.
+        Extract user/assistant messages, tool operations, and model history from session JSONL.
 
         Addresses Issue #120: Previously only extracted user/assistant messages,
         losing 98.6% of session content including tool_use and tool_result entries.
+
+        Now also extracts model history from assistant messages and model swap confirmations.
 
         Args:
             jsonl_path: Path to session JSONL file
 
         Returns:
-            List of message dicts with role/type, content, and tool metadata
+            Tuple of (messages, model_history)
+            - messages: List of message dicts with role/type, content, and tool metadata
+            - model_history: List of model change events with model, timestamp, line number
         """
         messages = []
+        model_history = []
+        current_model = None
 
         with open(jsonl_path) as f:
-            for line in f:
+            for line_num, line in enumerate(f):
                 if not line.strip():
                     continue
 
@@ -652,6 +667,37 @@ class ClockOutTool(BaseTool):
                             )
                         else:
                             text = ""
+
+                        # Extract model from assistant messages
+                        if entry_type == "assistant":
+                            msg_model = entry.get("message", {}).get("model")
+                            if msg_model and msg_model != current_model and msg_model != "<synthetic>":
+                                current_model = msg_model
+                                model_history.append(
+                                    {
+                                        "model": msg_model,
+                                        "timestamp": entry.get("timestamp"),
+                                        "line": line_num,
+                                    }
+                                )
+
+                        # Extract model swap confirmations from user messages
+                        if entry_type == "user" and "Set model to" in text:
+                            import re
+
+                            match = re.search(r"\((claude-[^)]+)\)", text)
+                            if match:
+                                swap_model = match.group(1)
+                                if swap_model != current_model:
+                                    current_model = swap_model
+                                    model_history.append(
+                                        {
+                                            "model": swap_model,
+                                            "timestamp": entry.get("timestamp"),
+                                            "line": line_num,
+                                            "source": "swap_command",
+                                        }
+                                    )
 
                         if text:
                             messages.append({"role": role, "content": text})
@@ -706,7 +752,7 @@ class ClockOutTool(BaseTool):
                     logger.warning(f"Failed to parse JSONL line: {e}")
                     continue
 
-        return messages
+        return messages, model_history
 
     def _redact_sensitive_params(self, params: dict) -> dict:
         """
@@ -827,6 +873,13 @@ class ClockOutTool(BaseTool):
         lines.append("=" * 80)
         lines.append("Claude Code Session Export")
         lines.append(f"Session ID: {session_data.get('session_id', 'unknown')}")
+        lines.append(f"Model: {session_data.get('model', 'unknown')}")
+
+        # Add model history if available
+        if session_data.get("model_history"):
+            models_summary = " → ".join([m["model"].replace("claude-", "") for m in session_data["model_history"]])
+            lines.append(f"Models Used: {models_summary}")
+
         lines.append(f"Role: {session_data.get('role', 'unknown')}")
         lines.append(f"Focus: {session_data.get('focus', 'general')}")
         lines.append(f"Started: {session_data.get('started_at', 'unknown')}")
@@ -964,6 +1017,83 @@ class ClockOutTool(BaseTool):
 
         # Return verification result
         return {"passed": len(issues) == 0, "issues": issues, "advisory": advisory}
+
+    def _extract_learnings_keys(self, octave_content: str) -> dict:
+        """
+        Extract learnings, decisions, and blockers keys from OCTAVE content.
+
+        Parses the ===DECISIONS===, ===BLOCKERS===, and ===LEARNINGS=== sections
+        to extract the unique keys for cross-session visibility.
+
+        Args:
+            octave_content: OCTAVE compressed session content
+
+        Returns:
+            dict with lists of {learnings: [...], decisions: [...], blockers: [...]}
+        """
+        import re
+
+        result = {"learnings": [], "decisions": [], "blockers": []}
+
+        # Extract DECISIONS keys (format: DECISION_KEY::)
+        decisions_section = re.search(r"===DECISIONS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if decisions_section:
+            # Find all DECISION_* keys (including lowercase and underscores)
+            decision_matches = re.findall(r"DECISION_([A-Za-z_0-9]+)::", decisions_section.group(1))
+            result["decisions"] = list(set(decision_matches))  # Deduplicate
+
+        # Extract BLOCKERS keys (format: BLOCKER_KEY::)
+        blockers_section = re.search(r"===BLOCKERS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if blockers_section:
+            # Find all BLOCKER_* keys (including lowercase and underscores)
+            blocker_matches = re.findall(r"BLOCKER_([A-Za-z_0-9]+)::", blockers_section.group(1))
+            result["blockers"] = list(set(blocker_matches))
+
+        # Extract LEARNINGS keys (format: LEARNING_KEY::)
+        learnings_section = re.search(r"===LEARNINGS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if learnings_section:
+            # Find all LEARNING_* keys (including lowercase and underscores)
+            learning_matches = re.findall(r"LEARNING_([A-Za-z_0-9]+)::", learnings_section.group(1))
+            result["learnings"] = list(set(learning_matches))
+
+        return result
+
+    def _append_to_learnings_index(self, session_data: dict, learnings_keys: dict, archive_dir: Path) -> None:
+        """
+        Append session learnings summary to the learnings index JSONL file.
+
+        Atomic append-only operation. Graceful degradation if append fails
+        (logs warning but doesn't fail clockout).
+
+        Args:
+            session_data: Session metadata
+            learnings_keys: Dict with {learnings: [...], decisions: [...], blockers: [...]}
+            archive_dir: Path to archive directory
+        """
+        try:
+            # Prepare learnings index path
+            learnings_index = archive_dir.parent / "learnings-index.jsonl"
+
+            # Create index entry
+            index_entry = {
+                "session_id": session_data.get("session_id", "unknown"),
+                "role": session_data.get("role", "unknown"),
+                "branch": session_data.get("branch", "main"),
+                "timestamp": datetime.now().isoformat(),
+                "learnings": learnings_keys.get("learnings", []),
+                "decisions": learnings_keys.get("decisions", []),
+                "blockers": learnings_keys.get("blockers", []),
+            }
+
+            # Atomic append (open in append mode, write single line, close)
+            with open(learnings_index, "a") as f:
+                f.write(json.dumps(index_entry) + "\n")
+
+            logger.info(f"Appended session {session_data.get('session_id')} to learnings index")
+
+        except Exception as e:
+            # Graceful degradation - log warning but don't fail clockout
+            logger.warning(f"Failed to append to learnings index: {e}")
 
     def _extract_context_from_octave(self, octave_content: str) -> str:
         """

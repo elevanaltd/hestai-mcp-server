@@ -33,6 +33,7 @@ class ClockInRequest(BaseModel):
     role: str = Field(..., description="Agent role name (e.g., 'implementation-lead', 'critical-engineer')")
     focus: str = Field("general", description="Work focus area (e.g., 'b2-implementation', 'validation', 'general')")
     working_dir: str = Field(..., description="Project working directory path")
+    model: str | None = Field(None, description="AI model identifier (e.g., 'claude-opus-4-5-20251101')")
 
 
 class ClockInTool(BaseTool):
@@ -67,6 +68,11 @@ class ClockInTool(BaseTool):
                     "default": "general",
                 },
                 "working_dir": {"type": "string", "description": "Project working directory path"},
+                "model": {
+                    "type": ["string", "null"],
+                    "description": "AI model identifier (e.g., 'claude-opus-4-5-20251101')",
+                    "default": None,
+                },
             },
             "required": ["role", "working_dir"],
         }
@@ -145,6 +151,7 @@ class ClockInTool(BaseTool):
                 "focus": request.focus,
                 "working_dir": str(project_root),
                 "started_at": datetime.now().isoformat(),
+                "model": request.model,
                 # Store transcript_path if available from context (for clockout JSONL extraction)
                 "transcript_path": getattr(session_context, "transcript_path", None) if session_context else None,
             }

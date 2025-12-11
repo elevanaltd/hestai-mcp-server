@@ -190,8 +190,12 @@ logs/
 *.bak
 /worktrees
 /.coord
-# HestAI session data (ephemeral, not tracked)
+# HestAI session data per #120 retention policy
 /.hestai/sessions/active
+# Archive: JSONL too large, TXT is lossy intermediate (eliminated per #120)
+/.hestai/sessions/archive/*.jsonl
+/.hestai/sessions/archive/*.txt
+# TRACKED: *.oct.md (OCTAVE audit trail), *.verification.json
 
 # Track context files for cross-agent visibility (Claude Web, Codex)
 # But ignore temporary analysis artifacts

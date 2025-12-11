@@ -36,7 +36,7 @@ class TestClockOutEdgeCases:
                 f.write(json.dumps(entry) + "\n")
 
         # Should not raise AttributeError or TypeError
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         assert len(messages) == 1
         # Only the valid "OK" should be extracted.
@@ -56,7 +56,7 @@ class TestClockOutEdgeCases:
             for entry in jsonl_content:
                 f.write(json.dumps(entry) + "\n")
 
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Should result in empty content -> filtered out if text check passes?
         # The code:
