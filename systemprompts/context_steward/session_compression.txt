@@ -13,6 +13,7 @@ SIGNAL_CONTEXT::[
 
 SESSION_CONTEXT::[
   ID::{{session_id}},
+  MODEL::{{model}},
   ROLE::{{role}},
   DURATION::{{duration}},
   BRANCH::{{branch}},
@@ -320,7 +321,7 @@ RESPONSE::[
       action::created,
       content::"===SESSION_COMPRESSION===
 
-METADATA::[SESSION_ID::{{session_id}}, ROLE::{{role}}, DURATION::{{duration}}, BRANCH::{{branch}}, GATES::{{gates_status}}]
+METADATA::[SESSION_ID::{{session_id}}, MODEL::{{model}}, ROLE::{{role}}, DURATION::{{duration}}, BRANCH::{{branch}}, GATES::{{gates_status}}]
 
 DECISIONS::[
   DECISION_1::BECAUSE[constraint_or_reason]→choice→outcome,

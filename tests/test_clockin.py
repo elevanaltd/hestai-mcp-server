@@ -312,3 +312,69 @@ class TestClockInTool:
 
         assert "transcript_path" in session_data
         assert session_data["transcript_path"] is None
+
+    @pytest.mark.asyncio
+    async def test_clockin_with_model_parameter(self, clockin_tool, temp_hestai_dir):
+        """Test clock_in stores model identifier in session.json when provided"""
+        working_dir = temp_hestai_dir.parent
+        test_model = "claude-opus-4-5-20251101"
+
+        arguments = {
+            "role": "implementation-lead",
+            "focus": "general",
+            "working_dir": str(working_dir),
+            "model": test_model,
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockin_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        session_id = content["session_id"]
+
+        # Verify session.json contains model
+        session_dir = temp_hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+
+        assert "model" in session_data
+        assert session_data["model"] == test_model
+
+    @pytest.mark.asyncio
+    async def test_clockin_without_model_parameter(self, clockin_tool, temp_hestai_dir):
+        """Test clock_in stores None for model when not provided"""
+        working_dir = temp_hestai_dir.parent
+
+        arguments = {
+            "role": "implementation-lead",
+            "focus": "general",
+            "working_dir": str(working_dir),
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockin_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+        session_id = content["session_id"]
+
+        # Verify session.json contains model as None
+        session_dir = temp_hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+
+        assert "model" in session_data
+        assert session_data["model"] is None

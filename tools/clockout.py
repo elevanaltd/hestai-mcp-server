@@ -214,6 +214,7 @@ class ClockOutTool(BaseTool):
                     result = await ai.run_task(
                         "session_compression",
                         session_id=request.session_id,
+                        model=session_data.get("model", "unknown"),
                         role=session_data.get("role", "unknown"),
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
@@ -827,6 +828,7 @@ class ClockOutTool(BaseTool):
         lines.append("=" * 80)
         lines.append("Claude Code Session Export")
         lines.append(f"Session ID: {session_data.get('session_id', 'unknown')}")
+        lines.append(f"Model: {session_data.get('model', 'unknown')}")
         lines.append(f"Role: {session_data.get('role', 'unknown')}")
         lines.append(f"Focus: {session_data.get('focus', 'general')}")
         lines.append(f"Started: {session_data.get('started_at', 'unknown')}")
