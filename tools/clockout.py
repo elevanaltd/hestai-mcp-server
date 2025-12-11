@@ -10,7 +10,6 @@ Part of the Context Steward session lifecycle management system.
 import json
 import logging
 import os
-import shutil
 import time
 from datetime import datetime
 from pathlib import Path
@@ -168,6 +167,19 @@ class ClockOutTool(BaseTool):
 
             # Find Claude session JSONL using dual-path resolution
             jsonl_path = self._resolve_transcript_path(session_data, project_root)
+
+            # Preserve raw JSONL before parsing (Issue #120)
+            # This maintains complete session history for potential future analysis
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            raw_jsonl_path = archive_dir / f"{request.session_id}-raw.jsonl"
+            try:
+                import shutil
+
+                shutil.copy(jsonl_path, raw_jsonl_path)
+                logger.info(f"Preserved raw JSONL to {raw_jsonl_path}")
+            except Exception as e:
+                logger.warning(f"Failed to preserve raw JSONL: {e}")
+                # Non-fatal - continue with parsing
 
             # Parse session transcript
             messages = self._parse_session_transcript(jsonl_path)
@@ -603,13 +615,16 @@ class ClockOutTool(BaseTool):
 
     def _parse_session_transcript(self, jsonl_path: Path) -> list[dict]:
         """
-        Extract user/assistant messages from session JSONL.
+        Extract user/assistant messages and tool operations from session JSONL.
+
+        Addresses Issue #120: Previously only extracted user/assistant messages,
+        losing 98.6% of session content including tool_use and tool_result entries.
 
         Args:
             jsonl_path: Path to session JSONL file
 
         Returns:
-            List of message dicts with role and content
+            List of message dicts with role/type, content, and tool metadata
         """
         messages = []
 
@@ -641,6 +656,49 @@ class ClockOutTool(BaseTool):
                         if text:
                             messages.append({"role": role, "content": text})
 
+                    elif entry_type == "tool_use":
+                        # Extract tool invocation with redacted/summarized params
+                        tool_name = entry.get("name", "unknown")
+                        tool_id = entry.get("id", "unknown")
+                        raw_params = entry.get("input", {})
+
+                        # Redact sensitive parameters
+                        params = self._redact_sensitive_params(raw_params)
+
+                        messages.append(
+                            {
+                                "type": "tool_use",
+                                "name": tool_name,
+                                "id": tool_id,
+                                "params": params,
+                            }
+                        )
+
+                    elif entry_type == "tool_result":
+                        # Extract tool result with summarized output
+                        tool_use_id = entry.get("tool_use_id", "unknown")
+                        content_parts = entry.get("content", [])
+
+                        # Summarize large outputs
+                        if isinstance(content_parts, list):
+                            text_parts = [
+                                part.get("text", "")
+                                for part in content_parts
+                                if isinstance(part, dict) and part.get("type") == "text"
+                            ]
+                            combined_text = "\n".join(text_parts)
+                            output = self._summarize_tool_output(combined_text)
+                        else:
+                            output = str(content_parts)[:500]  # Truncate if string
+
+                        messages.append(
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": tool_use_id,
+                                "output": output,
+                            }
+                        )
+
                     # Note: thinking messages excluded by default as per spec
                     # They can be included in future enhancement with include_thinking flag
 
@@ -649,6 +707,81 @@ class ClockOutTool(BaseTool):
                     continue
 
         return messages
+
+    def _redact_sensitive_params(self, params: dict) -> dict:
+        """
+        Redact sensitive parameters from tool invocations.
+
+        Security: Prevents exposure of API keys, passwords, tokens in session archives.
+
+        Args:
+            params: Raw tool parameters
+
+        Returns:
+            Sanitized parameters with sensitive values redacted
+        """
+        if not isinstance(params, dict):
+            return {}
+
+        # Patterns for sensitive keys
+        sensitive_patterns = [
+            "key",
+            "password",
+            "token",
+            "secret",
+            "auth",
+            "bearer",
+            "credential",
+            "api_key",
+            "access_token",
+        ]
+
+        redacted = {}
+        for key, value in params.items():
+            key_lower = key.lower()
+
+            # Check if key contains sensitive pattern
+            if any(pattern in key_lower for pattern in sensitive_patterns):
+                redacted[key] = "***REDACTED***"
+            # Recursively redact nested dictionaries
+            elif isinstance(value, dict):
+                redacted[key] = self._redact_sensitive_params(value)
+            # Check if value looks like a secret (long alphanumeric string)
+            elif isinstance(value, str) and len(value) > 20 and any(c.isalnum() for c in value):
+                # Could be a secret - redact if it has key-like patterns
+                if any(pattern in value.lower() for pattern in ["sk-", "bearer ", "token "]):
+                    redacted[key] = "***REDACTED***"
+                else:
+                    # Truncate long values to prevent bloat
+                    redacted[key] = value[:100] + "..." if len(value) > 100 else value
+            else:
+                # Safe to include
+                redacted[key] = value
+
+        return redacted
+
+    def _summarize_tool_output(self, output: str, max_length: int = 500) -> str:
+        """
+        Summarize tool output to prevent archive bloat.
+
+        Performance: Large tool outputs (file contents, test results) can be >10KB.
+        Archives should capture essence, not dump full content.
+
+        Args:
+            output: Raw tool output
+            max_length: Maximum length for summary
+
+        Returns:
+            Summarized output
+        """
+        if not output:
+            return ""
+
+        # Truncate long outputs
+        if len(output) > max_length:
+            return output[:max_length] + f"\n... (truncated {len(output) - max_length} chars)"
+
+        return output
 
     def _generate_summary(self, messages: list[dict], session_data: dict, description: str) -> str:
         """
@@ -704,14 +837,39 @@ class ClockOutTool(BaseTool):
         lines.append("=" * 80)
         lines.append("")
 
-        # Messages
+        # Messages - now includes tool operations
         for msg in messages:
-            role = msg["role"]
-            content = msg["content"]
+            msg_type = msg.get("type")
 
-            lines.append(f"[{role}]")
-            lines.append(content)
-            lines.append("")
+            if msg_type == "tool_use":
+                # Format tool invocation
+                tool_name = msg.get("name", "unknown")
+                params = msg.get("params", {})
+
+                lines.append(f"[TOOL: {tool_name}]")
+                if params:
+                    # Format params as key=value pairs
+                    param_lines = [f"  {k}: {v}" for k, v in params.items()]
+                    lines.append("\n".join(param_lines))
+                lines.append("")
+
+            elif msg_type == "tool_result":
+                # Format tool result
+                tool_use_id = msg.get("tool_use_id", "unknown")
+                output = msg.get("output", "")
+
+                lines.append(f"[TOOL_RESULT: {tool_use_id}]")
+                lines.append(output)
+                lines.append("")
+
+            else:
+                # Regular user/assistant message
+                role = msg.get("role", "unknown")
+                content = msg.get("content", "")
+
+                lines.append(f"[{role}]")
+                lines.append(content)
+                lines.append("")
 
         # Footer
         lines.append("=" * 80)

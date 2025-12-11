@@ -1,0 +1,4 @@
+# HestAI Session Archives - Raw JSONL files
+# These files can be large (>1MB) and contain complete session history
+# They are preserved locally but not tracked in git
+*-raw.jsonl
