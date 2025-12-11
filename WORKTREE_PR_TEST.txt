@@ -1,0 +1,11 @@
+Test file to verify worktree → branch → PR workflow
+Created: 2025-12-11
+Branch: worktree-branch-operations
+Purpose: Bypass Crystal's "merge to main" - push directly from worktree branch
+
+This tests the workflow:
+1. Work in worktree (isolated)
+2. Commit to worktree branch (not main)
+3. Push worktree branch to origin
+4. Create PR from worktree branch → main
+5. Use Crystal's "rebase from main" only when needed
