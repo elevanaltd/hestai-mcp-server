@@ -244,6 +244,10 @@ class ClockOutTool(BaseTool):
                                 octave_path_created = octave_path  # Track for response
                                 logger.info(f"AI compression saved to {octave_path}")
 
+                                # Extract learnings/decisions/blockers and append to learnings index
+                                learnings_keys = self._extract_learnings_keys(octave_content)
+                                self._append_to_learnings_index(session_data, learnings_keys, archive_dir)
+
                                 # Verify claims before context_update
                                 verification = self._verify_context_claims(octave_content, project_root)
 
@@ -1013,6 +1017,83 @@ class ClockOutTool(BaseTool):
 
         # Return verification result
         return {"passed": len(issues) == 0, "issues": issues, "advisory": advisory}
+
+    def _extract_learnings_keys(self, octave_content: str) -> dict:
+        """
+        Extract learnings, decisions, and blockers keys from OCTAVE content.
+
+        Parses the ===DECISIONS===, ===BLOCKERS===, and ===LEARNINGS=== sections
+        to extract the unique keys for cross-session visibility.
+
+        Args:
+            octave_content: OCTAVE compressed session content
+
+        Returns:
+            dict with lists of {learnings: [...], decisions: [...], blockers: [...]}
+        """
+        import re
+
+        result = {"learnings": [], "decisions": [], "blockers": []}
+
+        # Extract DECISIONS keys (format: DECISION_KEY::)
+        decisions_section = re.search(r"===DECISIONS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if decisions_section:
+            # Find all DECISION_* keys (including lowercase and underscores)
+            decision_matches = re.findall(r"DECISION_([A-Za-z_0-9]+)::", decisions_section.group(1))
+            result["decisions"] = list(set(decision_matches))  # Deduplicate
+
+        # Extract BLOCKERS keys (format: BLOCKER_KEY::)
+        blockers_section = re.search(r"===BLOCKERS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if blockers_section:
+            # Find all BLOCKER_* keys (including lowercase and underscores)
+            blocker_matches = re.findall(r"BLOCKER_([A-Za-z_0-9]+)::", blockers_section.group(1))
+            result["blockers"] = list(set(blocker_matches))
+
+        # Extract LEARNINGS keys (format: LEARNING_KEY::)
+        learnings_section = re.search(r"===LEARNINGS===(.*?)(?:===|$)", octave_content, re.DOTALL)
+        if learnings_section:
+            # Find all LEARNING_* keys (including lowercase and underscores)
+            learning_matches = re.findall(r"LEARNING_([A-Za-z_0-9]+)::", learnings_section.group(1))
+            result["learnings"] = list(set(learning_matches))
+
+        return result
+
+    def _append_to_learnings_index(self, session_data: dict, learnings_keys: dict, archive_dir: Path) -> None:
+        """
+        Append session learnings summary to the learnings index JSONL file.
+
+        Atomic append-only operation. Graceful degradation if append fails
+        (logs warning but doesn't fail clockout).
+
+        Args:
+            session_data: Session metadata
+            learnings_keys: Dict with {learnings: [...], decisions: [...], blockers: [...]}
+            archive_dir: Path to archive directory
+        """
+        try:
+            # Prepare learnings index path
+            learnings_index = archive_dir.parent / "learnings-index.jsonl"
+
+            # Create index entry
+            index_entry = {
+                "session_id": session_data.get("session_id", "unknown"),
+                "role": session_data.get("role", "unknown"),
+                "branch": session_data.get("branch", "main"),
+                "timestamp": datetime.now().isoformat(),
+                "learnings": learnings_keys.get("learnings", []),
+                "decisions": learnings_keys.get("decisions", []),
+                "blockers": learnings_keys.get("blockers", []),
+            }
+
+            # Atomic append (open in append mode, write single line, close)
+            with open(learnings_index, "a") as f:
+                f.write(json.dumps(index_entry) + "\n")
+
+            logger.info(f"Appended session {session_data.get('session_id')} to learnings index")
+
+        except Exception as e:
+            # Graceful degradation - log warning but don't fail clockout
+            logger.warning(f"Failed to append to learnings index: {e}")
 
     def _extract_context_from_octave(self, octave_content: str) -> str:
         """

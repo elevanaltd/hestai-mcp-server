@@ -1643,6 +1643,265 @@ class TestModelHistoryExtraction:
         assert model_history[0].get("source") == "swap_command"
 
 
+class TestLearningsIndexFeature:
+    """Test suite for cross-session learnings index feature"""
+
+    @pytest.mark.asyncio
+    async def test_clockout_appends_to_learnings_index(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that clockout appends session learnings to learnings-index.jsonl"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Update session data with correct branch
+        session_dir = hestai_dir / "sessions" / "active" / session_id
+        session_file = session_dir / "session.json"
+        session_data = json.loads(session_file.read_text())
+        session_data["branch"] = "feature/learnings-index"
+        session_file.write_text(json.dumps(session_data))
+
+        # Create files to pass verification
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "clockout.py").write_text("# implementation")
+
+        # Mock AI to return OCTAVE content with learnings/decisions/blockers
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                octave_content = """
+===SESSION_COMPRESSION===
+
+METADATA::[
+  SESSION_ID::test-clockout-00000000-0000-0000-0000-000000000001,
+  ROLE::implementation-lead,
+  BRANCH::feature/learnings-index,
+  MESSAGES::25
+]
+
+===DECISIONS===
+
+DECISION_USE_JSONL_FORMAT::[
+  BECAUSE::append_only_pattern→no_race_conditions,
+  ACTION::chose_JSONL_over_markdown,
+  OUTCOME::atomic_writes_guaranteed
+]
+
+DECISION_GRACEFUL_DEGRADATION::[
+  BECAUSE::learnings_index→nice_to_have≠critical,
+  ACTION::log_warnings_dont_fail_clockout,
+  OUTCOME::core_clockout_always_succeeds
+]
+
+===BLOCKERS===
+
+BLOCKER_TEST_ISOLATION::ONGOING[requires_unique_session_ids]
+  ROOT::temporal_beacon_can_find_real_sessions,
+  IMPACT::tests_interfere_with_production
+
+===LEARNINGS===
+
+LEARNING_APPEND_ONLY_PATTERN::
+  PROBLEM::"How to handle concurrent writes to learnings index?",
+  DIAGNOSIS::"JSONL format + append mode = atomic operations",
+  WISDOM::"Append-only eliminates need for file locking",
+  TRANSFER::"Use JSONL for concurrent access patterns"
+
+LEARNING_MIP_COMPLIANCE::
+  PROBLEM::"How to keep implementation minimal?",
+  DIAGNOSIS::"Simple regex extraction sufficient for OCTAVE keys",
+  WISDOM::"Don't over-engineer - extract keys, not full content",
+  TRANSFER::"MIP = essential complexity only"
+
+===OUTCOMES===
+
+OUTCOME_LEARNINGS_INDEX_IMPLEMENTED::
+  DESCRIPTION::cross_session_visibility_achieved,
+  MEASUREMENT::JSONL_file_created_with_session_summary
+
+===END_SESSION_COMPRESSION===
+"""
+                return {"status": "success", "artifacts": [{"content": octave_content}]}
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test learnings index",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Verify learnings-index.jsonl was created/appended
+        learnings_index = hestai_dir / "sessions" / "learnings-index.jsonl"
+        assert learnings_index.exists(), "learnings-index.jsonl should be created"
+
+        # Read and verify the JSONL entry
+        entries = []
+        with open(learnings_index) as f:
+            for line in f:
+                entries.append(json.loads(line))
+
+        # Should have at least one entry
+        assert len(entries) > 0
+
+        # Find our session entry
+        session_entry = next((e for e in entries if e["session_id"] == session_id), None)
+        assert session_entry is not None, "Session should be in learnings index"
+
+        # Verify extracted keys
+        assert "learnings" in session_entry
+        assert "decisions" in session_entry
+        assert "blockers" in session_entry
+
+        # Verify specific keys were extracted (order doesn't matter)
+        assert set(session_entry["learnings"]) == {"APPEND_ONLY_PATTERN", "MIP_COMPLIANCE"}
+        assert set(session_entry["decisions"]) == {"USE_JSONL_FORMAT", "GRACEFUL_DEGRADATION"}
+        assert set(session_entry["blockers"]) == {"TEST_ISOLATION"}
+
+        # Verify metadata fields
+        assert session_entry["role"] == "implementation-lead"
+        assert session_entry["branch"] == "feature/learnings-index"
+        assert "timestamp" in session_entry
+
+    def test_extract_learnings_keys_from_octave(self, clockout_tool):
+        """Test that _extract_learnings_keys correctly parses OCTAVE sections"""
+        octave_content = """
+===DECISIONS===
+
+DECISION_MERGE_PR_348::[BECAUSE::race_condition]
+
+DECISION_CHERRY_PICK::[ACTION::extracted_8_commits]
+
+===BLOCKERS===
+
+BLOCKER_COPY_EDITOR_FLAKINESS::ONGOING[requires_investigation]
+
+BLOCKER_WORKTREE_SYNC::ONGOING[not_blocking]
+
+===LEARNINGS===
+
+LEARNING_FLAKINESS_vs_CORRECTNESS::
+  PROBLEM::"test reliability",
+  WISDOM::"separate concerns"
+
+LEARNING_OVER_ENGINEERING::
+  PROBLEM::"automation complexity"
+
+===END===
+"""
+
+        result = clockout_tool._extract_learnings_keys(octave_content)
+
+        # Verify all keys extracted correctly
+        assert set(result["decisions"]) == {"MERGE_PR_348", "CHERRY_PICK"}
+        assert set(result["blockers"]) == {"COPY_EDITOR_FLAKINESS", "WORKTREE_SYNC"}
+        assert set(result["learnings"]) == {"FLAKINESS_vs_CORRECTNESS", "OVER_ENGINEERING"}
+
+    def test_extract_learnings_keys_handles_empty_sections(self, clockout_tool):
+        """Test that empty OCTAVE sections return empty lists"""
+        octave_content = """
+===DECISIONS===
+
+===BLOCKERS===
+
+===LEARNINGS===
+
+===END===
+"""
+
+        result = clockout_tool._extract_learnings_keys(octave_content)
+
+        assert result["decisions"] == []
+        assert result["blockers"] == []
+        assert result["learnings"] == []
+
+    def test_extract_learnings_keys_handles_missing_sections(self, clockout_tool):
+        """Test that missing OCTAVE sections return empty lists"""
+        octave_content = """
+===SESSION_COMPRESSION===
+
+METADATA::[SESSION_ID::test]
+
+===END_SESSION_COMPRESSION===
+"""
+
+        result = clockout_tool._extract_learnings_keys(octave_content)
+
+        assert result["decisions"] == []
+        assert result["blockers"] == []
+        assert result["learnings"] == []
+
+    @pytest.mark.asyncio
+    async def test_learnings_index_graceful_degradation(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that learnings index failures don't break clockout"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Create files to pass verification
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "clockout.py").write_text("# implementation")
+
+        # Mock AI to return valid OCTAVE content
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                return {
+                    "status": "success",
+                    "artifacts": [
+                        {
+                            "content": """
+===SESSION_COMPRESSION===
+METADATA::[SESSION_ID::test]
+===DECISIONS===
+DECISION_TEST::[ACTION::test]
+===END_SESSION_COMPRESSION===
+"""
+                            + " " * 300  # Pad to exceed MIN_OCTAVE_LENGTH
+                        }
+                    ],
+                }
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        # Make sessions directory read-only to trigger write failure
+        sessions_dir = hestai_dir / "sessions"
+        sessions_dir.chmod(0o555)  # Read + execute only, no write
+
+        try:
+            arguments = {
+                "session_id": session_id,
+                "description": "Test graceful degradation",
+                "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+            }
+
+            result = await clockout_tool.execute(arguments)
+
+            # Parse result
+            result_text = result[0].text
+            output = json.loads(result_text)
+
+            # Clockout should still succeed even if learnings index append failed
+            assert output["status"] == "success"
+
+        finally:
+            # Restore permissions for cleanup
+            sessions_dir.chmod(0o755)
+
+
 class TestOctavePathInResponse:
     """Test suite for octave_path inclusion in clockout response"""
 
