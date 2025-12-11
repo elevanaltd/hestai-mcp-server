@@ -182,7 +182,10 @@ class ClockOutTool(BaseTool):
                 # Non-fatal - continue with parsing
 
             # Parse session transcript
-            messages = self._parse_session_transcript(jsonl_path)
+            messages, model_history = self._parse_session_transcript(jsonl_path)
+
+            # Add model_history to session_data for archive and AI compression
+            session_data["model_history"] = model_history
 
             # Generate summary
             summary = self._generate_summary(messages, session_data, request.description)
@@ -215,6 +218,7 @@ class ClockOutTool(BaseTool):
                         "session_compression",
                         session_id=request.session_id,
                         model=session_data.get("model", "unknown"),
+                        model_history=session_data.get("model_history", []),
                         role=session_data.get("role", "unknown"),
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
@@ -614,23 +618,29 @@ class ClockOutTool(BaseTool):
         # Return most recently modified
         return max(jsonl_files, key=lambda p: p.stat().st_mtime)
 
-    def _parse_session_transcript(self, jsonl_path: Path) -> list[dict]:
+    def _parse_session_transcript(self, jsonl_path: Path) -> tuple[list[dict], list[dict]]:
         """
-        Extract user/assistant messages and tool operations from session JSONL.
+        Extract user/assistant messages, tool operations, and model history from session JSONL.
 
         Addresses Issue #120: Previously only extracted user/assistant messages,
         losing 98.6% of session content including tool_use and tool_result entries.
+
+        Now also extracts model history from assistant messages and model swap confirmations.
 
         Args:
             jsonl_path: Path to session JSONL file
 
         Returns:
-            List of message dicts with role/type, content, and tool metadata
+            Tuple of (messages, model_history)
+            - messages: List of message dicts with role/type, content, and tool metadata
+            - model_history: List of model change events with model, timestamp, line number
         """
         messages = []
+        model_history = []
+        current_model = None
 
         with open(jsonl_path) as f:
-            for line in f:
+            for line_num, line in enumerate(f):
                 if not line.strip():
                     continue
 
@@ -653,6 +663,37 @@ class ClockOutTool(BaseTool):
                             )
                         else:
                             text = ""
+
+                        # Extract model from assistant messages
+                        if entry_type == "assistant":
+                            msg_model = entry.get("message", {}).get("model")
+                            if msg_model and msg_model != current_model and msg_model != "<synthetic>":
+                                current_model = msg_model
+                                model_history.append(
+                                    {
+                                        "model": msg_model,
+                                        "timestamp": entry.get("timestamp"),
+                                        "line": line_num,
+                                    }
+                                )
+
+                        # Extract model swap confirmations from user messages
+                        if entry_type == "user" and "Set model to" in text:
+                            import re
+
+                            match = re.search(r"\((claude-[^)]+)\)", text)
+                            if match:
+                                swap_model = match.group(1)
+                                if swap_model != current_model:
+                                    current_model = swap_model
+                                    model_history.append(
+                                        {
+                                            "model": swap_model,
+                                            "timestamp": entry.get("timestamp"),
+                                            "line": line_num,
+                                            "source": "swap_command",
+                                        }
+                                    )
 
                         if text:
                             messages.append({"role": role, "content": text})
@@ -707,7 +748,7 @@ class ClockOutTool(BaseTool):
                     logger.warning(f"Failed to parse JSONL line: {e}")
                     continue
 
-        return messages
+        return messages, model_history
 
     def _redact_sensitive_params(self, params: dict) -> dict:
         """
@@ -829,6 +870,12 @@ class ClockOutTool(BaseTool):
         lines.append("Claude Code Session Export")
         lines.append(f"Session ID: {session_data.get('session_id', 'unknown')}")
         lines.append(f"Model: {session_data.get('model', 'unknown')}")
+
+        # Add model history if available
+        if session_data.get("model_history"):
+            models_summary = " → ".join([m["model"].replace("claude-", "") for m in session_data["model_history"]])
+            lines.append(f"Models Used: {models_summary}")
+
         lines.append(f"Role: {session_data.get('role', 'unknown')}")
         lines.append(f"Focus: {session_data.get('focus', 'general')}")
         lines.append(f"Started: {session_data.get('started_at', 'unknown')}")

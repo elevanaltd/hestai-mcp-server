@@ -951,7 +951,7 @@ class TestContentFormatHandling:
                 f.write(json.dumps(entry) + "\n")
 
         # Parse messages
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Should successfully parse string content
         assert len(messages) == 2
@@ -986,7 +986,7 @@ class TestContentFormatHandling:
                 f.write(json.dumps(entry) + "\n")
 
         # Parse messages
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Should handle both formats
         assert len(messages) == 3
@@ -1013,7 +1013,7 @@ class TestContentFormatHandling:
                 f.write(json.dumps(entry) + "\n")
 
         # Parse messages - should not crash
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Empty string should be filtered out (if text:)
         # Only valid response should remain
@@ -1051,7 +1051,7 @@ class TestContentFormatHandling:
                 f.write(json.dumps(entry) + "\n")
 
         # Parse messages
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Should only extract text content, ignore image and tool_use
         assert len(messages) == 2
@@ -1080,7 +1080,7 @@ class TestContentFormatHandling:
                 f.write(json.dumps(entry) + "\n")
 
         # Should not raise TypeError, should skip null and keep valid
-        messages = clockout_tool._parse_session_transcript(jsonl_path)
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
 
         # Null text should be coerced to empty string and filtered out (if text:)
         # Only valid response should remain
@@ -1569,6 +1569,78 @@ PHASE_CHANGES::[B2[implementation] to B3[integration]]
     assert "implemented[tested]" in extracted
     assert "Z[v2.0+]" in extracted
     assert "B2[implementation]" in extracted
+
+
+class TestModelHistoryExtraction:
+    """Test suite for model history extraction from session JSONL"""
+
+    def test_parse_session_transcript_extracts_model_history(self, clockout_tool, temp_hestai_dir):
+        """Test that model swaps are extracted from JSONL."""
+        hestai_dir, _ = temp_hestai_dir
+
+        # Create JSONL with model swap
+        jsonl_content = """{"type":"assistant","message":{"model":"claude-opus-4-5-20251101","role":"assistant"},"timestamp":"2025-12-11T10:00:00Z"}
+{"type":"user","message":{"content":"<local-command-stdout>Set model to haiku (claude-haiku-4-5-20251001)</local-command-stdout>"},"timestamp":"2025-12-11T10:30:00Z"}
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","role":"assistant"},"timestamp":"2025-12-11T10:30:05Z"}"""
+
+        jsonl_path = hestai_dir.parent / "test.jsonl"
+        jsonl_path.write_text(jsonl_content)
+
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
+
+        assert len(model_history) == 2
+        assert model_history[0]["model"] == "claude-opus-4-5-20251101"
+        assert model_history[1]["model"] == "claude-haiku-4-5-20251001"
+
+    def test_parse_session_transcript_ignores_synthetic_model(self, clockout_tool, temp_hestai_dir):
+        """Test that <synthetic> model entries are ignored."""
+        hestai_dir, _ = temp_hestai_dir
+
+        jsonl_content = """{"type":"assistant","message":{"model":"<synthetic>","role":"assistant"},"timestamp":"2025-12-11T10:00:00Z"}
+{"type":"assistant","message":{"model":"claude-opus-4-5-20251101","role":"assistant"},"timestamp":"2025-12-11T10:00:05Z"}"""
+
+        jsonl_path = hestai_dir.parent / "test.jsonl"
+        jsonl_path.write_text(jsonl_content)
+
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
+
+        assert len(model_history) == 1
+        assert model_history[0]["model"] == "claude-opus-4-5-20251101"
+
+    def test_parse_session_transcript_deduplicates_consecutive_same_model(self, clockout_tool, temp_hestai_dir):
+        """Test that consecutive same-model entries are deduplicated."""
+        hestai_dir, _ = temp_hestai_dir
+
+        jsonl_content = """{"type":"assistant","message":{"model":"claude-opus-4-5-20251101","role":"assistant"},"timestamp":"2025-12-11T10:00:00Z"}
+{"type":"assistant","message":{"model":"claude-opus-4-5-20251101","role":"assistant"},"timestamp":"2025-12-11T10:00:05Z"}
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","role":"assistant"},"timestamp":"2025-12-11T10:30:00Z"}"""
+
+        jsonl_path = hestai_dir.parent / "test.jsonl"
+        jsonl_path.write_text(jsonl_content)
+
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # Should only record 2 models (opus once, then haiku)
+        assert len(model_history) == 2
+        assert model_history[0]["model"] == "claude-opus-4-5-20251101"
+        assert model_history[1]["model"] == "claude-haiku-4-5-20251001"
+
+    def test_parse_session_transcript_extracts_swap_command_source(self, clockout_tool, temp_hestai_dir):
+        """Test that model swap confirmations include source field."""
+        hestai_dir, _ = temp_hestai_dir
+
+        jsonl_content = """{"type":"user","message":{"content":"<local-command-stdout>Set model to haiku (claude-haiku-4-5-20251001)</local-command-stdout>"},"timestamp":"2025-12-11T10:30:00Z"}
+{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","role":"assistant"},"timestamp":"2025-12-11T10:30:05Z"}"""
+
+        jsonl_path = hestai_dir.parent / "test.jsonl"
+        jsonl_path.write_text(jsonl_content)
+
+        messages, model_history = clockout_tool._parse_session_transcript(jsonl_path)
+
+        # First entry should be from swap command with source field
+        assert len(model_history) == 1
+        assert model_history[0]["model"] == "claude-haiku-4-5-20251001"
+        assert model_history[0].get("source") == "swap_command"
 
 
 class TestOctavePathInResponse:
