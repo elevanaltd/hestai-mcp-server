@@ -44,7 +44,7 @@ class GlobalSessionRegistry:
         """Load the registry data from disk."""
         if not self.registry_file.exists():
             return {"active_sessions": {}, "version": "1.0"}
-        
+
         try:
             return json.loads(self.registry_file.read_text())
         except Exception as e:
@@ -61,7 +61,7 @@ class GlobalSessionRegistry:
     def register_session(self, session_id: str, working_dir: str, role: str, focus: str):
         """
         Register a new session.
-        
+
         Args:
             session_id: The session ID
             working_dir: Absolute path to the project root
@@ -69,25 +69,25 @@ class GlobalSessionRegistry:
             focus: Focus area
         """
         data = self._load_registry()
-        
+
         data["active_sessions"][session_id] = {
             "working_dir": str(working_dir),
             "role": role,
             "focus": focus,
             "started_at": datetime.now().isoformat(),
-            "last_active": datetime.now().isoformat()
+            "last_active": datetime.now().isoformat(),
         }
-        
+
         self._save_registry(data)
         logger.debug(f"Registered session {session_id} in global registry")
 
     def get_session(self, session_id: str) -> Optional[Dict]:
         """
         Get session details by ID.
-        
+
         Args:
             session_id: The session ID
-            
+
         Returns:
             Dict with session info or None
         """
@@ -97,7 +97,7 @@ class GlobalSessionRegistry:
     def remove_session(self, session_id: str):
         """
         Remove a session from the registry.
-        
+
         Args:
             session_id: The session ID to remove
         """
@@ -110,7 +110,7 @@ class GlobalSessionRegistry:
     def list_active_sessions(self) -> Dict:
         """
         List all active sessions.
-        
+
         Returns:
             Dict of active sessions
         """
