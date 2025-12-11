@@ -1,5 +1,9 @@
 # Project Changelog
 
+## 2025-12-10 19:11
+**Update with session accomplishments: PR #117 grep bug fixes merged, PR #118 pgrep refactor created**
+Updated PROJECT-CONTEXT
+
 ## 2025-12-10 06:30
 **Compact PROJECT-CONTEXT from 205→114 LOC via system-steward context lifecycle**
 Archived PHASE_STATUS, INTEGRATION_GUARDRAILS, BRANCH_HEALTH, and consolidated QUICK_REFERENCES. Preserved active B2 focus. Sections moved to PROJECT-HISTORY[2025-12-10].

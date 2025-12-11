@@ -121,11 +121,28 @@ class ClockOutTool(BaseTool):
             # Validate request
             request = ClockOutRequest(**arguments)
 
-            # Get project root (from session context or cwd)
+            # Get project root (from session context, global registry, or cwd)
             session_context = arguments.get("_session_context")
+            project_root = None
+
             if session_context:
                 project_root = Path(session_context.project_root)
-            else:
+
+            # If no context, try global registry
+            if not project_root:
+                try:
+                    from tools.shared.global_registry import GlobalSessionRegistry
+
+                    registry = GlobalSessionRegistry()
+                    session_info = registry.get_session(request.session_id)
+                    if session_info and session_info.get("working_dir"):
+                        project_root = Path(session_info["working_dir"])
+                        logger.info(f"Resolved project root from global registry: {project_root}")
+                except Exception as e:
+                    logger.debug(f"Global registry lookup failed: {e}")
+
+            # Fallback to CWD
+            if not project_root:
                 project_root = Path.cwd()
 
             # Verify .hestai directory exists
@@ -175,6 +192,8 @@ class ClockOutTool(BaseTool):
 
             # AI compression (optional - graceful degradation)
             # Controlled by conf/context_steward.json enabled flag
+            # Track octave_path to include in response when compression succeeds
+            octave_path_created = None
             from tools.context_steward.ai import ContextStewardAI
 
             try:
@@ -205,6 +224,7 @@ class ClockOutTool(BaseTool):
                                 )
                             else:
                                 octave_path.write_text(octave_content)
+                                octave_path_created = octave_path  # Track for response
                                 logger.info(f"AI compression saved to {octave_path}")
 
                                 # Verify claims before context_update
@@ -258,6 +278,15 @@ class ClockOutTool(BaseTool):
             shutil.rmtree(session_dir)
             logger.info(f"Removed active session directory: {session_dir}")
 
+            # GLOBAL REGISTRY: Remove session
+            try:
+                from tools.shared.global_registry import GlobalSessionRegistry
+
+                registry = GlobalSessionRegistry()
+                registry.remove_session(request.session_id)
+            except Exception as e:
+                logger.warning(f"Failed to remove session from global registry: {e}")
+
             # Create response content
             content = {
                 "summary": summary,
@@ -265,6 +294,10 @@ class ClockOutTool(BaseTool):
                 "message_count": len(messages),
                 "session_id": request.session_id,
             }
+
+            # Include octave_path only when compression succeeded and file was created
+            if octave_path_created is not None:
+                content["octave_path"] = str(octave_path_created)
 
             tool_output = ToolOutput(
                 status="success",

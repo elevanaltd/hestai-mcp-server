@@ -41,7 +41,14 @@
       "session_id": "direct",
       "timestamp": "2025-12-10T03:33:43.307661",
       "processed_at": "2025-12-10T03:33:43.308082"
+    },
+    {
+      "uuid": "c603f4ae-32f1-4d1e-b04b-586e5e989a0d",
+      "doc_type": "context_update",
+      "session_id": "direct",
+      "timestamp": "2025-12-10T19:10:23.617832",
+      "processed_at": "2025-12-10T19:11:01.914072"
     }
   ],
-  "last_updated": "2025-12-10T03:33:43.308265"
+  "last_updated": "2025-12-10T19:11:01.914416"
 }

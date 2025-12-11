@@ -152,6 +152,20 @@ class ClockInTool(BaseTool):
             session_file = session_dir / "session.json"
             session_file.write_text(json.dumps(session_data, indent=2))
 
+            # GLOBAL REGISTRY: Register session for cross-context discovery
+            try:
+                from tools.shared.global_registry import GlobalSessionRegistry
+
+                registry = GlobalSessionRegistry()
+                registry.register_session(
+                    session_id=session_id,
+                    working_dir=str(project_root),
+                    role=request.role,
+                    focus=request.focus,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to register session globally: {e}")
+
             logger.info(f"Created session {session_id} for {request.role} (focus: {request.focus})")
 
             # Build context paths (relative to project root)
