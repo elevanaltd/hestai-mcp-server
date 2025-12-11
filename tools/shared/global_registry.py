@@ -7,10 +7,9 @@ the "lost context" problem where clockout doesn't know the working directory.
 
 import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class GlobalSessionRegistry:
             except Exception as e:
                 logger.error(f"Failed to initialize global registry file: {e}")
 
-    def _load_registry(self) -> Dict:
+    def _load_registry(self) -> dict:
         """Load the registry data from disk."""
         if not self.registry_file.exists():
             return {"active_sessions": {}, "version": "1.0"}
@@ -51,7 +50,7 @@ class GlobalSessionRegistry:
             logger.error(f"Failed to read registry: {e}")
             return {"active_sessions": {}, "version": "1.0"}
 
-    def _save_registry(self, data: Dict):
+    def _save_registry(self, data: dict):
         """Save the registry data to disk."""
         try:
             self.registry_file.write_text(json.dumps(data, indent=2))
@@ -81,7 +80,7 @@ class GlobalSessionRegistry:
         self._save_registry(data)
         logger.debug(f"Registered session {session_id} in global registry")
 
-    def get_session(self, session_id: str) -> Optional[Dict]:
+    def get_session(self, session_id: str) -> Optional[dict]:
         """
         Get session details by ID.
 
@@ -107,7 +106,7 @@ class GlobalSessionRegistry:
             self._save_registry(data)
             logger.debug(f"Removed session {session_id} from global registry")
 
-    def list_active_sessions(self) -> Dict:
+    def list_active_sessions(self) -> dict:
         """
         List all active sessions.
 

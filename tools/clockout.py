@@ -192,6 +192,8 @@ class ClockOutTool(BaseTool):
 
             # AI compression (optional - graceful degradation)
             # Controlled by conf/context_steward.json enabled flag
+            # Track octave_path to include in response when compression succeeds
+            octave_path_created = None
             from tools.context_steward.ai import ContextStewardAI
 
             try:
@@ -222,6 +224,7 @@ class ClockOutTool(BaseTool):
                                 )
                             else:
                                 octave_path.write_text(octave_content)
+                                octave_path_created = octave_path  # Track for response
                                 logger.info(f"AI compression saved to {octave_path}")
 
                                 # Verify claims before context_update
@@ -291,6 +294,10 @@ class ClockOutTool(BaseTool):
                 "message_count": len(messages),
                 "session_id": request.session_id,
             }
+
+            # Include octave_path only when compression succeeded and file was created
+            if octave_path_created is not None:
+                content["octave_path"] = str(octave_path_created)
 
             tool_output = ToolOutput(
                 status="success",

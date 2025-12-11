@@ -1569,3 +1569,165 @@ PHASE_CHANGES::[B2[implementation] to B3[integration]]
     assert "implemented[tested]" in extracted
     assert "Z[v2.0+]" in extracted
     assert "B2[implementation]" in extracted
+
+
+class TestOctavePathInResponse:
+    """Test suite for octave_path inclusion in clockout response"""
+
+    @pytest.mark.asyncio
+    async def test_clockout_response_includes_octave_path_when_compression_succeeds(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """
+        Test that clockout response includes octave_path when OCTAVE compression succeeds.
+
+        Issue #116: OCTAVE compression creates the file but doesn't include path in response.
+        Expected response should include octave_path field when compression succeeds.
+        """
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Create files to pass verification
+        (working_dir / "tools").mkdir()
+        (working_dir / "tools" / "clockout.py").write_text("# implementation")
+        (working_dir / "tests").mkdir()
+        (working_dir / "tests" / "test_clockout.py").write_text("# tests")
+
+        # Mock AI to return substantial OCTAVE content (> MIN_OCTAVE_LENGTH)
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                octave_content = """
+SESSION_SUMMARY::[
+  SESSION_ID::test-clockout-00000000-0000-0000-0000-000000000001,
+  ROLE::implementation-lead,
+  FOCUS::b2-implementation,
+  DURATION::45m,
+  FILES_MODIFIED::[tools/clockout.py,tests/test_clockout.py],
+  OUTCOMES::[octave_compression_successful,response_path_included]
+]
+
+TECHNICAL_CONTEXT::[
+  BRANCH::feature/issue-120-web-agent-protocol,
+  QUALITY_GATES::ALL_PASSING,
+  TDD_CYCLE::RED_GREEN_REFACTOR_COMPLETE
+]
+
+ARTIFACTS_GENERATED::[
+  IMPLEMENTATION::tools/clockout.py[octave_path_in_response],
+  TESTS::tests/test_clockout.py[test_octave_path_included]
+]
+"""
+                return {"status": "success", "artifacts": [{"content": octave_content}]}
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test octave_path in response",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+
+        # Verify standard fields are present
+        assert "archive_path" in content
+        assert "message_count" in content
+        assert "session_id" in content
+
+        # RED: Test fails here - octave_path should be included when compression succeeds
+        assert "octave_path" in content, "Response should include octave_path when OCTAVE compression succeeds"
+
+        # Verify octave_path points to the actual file created
+        octave_path = Path(content["octave_path"])
+        assert octave_path.exists(), "octave_path should point to an existing file"
+        assert octave_path.suffix == ".md", "octave file should have .md extension"
+        assert "oct" in octave_path.name, "octave file should have 'oct' in filename"
+
+    @pytest.mark.asyncio
+    async def test_clockout_response_excludes_octave_path_when_compression_disabled(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that octave_path is NOT included when AI compression is disabled"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Mock AI to return compression disabled
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return False  # Compression disabled
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test octave_path excluded when disabled",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+
+        # octave_path should NOT be present when compression is disabled
+        assert "octave_path" not in content, "octave_path should not be included when compression is disabled"
+
+    @pytest.mark.asyncio
+    async def test_clockout_response_excludes_octave_path_when_content_too_short(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Test that octave_path is NOT included when OCTAVE content is too short (< MIN_OCTAVE_LENGTH)"""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+
+        # Mock AI to return short content
+        class MockContextStewardAI:
+            def is_task_enabled(self, task_name):
+                return True
+
+            async def run_task(self, task_name, **kwargs):
+                # Return short stub content (< 300 chars)
+                return {
+                    "status": "success",
+                    "artifacts": [{"content": "Short stub - 60% compression"}],
+                }
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": "Test octave_path excluded for short content",
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+
+        result = await clockout_tool.execute(arguments)
+
+        # Parse result
+        result_text = result[0].text
+        output = json.loads(result_text)
+
+        assert output["status"] == "success"
+
+        # Content is JSON-encoded
+        content = json.loads(output["content"])
+
+        # octave_path should NOT be present when content is too short
+        assert "octave_path" not in content, "octave_path should not be included when OCTAVE content is too short"
