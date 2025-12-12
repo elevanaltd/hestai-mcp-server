@@ -484,6 +484,42 @@ SESSION_SUMMARY::[
         assert content["message_count"] > 0
 
 
+class TestClockoutDescriptionFidelity:
+    """Test that clockout description flows to AI compression."""
+
+    @pytest.mark.asyncio
+    async def test_clockout_passes_description_to_ai(
+        self, clockout_tool, temp_hestai_dir, temp_claude_session, monkeypatch
+    ):
+        """Verify description parameter reaches AI compressor as clockout_summary."""
+        hestai_dir, session_id = temp_hestai_dir
+        working_dir = hestai_dir.parent
+        description = "Critical finding: Root cause was X not Y"
+
+        # Mock AI to capture parameters
+        captured_kwargs = {}
+
+        class MockContextStewardAI:
+            def is_task_enabled(self, task):
+                return True
+
+            async def run_task(self, task, **kwargs):
+                captured_kwargs.update(kwargs)
+                return {"status": "success", "artifacts": [{"content": "x" * 400}]}
+
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+
+        arguments = {
+            "session_id": session_id,
+            "description": description,
+            "_session_context": type("obj", (object,), {"project_root": working_dir})(),
+        }
+        await clockout_tool.execute(arguments)
+
+        assert "clockout_summary" in captured_kwargs
+        assert captured_kwargs["clockout_summary"] == description
+
+
 class TestTranscriptPathResolution:
     """Test suite for layered transcript path resolution"""
 
