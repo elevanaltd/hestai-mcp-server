@@ -256,8 +256,11 @@ class ClockOutTool(BaseTool):
                                 # Verify claims before context_update
                                 verification = self._verify_context_claims(octave_content, project_root)
 
-                                # Save verification result
-                                verification_path = archive_dir / f"{request.session_id}.verification.json"
+                                # Save verification result - Issue #120: Use consistent naming base
+                                verification_filename = (
+                                    f"{timestamp}-{safe_focus}-{request.session_id}.verification.json"
+                                )
+                                verification_path = archive_dir / verification_filename
                                 verification_path.write_text(json.dumps(verification, indent=2))
 
                                 # FIX: Make verification gate actually block (not just log)

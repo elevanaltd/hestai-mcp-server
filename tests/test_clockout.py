@@ -1262,8 +1262,13 @@ ARTIFACTS_GENERATED::[
         assert output["status"] == "success"
 
         # Verify .verification.json was created
-        archive_dir = hestai_dir / "sessions" / "archive"
-        verification_file = archive_dir / f"{session_id}.verification.json"
+        # Issue #120: Derive verification path from raw_jsonl_path (consistent naming)
+        content = json.loads(output["content"])
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+
+        # Derive verification path by replacing -raw.jsonl with .verification.json
+        verification_file = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".verification.json"))
 
         assert verification_file.exists(), "Verification result should be persisted"
 
