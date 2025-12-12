@@ -26,18 +26,19 @@ RUNTIME_DEPENDENCIES::[
 ]
 
 ## CURRENT_STATE
-DATE::2025-12-11
-BRANCH::fix-issue-120[868ad56]
-ACTIVE_FOCUS::\"Issue #120 Unified .hestai Architecture - Foundation for Context Steward v2\"
+DATE::2025-12-12
+BRANCH::fix-issue-120[d6c38f2]
+ACTIVE_FOCUS::\"Issue #120 Unified .hestai Architecture - Phase 3 Clockin Updates\"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
-ISSUE_120_STATUS::OPEN[REOPENED - architectural scope exceeds initial PRs]
+ISSUE_120_STATUS::OPEN[Phase 1+2 COMPLETE, Phase 3-5 remaining]
 
 RECENT_ACHIEVEMENTS::[
+  \"PR #125 Phase 2 - Consistent archive naming and TXT removal MERGED\",
   \"PR #124 Worktree branch operations MERGED\",
   \"PR #123 Clockout pipeline fix MERGED (tool_use + tool_result capture)\",
   \"PR #122 Tool operations preservation MERGED\",
   \"PR #121 Web Agent Protocol MERGED\",
-  \"/load command 7-tier redesign validated (5/5 specialist consensus)\"
+  \"#116 octave_path in response CLOSED\"
 ]
 
 ## ISSUE_120_ARCHITECTURE_OVERHAUL
@@ -52,8 +53,8 @@ PROBLEM_STATEMENT::[
 PROPOSED_SOLUTION::\"Centralize via ~/.hestai/ as separate git repo with symlinks; preserve JSONL (gitignored, 30-day); track OCTAVE permanently\"
 
 PHASE_PROGRESS::[
-  \"Phase 1 Infrastructure: TODO (create ~/.hestai/, init git, symlinking script)\",
-  \"Phase 2 Clockout Fix: PARTIAL (PR #123 merged, but TXT still generated, no JSONL copy to archive)\",
+  \"Phase 1 Infrastructure: COMPLETE (PR #125: ~/.hestai/ + git init + setup script + inbox layer)\",
+  \"Phase 2 Clockout Fix: COMPLETE (PR #125: TXT removed, consistent naming, JSONL preserved)\",
   \"Phase 3 Clockin Updates: TODO (symlink detection, cleanup trigger)\",
   \"Phase 4 Migration: TODO (existing directory migration, PROJECT-CONTEXT merge)\",
   \"Phase 5 Documentation: TODO (spec updates, setup guide, retention policy)\"
@@ -75,10 +76,10 @@ BLOCKING_ISSUES::[
 ]
 
 NEXT_PRIORITY::[
-  \"Phase 1: Create ~/.hestai/ directory structure + git init\",
-  \"Phase 1: Symlinking setup script\",
-  \"Phase 2: Remove TXT generation, add JSONL copy to archive\",
-  \"Quick win: #116 Add octave_path to response (independent, 30 min)\"
+  \"Phase 3: Detect symlinks in clockin, resolve correctly\",
+  \"Phase 3: Add cleanup trigger (daily retention enforcement)\",
+  \"Phase 3: Update context path resolution for unified structure\",
+  \"Phase 4: Migration script for existing .hestai/ directories\"
 ]
 
 ## CONTEXT_STEWARD_PHASE_STATUS
@@ -101,8 +102,8 @@ ACCOUNTABLE_TO::critical-engineer[via holistic-orchestrator]
 
 QUALITY_GATES::[lint::\"passing\", typecheck::\"passing\", test::\"passing\"]
 
-BRANCH_TRACKING::fix-issue-120[868ad56: synced with main after PR #123, #124 merges]
-MAIN_BRANCH_STATUS::868ad56[PR #124 worktree-branch-operations merged]
+BRANCH_TRACKING::fix-issue-120[d6c38f2: synced with main after PR #125 merge]
+MAIN_BRANCH_STATUS::d6c38f2[PR #125 Phase 2 consistent naming merged]
 
 ## DEVELOPMENT_GUIDELINES
 STYLE::\"Follow existing project conventions (formatting, naming).\"
@@ -144,11 +145,11 @@ BRANCH::\"fix-issue-120\"
 COMMITS_AHEAD::0
 COMMITS_BEHIND::0
 QUALITY_GATES::[lint::\"passing\", typecheck::\"passing\", test::\"passing\"]
-LAST_MERGE::\"PR #124 worktree-branch-operations merged\"
+LAST_MERGE::\"PR #125 Phase 2 consistent naming merged\"
 
 ## DEPENDENCY_GRAPH[from_803-REPORT]
-KEYSTONE::#120[Unified .hestai Architecture]
-TIER_1_QUICK_WINS::[#116 octave_path (30 min, independent)]
+KEYSTONE::#120[Unified .hestai Architecture - Phase 1+2 COMPLETE]
+TIER_1_QUICK_WINS::[#116 octave_path CLOSED]
 TIER_2_FOUNDATION::[#120 Architecture → #119 CSI-HYBRID]
 TIER_3_BUG_TRIAGE::[#103 working_dir (may be solved by #120)]
 TIER_4_PHASE_PROGRESSION::[#92 deprecation → #104 verification → #93 validation]
