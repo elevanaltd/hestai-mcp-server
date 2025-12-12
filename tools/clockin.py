@@ -127,12 +127,25 @@ class ClockInTool(BaseTool):
 
             # Ensure .hestai directory structure exists
             hestai_dir = project_root / ".hestai"
+
+            # Resolve symlink if .hestai is symlinked to unified location
+            if hestai_dir.is_symlink():
+                resolved_path = hestai_dir.resolve()
+                logger.info(f"Resolved .hestai symlink to: {resolved_path}")
+                hestai_dir = resolved_path
+
             sessions_dir = hestai_dir / "sessions"
             active_dir = sessions_dir / "active"
             context_dir = hestai_dir / "context"
 
             active_dir.mkdir(parents=True, exist_ok=True)
             context_dir.mkdir(parents=True, exist_ok=True)
+
+            # Trigger daily cleanup if needed (non-blocking)
+            try:
+                self._check_and_trigger_cleanup(hestai_dir)
+            except Exception as e:
+                logger.warning(f"Cleanup check failed (non-blocking): {e}")
 
             # Generate session ID (short UUID)
             session_id = str(uuid.uuid4())[:8]
@@ -342,3 +355,101 @@ class ClockInTool(BaseTool):
     def get_model_category(self) -> ToolModelCategory:
         """Return the model category for this tool"""
         return ToolModelCategory.FAST_RESPONSE  # Utility tool, no AI needed
+
+    def _check_and_trigger_cleanup(self, hestai_dir: Path) -> None:
+        """
+        Check if cleanup should run (> 24h since last run) and trigger if needed.
+
+        This is a non-blocking operation - errors are logged but don't fail clockin.
+
+        Args:
+            hestai_dir: Path to .hestai directory
+        """
+        last_cleanup_file = hestai_dir / "last_cleanup"
+
+        # Check if we need to run cleanup
+        should_cleanup = False
+
+        if not last_cleanup_file.exists():
+            # First run - create the file and run cleanup
+            should_cleanup = True
+        else:
+            try:
+                last_cleanup_str = last_cleanup_file.read_text().strip()
+                last_cleanup = datetime.fromisoformat(last_cleanup_str)
+                hours_since_cleanup = (datetime.now() - last_cleanup).total_seconds() / 3600
+
+                if hours_since_cleanup > 24:
+                    should_cleanup = True
+                    logger.info(f"Last cleanup was {hours_since_cleanup:.1f}h ago - triggering cleanup")
+            except (ValueError, OSError) as e:
+                logger.warning(f"Could not parse last_cleanup timestamp: {e} - will run cleanup")
+                should_cleanup = True
+
+        if should_cleanup:
+            logger.info("Triggering session cleanup")
+            self._run_cleanup(hestai_dir)
+
+            # Update last_cleanup timestamp
+            last_cleanup_file.write_text(datetime.now().isoformat())
+
+    def _run_cleanup(self, hestai_dir: Path) -> None:
+        """
+        Run cleanup of old archived sessions and stale active sessions.
+
+        Retention policy:
+        - Archive JSONL files: Delete if > 30 days old
+        - Active sessions: Delete if > 24h old (stale)
+
+        Args:
+            hestai_dir: Path to .hestai directory
+        """
+
+        sessions_dir = hestai_dir / "sessions"
+        archive_dir = sessions_dir / "archive"
+        active_dir = sessions_dir / "active"
+
+        now = datetime.now()
+        archive_retention_days = 30
+        stale_session_hours = 24
+
+        # Cleanup old archives
+        if archive_dir.exists():
+            for archive_file in archive_dir.glob("*.jsonl"):
+                try:
+                    # Check file modification time
+                    mtime = datetime.fromtimestamp(archive_file.stat().st_mtime)
+                    age_days = (now - mtime).days
+
+                    if age_days > archive_retention_days:
+                        logger.info(f"Deleting old archive ({age_days}d): {archive_file.name}")
+                        archive_file.unlink()
+                except Exception as e:
+                    logger.warning(f"Failed to cleanup archive {archive_file.name}: {e}")
+
+        # Cleanup stale active sessions
+        if active_dir.exists():
+            for session_dir in active_dir.iterdir():
+                if not session_dir.is_dir():
+                    continue
+
+                session_file = session_dir / "session.json"
+                if not session_file.exists():
+                    continue
+
+                try:
+                    session_data = json.loads(session_file.read_text())
+                    started_at_str = session_data.get("started_at")
+
+                    if started_at_str:
+                        started_at = datetime.fromisoformat(started_at_str)
+                        age_hours = (now - started_at).total_seconds() / 3600
+
+                        if age_hours > stale_session_hours:
+                            logger.info(f"Deleting stale session ({age_hours:.1f}h): {session_dir.name}")
+                            # Delete entire session directory
+                            import shutil
+
+                            shutil.rmtree(session_dir)
+                except Exception as e:
+                    logger.warning(f"Failed to cleanup session {session_dir.name}: {e}")
