@@ -283,6 +283,16 @@ This allows project-specific MCP configuration without manual intervention.
 - [ ] Verify JSON integrity after modifications
 - [ ] Document in CLAUDE.md if needed
 
+## Default Behavior
+
+**Important:** Claude Code has a default behavior for MCP servers:
+
+- If a path is **not in** `~/.claude.json` → All servers enabled (default)
+- If a path **exists** with empty `disabledMcpServers: []` → All servers enabled
+- If a path **exists** with servers in `disabledMcpServers` → Only those are disabled
+
+**Implication:** New projects/worktrees get all servers enabled by default. Users must explicitly disable servers they don't need for that path.
+
 ## Security Considerations
 
 1. **Atomic writes**: Always backup before modifying ~/.claude.json
