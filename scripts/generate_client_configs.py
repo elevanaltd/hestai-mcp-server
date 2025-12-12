@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Agent Model Tier Config Generator
+Agent Routing Config Generator
 
-Generates CLI client configurations from agent-model-tiers.json mapping.
-Supports hybrid architecture: tiers (default) + exceptions (overrides).
+Generates CLI client configurations from agent-routing.yaml.
+Each agent can be configured individually with specific models per CLI.
 
 Usage:
     python scripts/generate_client_configs.py              # Generate configs
@@ -17,9 +17,11 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
+import yaml
+
 
 class ConfigGenerator:
-    """Generates CLI client configs from tier mapping."""
+    """Generates CLI client configs from agent-routing.yaml."""
 
     def __init__(self, base_dir: Optional[Path] = None):
         """Initialize generator.
@@ -28,32 +30,24 @@ class ConfigGenerator:
             base_dir: Base directory (defaults to repo root)
         """
         if base_dir is None:
-            # Detect if we're in worktree or main repo
-            current = Path(__file__).resolve().parent.parent
-            if current.name == "agent-model-tiers":
-                # We're in worktree
-                self.base_dir = current
-            else:
-                # We're in main repo
-                self.base_dir = current
+            self.base_dir = Path(__file__).resolve().parent.parent
         else:
             self.base_dir = base_dir
 
         self.cli_clients_dir = self.base_dir / "conf" / "cli_clients"
-        self.metadata_dir = self.cli_clients_dir / "metadata"
-        self.tier_mapping_path = self.metadata_dir / "agent-model-tiers.json"
-        self.fallback_hints_path = self.metadata_dir / "fallback_hints.json"
+        self.routing_config_path = self.base_dir / "conf" / "agent-routing.yaml"
+        self.systemprompts_dir = self.base_dir / "systemprompts" / "clink"
 
-        self.tier_mapping: dict[str, Any] = {}
+        self.routing_config: dict[str, Any] = {}
         self.client_configs: dict[str, dict[str, Any]] = {}
 
-    def load_tier_mapping(self) -> None:
-        """Load agent-model-tiers.json."""
-        if not self.tier_mapping_path.exists():
-            raise FileNotFoundError(f"Tier mapping not found: {self.tier_mapping_path}")
+    def load_routing_config(self) -> None:
+        """Load agent-routing.yaml."""
+        if not self.routing_config_path.exists():
+            raise FileNotFoundError(f"Routing config not found: {self.routing_config_path}")
 
-        with open(self.tier_mapping_path) as f:
-            self.tier_mapping = json.load(f)
+        with open(self.routing_config_path) as f:
+            self.routing_config = yaml.safe_load(f)
 
     def load_client_configs(self, cli_names: list[str]) -> None:
         """Load existing client configurations.
@@ -63,54 +57,55 @@ class ConfigGenerator:
         """
         for cli_name in cli_names:
             config_path = self.cli_clients_dir / f"{cli_name}.json"
-            if not config_path.exists():
-                raise FileNotFoundError(f"Client config not found: {config_path}")
+            if config_path.exists():
+                with open(config_path) as f:
+                    self.client_configs[cli_name] = json.load(f)
+            else:
+                # Create minimal config if doesn't exist
+                self.client_configs[cli_name] = {
+                    "name": cli_name,
+                    "command": cli_name,
+                    "additional_args": [],
+                    "env": {},
+                    "roles": {},
+                }
 
-            with open(config_path) as f:
-                self.client_configs[cli_name] = json.load(f)
-
-    def find_agent_tier(self, agent_name: str) -> Optional[str]:
-        """Find which tier an agent belongs to.
-
-        Args:
-            agent_name: Agent name to search for
-
-        Returns:
-            Tier name (HIGH/MEDIUM/LOW) or None if not found
-        """
-        for tier_name, tier_data in self.tier_mapping["tiers"].items():
-            if agent_name in tier_data.get("agents", []):
-                return tier_name
-        return None
-
-    def get_model_for_agent(self, agent_name: str, cli_name: str) -> Optional[str]:
-        """Get the appropriate model for an agent on a given CLI.
-
-        Priority:
-            1. Check exceptions
-            2. Check tier mapping
+    def get_agent_config(self, agent_name: str) -> dict[str, Any]:
+        """Get configuration for a specific agent.
 
         Args:
             agent_name: Agent name
-            cli_name: CLI client name (claude/codex/gemini)
 
         Returns:
-            Model ID or None if agent should be excluded from this CLI
+            Agent configuration dict, or defaults if not found
         """
-        # Check exceptions first
-        exceptions = self.tier_mapping.get("exceptions", {})
-        if agent_name in exceptions:
-            model = exceptions[agent_name].get(cli_name)
-            return model  # Could be None (explicit exclusion)
+        agents = self.routing_config.get("agents", {})
+        if agent_name in agents:
+            return agents[agent_name]
 
-        # Fall back to tier mapping
-        tier = self.find_agent_tier(agent_name)
-        if tier is None:
-            return None
+        # Return defaults
+        return self.routing_config.get("defaults", {})
 
-        tier_data = self.tier_mapping["tiers"][tier]
-        model = tier_data.get(cli_name)
-        return model  # Could be None (tier excludes this CLI)
+    def get_model_for_agent(self, agent_name: str, cli_name: str) -> Optional[str]:
+        """Get the model for an agent on a specific CLI.
+
+        Args:
+            agent_name: Agent name
+            cli_name: CLI name (claude/codex/gemini)
+
+        Returns:
+            Model ID or None if agent excluded from this CLI
+        """
+        agent_config = self.get_agent_config(agent_name)
+        model = agent_config.get(cli_name)
+
+        # Handle explicit null (excluded) vs missing (use default)
+        if model is None and cli_name not in agent_config:
+            # Not explicitly configured, use default
+            defaults = self.routing_config.get("defaults", {})
+            model = defaults.get(cli_name)
+
+        return model
 
     def get_reasoning_effort(self, agent_name: str) -> Optional[str]:
         """Get reasoning effort level for an agent (Codex-specific).
@@ -121,221 +116,234 @@ class ConfigGenerator:
         Returns:
             Reasoning effort level (high/medium/low) or None
         """
-        reasoning_mappings = self.tier_mapping.get("reasoning_effort_mappings", {})
-        for effort_level in ["high", "medium", "low"]:
-            if agent_name in reasoning_mappings.get(effort_level, []):
-                return effort_level
-        return None
+        agent_config = self.get_agent_config(agent_name)
+        return agent_config.get("reasoning_effort")
 
-    def update_client_config(self, cli_name: str, dry_run: bool = False) -> dict[str, Any]:
-        """Update a client configuration with tier-based model assignments.
+    def get_prompt_path(self, agent_name: str, cli_name: str = None) -> Optional[str]:
+        """Get the system prompt path for an agent.
 
         Args:
-            cli_name: CLI client name
-            dry_run: If True, don't modify config, just return what would change
+            agent_name: Agent name
+            cli_name: CLI name (for prompt_override lookup)
 
         Returns:
-            Updated config (or preview if dry_run=True)
+            Relative path to prompt file, or None if not found
         """
-        config = self.client_configs[cli_name].copy()
-        roles = config.get("roles", {})
+        agent_config = self.get_agent_config(agent_name)
+
+        # Check for CLI-specific prompt override
+        if cli_name and "prompt_override" in agent_config:
+            override = agent_config["prompt_override"].get(cli_name)
+            if override:
+                prompt_file = self.systemprompts_dir / override
+                if prompt_file.exists():
+                    return f"systemprompts/clink/{override}"
+
+        # Check for agent-specific prompt
+        prompt_file = self.systemprompts_dir / f"{agent_name}.txt"
+        if prompt_file.exists():
+            return f"systemprompts/clink/{agent_name}.txt"
+
+        # Check for default prompt
+        default_prompt = self.systemprompts_dir / "default.txt"
+        if default_prompt.exists():
+            return "systemprompts/clink/default.txt"
+
+        return None
+
+    def discover_agents(self) -> set[str]:
+        """Discover all available agents from systemprompts directory.
+
+        Returns:
+            Set of agent names
+        """
+        agents = set()
+        if self.systemprompts_dir.exists():
+            for prompt_file in self.systemprompts_dir.glob("*.txt"):
+                agent_name = prompt_file.stem
+                # Skip internal files
+                if agent_name.startswith("_"):
+                    continue
+                # Skip CLI-specific variants (handled separately)
+                if agent_name.startswith("codex_") or agent_name.startswith("default_"):
+                    agents.add(agent_name)  # Include these as valid roles
+                else:
+                    agents.add(agent_name)
+        return agents
+
+    def build_role_args(self, agent_name: str, cli_name: str, model: str) -> list[str]:
+        """Build role_args for a specific agent/CLI combination.
+
+        Args:
+            agent_name: Agent name
+            cli_name: CLI name
+            model: Model ID
+
+        Returns:
+            List of role arguments
+        """
+        role_args = []
+
+        if cli_name == "claude":
+            # Claude uses --model in role_args
+            if model:
+                role_args = ["--model", model]
+
+        elif cli_name == "codex":
+            # Codex uses -c model_reasoning_effort in role_args
+            reasoning_effort = self.get_reasoning_effort(agent_name)
+            if reasoning_effort:
+                role_args = ["-c", f"model_reasoning_effort={reasoning_effort}"]
+
+        elif cli_name == "gemini":
+            # Gemini uses --model in additional_args (global), role_args typically empty
+            pass
+
+        return role_args
+
+    def generate_client_config(
+        self, cli_name: str, dry_run: bool = False
+    ) -> dict[str, Any]:
+        """Generate a complete client configuration.
+
+        Args:
+            cli_name: CLI name
+            dry_run: If True, don't modify anything
+
+        Returns:
+            Dict with 'config' and 'changes' keys
+        """
+        # Start with existing config or minimal template
+        if cli_name in self.client_configs:
+            config = self.client_configs[cli_name].copy()
+        else:
+            config = {
+                "name": cli_name,
+                "command": cli_name,
+                "additional_args": [],
+                "env": {},
+                "roles": {},
+            }
+
         changes = []
+        new_roles = {}
 
-        for agent_name, role_data in roles.items():
-            model = self.get_model_for_agent(agent_name, cli_name)
+        # Get all agents from routing config
+        agents = self.routing_config.get("agents", {})
 
-            # Handle explicit exclusion (null in exceptions OR null in tier)
+        for agent_name, agent_config in agents.items():
+            model = agent_config.get(cli_name)
+
+            # Skip if agent is excluded from this CLI (explicit null)
             if model is None:
-                # This agent is excluded from this CLI (either by exception or tier-level null)
-                changes.append(f"REMOVE {agent_name} (model=null for {cli_name})")
+                if agent_name in config.get("roles", {}):
+                    changes.append(f"REMOVE {agent_name} (excluded from {cli_name})")
                 continue
 
-            # Update role_args based on CLI type
-            if cli_name == "claude":
-                # Claude uses --model flag
-                new_role_args = ["--model", model] if model else []
-                if role_data.get("role_args") != new_role_args:
-                    if not dry_run:
-                        role_data["role_args"] = new_role_args
-                    changes.append(f"UPDATE {agent_name}: {role_data.get('role_args')} -> {new_role_args}")
+            # Get prompt path (with CLI-specific override support)
+            prompt_path = self.get_prompt_path(agent_name, cli_name)
+            if not prompt_path:
+                changes.append(f"SKIP {agent_name} (no prompt file)")
+                continue
 
-            elif cli_name == "codex":
-                # Codex uses -c model_reasoning_effort in role_args
-                # and model in additional_args
-                reasoning_effort = self.get_reasoning_effort(agent_name)
-                new_role_args = []
-                if reasoning_effort:
-                    new_role_args = ["-c", f"model_reasoning_effort={reasoning_effort}"]
+            # Build role args
+            role_args = self.build_role_args(agent_name, cli_name, model)
 
-                if role_data.get("role_args") != new_role_args:
-                    if not dry_run:
-                        role_data["role_args"] = new_role_args
-                    changes.append(f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}")
+            # Check for changes
+            existing_role = config.get("roles", {}).get(agent_name, {})
+            new_role = {"prompt_path": prompt_path, "role_args": role_args}
 
-                # Update model in additional_args at top level
-                # (Codex model is global, not per-role)
-                # This is handled separately below
+            if existing_role != new_role:
+                if agent_name in config.get("roles", {}):
+                    changes.append(f"UPDATE {agent_name}: {existing_role} -> {new_role}")
+                else:
+                    changes.append(f"ADD {agent_name}: {new_role}")
 
-            elif cli_name == "gemini":
-                # Gemini uses --model in additional_args (global)
-                # role_args typically empty unless specific overrides needed
-                new_role_args = []
-                if role_data.get("role_args") != new_role_args:
-                    if not dry_run:
-                        role_data["role_args"] = new_role_args
-                    changes.append(f"UPDATE {agent_name}: role_args {role_data.get('role_args')} -> {new_role_args}")
+            new_roles[agent_name] = new_role
 
-        # Remove agents excluded by null model (exception or tier-level)
-        for agent_name in list(roles.keys()):
-            model = self.get_model_for_agent(agent_name, cli_name)
-            if model is None:
-                if not dry_run:
-                    del roles[agent_name]
-                # Change already logged above in the iteration loop
+        # Check for removed roles
+        for existing_agent in config.get("roles", {}).keys():
+            if existing_agent not in new_roles:
+                # Check if it's explicitly excluded or just not in routing config
+                if existing_agent in agents:
+                    agent_config = agents[existing_agent]
+                    if agent_config.get(cli_name) is None:
+                        changes.append(f"REMOVE {existing_agent} (excluded)")
+                # Keep roles that aren't in routing config (legacy compatibility)
+                else:
+                    new_roles[existing_agent] = config["roles"][existing_agent]
 
-        # Add metadata
+        # Update config
         if not dry_run:
+            config["roles"] = dict(sorted(new_roles.items()))
             config["_generated_by"] = "scripts/generate_client_configs.py"
-            config["_tier_mapping_version"] = self.tier_mapping.get("_schema_version", "1.0.0")
+            config["_routing_version"] = self.routing_config.get("schema_version", "2.0.0")
 
         return {"config": config, "changes": changes}
 
-    def validate_model_ids(self) -> list[str]:
-        """Validate that all model IDs used in tiers/exceptions are valid.
+    def validate_routing_config(self) -> list[str]:
+        """Validate the routing configuration.
 
         Returns:
             List of validation errors (empty if valid)
         """
         errors = []
-        model_mappings = self.tier_mapping.get("model_mappings", {})
+        available_models = self.routing_config.get("available_models", {})
 
-        # Validate tier model assignments
-        for tier_name, tier_data in self.tier_mapping.get("tiers", {}).items():
+        for agent_name, agent_config in self.routing_config.get("agents", {}).items():
             for cli_name in ["claude", "codex", "gemini"]:
-                model = tier_data.get(cli_name)
+                model = agent_config.get(cli_name)
                 if model is None:
-                    continue  # null is valid (tier excludes this CLI)
+                    continue  # null is valid (exclusion)
 
-                valid_models = model_mappings.get(cli_name, {})
-                if model not in valid_models:
-                    errors.append(f"Invalid model '{model}' for {cli_name} in tier {tier_name}")
+                valid_models = available_models.get(cli_name, [])
+                if valid_models and model not in valid_models:
+                    errors.append(
+                        f"Invalid model '{model}' for {cli_name} in agent {agent_name}. "
+                        f"Valid: {valid_models}"
+                    )
 
-        # Validate exception model assignments
-        for agent_name, exception_data in self.tier_mapping.get("exceptions", {}).items():
-            for cli_name in ["claude", "codex", "gemini"]:
-                model = exception_data.get(cli_name)
-                if model is None:
-                    continue  # null is valid (explicit exclusion)
+            # Validate primary CLI
+            primary = agent_config.get("primary")
+            if primary and primary not in ["claude", "codex", "gemini"]:
+                errors.append(
+                    f"Invalid primary CLI '{primary}' for agent {agent_name}"
+                )
 
-                valid_models = model_mappings.get(cli_name, {})
-                if model not in valid_models:
-                    errors.append(f"Invalid model '{model}' for {cli_name} in exception {agent_name}")
+            # Validate reasoning_effort
+            reasoning = agent_config.get("reasoning_effort")
+            if reasoning and reasoning not in ["high", "medium", "low"]:
+                errors.append(
+                    f"Invalid reasoning_effort '{reasoning}' for agent {agent_name}"
+                )
 
         return errors
 
-    def validate_tier_degradation(self) -> list[str]:
-        """Check for tier degradation warnings (HIGH->LOW fallback).
+    def validate_prompt_coverage(self) -> list[str]:
+        """Validate that all configured agents have prompt files.
 
         Returns:
-            List of warnings
+            List of warnings (not errors)
         """
         warnings = []
-        fallback_hints = self.tier_mapping.get("primary_fallback_hints", {})
 
-        for agent_name, hint in fallback_hints.items():
-            primary_cli = hint.get("primary_cli")
-            fallback_cli = hint.get("fallback_cli")
-
-            if primary_cli is None or fallback_cli is None:
-                continue
-
-            # Find tiers
-
-            # Check if agent is in tiers or exceptions
-            agent_tier = self.find_agent_tier(agent_name)
-            if agent_tier:
-                self.tier_mapping["tiers"][agent_tier].get(primary_cli)
-                self.tier_mapping["tiers"][agent_tier].get(fallback_cli)
-
-                # Determine tier level by model
-                tier_levels = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
-                primary_tier_level = tier_levels.get(agent_tier, 0)
-
-                # Check fallback tier (could be different if using exceptions)
-                fallback_agent_tier = agent_tier
-                if agent_name in self.tier_mapping.get("exceptions", {}):
-                    # Exception might have different fallback tier
-                    pass  # Complex logic, skip for now
-
-                if primary_tier_level == 3 and fallback_agent_tier == "LOW":
-                    warnings.append(f"DEGRADATION: {agent_name} primary=HIGH fallback=LOW")
+        for agent_name in self.routing_config.get("agents", {}).keys():
+            prompt_path = self.get_prompt_path(agent_name)
+            if not prompt_path:
+                warnings.append(f"No prompt file for agent: {agent_name}")
 
         return warnings
 
-    def validate_agent_coverage(self) -> list[str]:
-        """Validate that all agents in tier mapping exist in client configs.
-
-        Returns:
-            List of validation errors
-        """
-        errors = []
-
-        # Collect all agents from tiers
-        tier_agents: set[str] = set()
-        for tier_data in self.tier_mapping.get("tiers", {}).values():
-            tier_agents.update(tier_data.get("agents", []))
-
-        # Collect all agents from exceptions
-        exception_agents: set[str] = set(self.tier_mapping.get("exceptions", {}).keys())
-
-        # Collect all agents from client configs
-        config_agents: set[str] = set()
-        for config in self.client_configs.values():
-            config_agents.update(config.get("roles", {}).keys())
-
-        # Check for agents in tiers but not in configs
-        missing_in_configs = tier_agents - config_agents
-        if missing_in_configs:
-            errors.append(f"Agents in tiers but missing from client configs: {missing_in_configs}")
-
-        # Check for agents in configs but not in tiers (warning, not error)
-        # These might be in exceptions only
-        untiered_agents = config_agents - tier_agents - exception_agents
-        if untiered_agents:
-            # This is actually OK - some agents might not be in tiers
-            # (e.g., "default", "planner", "codereviewer")
-            pass
-
-        return errors
-
-    def generate_fallback_hints(self) -> dict[str, Any]:
-        """Generate fallback_hints.json from primary_fallback_hints.
-
-        Returns:
-            Fallback hints dictionary
-        """
-        return self.tier_mapping.get("primary_fallback_hints", {})
-
     def write_client_config(self, cli_name: str, config: dict[str, Any]) -> None:
-        """Write updated client configuration to disk.
+        """Write client configuration to disk.
 
         Args:
-            cli_name: CLI client name
-            config: Updated configuration
+            cli_name: CLI name
+            config: Configuration dict
         """
         config_path = self.cli_clients_dir / f"{cli_name}.json"
         with open(config_path, "w") as f:
             json.dump(config, f, indent=2)
-            f.write("\n")  # Add trailing newline
-
-    def write_fallback_hints(self, hints: dict[str, Any]) -> None:
-        """Write fallback_hints.json to disk.
-
-        Args:
-            hints: Fallback hints dictionary
-        """
-        with open(self.fallback_hints_path, "w") as f:
-            json.dump(hints, f, indent=2)
             f.write("\n")
 
     def run(self, mode: str = "generate", cli_names: Optional[list[str]] = None) -> int:
@@ -352,39 +360,34 @@ class ConfigGenerator:
             cli_names = ["claude", "codex", "gemini"]
 
         try:
-            # Load data
-            self.load_tier_mapping()
+            # Load configs
+            print("Loading routing configuration...")
+            self.load_routing_config()
             self.load_client_configs(cli_names)
 
             # Validate
-            print("Validating model IDs...")
-            model_errors = self.validate_model_ids()
-            if model_errors:
-                print("ERROR: Invalid model IDs found:")
-                for error in model_errors:
+            print("Validating routing configuration...")
+            errors = self.validate_routing_config()
+            if errors:
+                print("ERROR: Invalid routing configuration:")
+                for error in errors:
                     print(f"  - {error}")
                 return 1
 
-            print("Checking tier degradation warnings...")
-            degradation_warnings = self.validate_tier_degradation()
-            if degradation_warnings:
-                print("WARNING: Tier degradation detected:")
-                for warning in degradation_warnings:
+            print("Checking prompt coverage...")
+            warnings = self.validate_prompt_coverage()
+            if warnings:
+                print("WARNING: Missing prompt files:")
+                for warning in warnings:
                     print(f"  - {warning}")
-
-            print("Validating agent coverage...")
-            coverage_errors = self.validate_agent_coverage()
-            if coverage_errors:
-                print("ERROR: Agent coverage issues:")
-                for error in coverage_errors:
-                    print(f"  - {error}")
-                # Don't fail on coverage errors (warning only)
 
             # Process configs
             all_changes = {}
             for cli_name in cli_names:
                 print(f"\nProcessing {cli_name} client...")
-                result = self.update_client_config(cli_name, dry_run=(mode in ["check", "dry-run"]))
+                result = self.generate_client_config(
+                    cli_name, dry_run=(mode in ["check", "dry-run"])
+                )
 
                 if result["changes"]:
                     print(f"  Changes for {cli_name}:")
@@ -396,22 +399,16 @@ class ConfigGenerator:
 
                 if mode == "generate":
                     self.write_client_config(cli_name, result["config"])
-                    print(f"  ✓ Updated {cli_name}.json")
+                    print(f"  -> Updated {cli_name}.json")
 
-            # Generate fallback hints
-            if mode == "generate":
-                hints = self.generate_fallback_hints()
-                self.write_fallback_hints(hints)
-                print("\n✓ Generated fallback_hints.json")
-
-            # Check mode validation
+            # Summary
             if mode == "check":
                 if all_changes:
                     print("\nERROR: Configs are out of sync!")
                     print("Run: python scripts/generate_client_configs.py")
                     return 1
                 else:
-                    print("\n✓ All configs are in sync")
+                    print("\n All configs are in sync")
                     return 0
 
             if mode == "dry-run":
@@ -421,7 +418,7 @@ class ConfigGenerator:
                     print("\nDry-run complete. No changes needed.")
                 return 0
 
-            print("\n✓ Config generation complete")
+            print("\n Config generation complete")
             return 0
 
         except Exception as e:
@@ -434,7 +431,9 @@ class ConfigGenerator:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Generate CLI client configs from agent-model-tiers.json")
+    parser = argparse.ArgumentParser(
+        description="Generate CLI client configs from agent-routing.yaml"
+    )
     parser.add_argument(
         "--check",
         action="store_true",

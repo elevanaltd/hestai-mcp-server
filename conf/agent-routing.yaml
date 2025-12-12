@@ -1,0 +1,484 @@
+# Agent Routing Configuration
+#
+# This file defines which CLI/model combinations are available for each agent.
+#
+# Structure per agent:
+#   claude: <model>     - Model to use on Claude CLI (opus/sonnet/haiku)
+#   codex: <model>      - Model to use on Codex CLI (gpt-5.1-codex/gpt-5.1-codex-mini/o3-mini)
+#   gemini: <model>     - Model to use on Gemini CLI (gemini-3-pro-preview/gemini-2.5-flash)
+#   primary: <cli>      - Preferred CLI for this agent
+#   reasoning_effort: <level> - Codex-specific (high/medium/low)
+#   notes: <string>     - Optional documentation
+#
+# Use 'null' to exclude an agent from a specific CLI.
+#
+# To regenerate CLI configs after editing: python scripts/generate_client_configs.py
+
+schema_version: "2.0.0"
+
+# Available models per CLI (for validation)
+available_models:
+  claude: [opus, sonnet, haiku]
+  codex: [gpt-5.1-codex, gpt-5.1-codex-mini, o3-mini]
+  gemini: [gemini-3-pro-preview, gemini-2.5-flash]
+
+# Defaults for agents not explicitly listed
+defaults:
+  claude: sonnet
+  codex: gpt-5.1-codex
+  gemini: gemini-3-pro-preview
+  primary: claude
+
+# Per-agent routing configuration
+agents:
+  # =============================================================================
+  # CONSTITUTIONAL / BLOCKING AUTHORITY AGENTS
+  # These agents have GO/NO-GO authority. Most work best on Claude Opus but
+  # can be used on other CLIs for analysis (without blocking authority).
+  # =============================================================================
+
+  holistic-orchestrator:
+    claude: opus
+    codex: null           # Constitutional authority - Claude only
+    gemini: null
+    primary: claude
+    notes: "Ultimate system orchestrator - constitutional authority requires Claude"
+
+  critical-engineer:
+    claude: opus
+    codex: gpt-5.1-codex  # Available for analysis, blocking decisions on Claude
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: high
+    notes: "GO/NO-GO authority - prefers Claude Opus, but analysis works on all CLIs"
+
+  critical-design-validator:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: high
+    notes: "Design validation - prefers Claude for critical decisions"
+
+  critical-implementation-validator:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: high
+    notes: "Implementation validation - prefers Claude for critical decisions"
+
+  requirements-steward:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "North Star alignment guardian"
+
+  security-specialist:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: high
+    notes: "Security analysis - prefers Claude for thorough analysis"
+
+  coherence-oracle:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: medium
+    notes: "Cross-boundary pattern recognition"
+
+  # =============================================================================
+  # TEST & VALIDATION AGENTS
+  # Quality gates and test methodology enforcement.
+  # =============================================================================
+
+  test-methodology-guardian:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: gemini        # User discovered: performs well on Gemini
+    reasoning_effort: medium
+    notes: "Test integrity guardian - works well on Gemini"
+
+  universal-test-engineer:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: medium
+    notes: "90% coverage testing specialist"
+
+  test-infrastructure-steward:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: medium
+    notes: "CI pipelines and test environments"
+
+  build-plan-checker:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Build plan validation and gap analysis"
+
+  # =============================================================================
+  # CODE REVIEW & QUALITY
+  # =============================================================================
+
+  code-review-specialist:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: codex         # User discovered: excellent on Codex
+    reasoning_effort: high
+    notes: "Code review authority - works excellently on Codex"
+
+  quality-observer:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Lightweight quality assessment"
+
+  validator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Unflinching reality assessment"
+
+  blind-assessor:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Unbiased assessment without context"
+
+  # =============================================================================
+  # ARCHITECTURE & DESIGN
+  # =============================================================================
+
+  north-star-architect:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Immutable North Star document creation"
+
+  technical-architect:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    reasoning_effort: medium
+    notes: "System design and architectural decisions"
+
+  design-architect:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "D3 blueprint creation"
+
+  visual-architect:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "UI/UX mockups and visual design"
+
+  workspace-architect:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "B1 workspace setup and structure"
+
+  completion-architect:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Final integration and system unification"
+
+  # =============================================================================
+  # IMPLEMENTATION & BUILD
+  # =============================================================================
+
+  implementation-lead:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Build phase execution and task coordination"
+
+  principal-engineer:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Long-term system health and architectural sentinel"
+
+  error-architect:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Systematic error resolution with triage"
+
+  error-architect-surface:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Surface-level error triage for quick fixes"
+
+  directory-curator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Directory reorganization and cleanup"
+
+  # =============================================================================
+  # EXPLORATION & RESEARCH
+  # =============================================================================
+
+  surveyor:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini        # Free tier preferred for exploration
+    notes: "Autonomous codebase explorer"
+
+  research-analyst:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Fact-finding and technical feasibility"
+
+  research-curator:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Research organization and synthesis"
+
+  ho-liaison:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    reasoning_effort: medium
+    notes: "Advisory specialist for holistic-orchestrator"
+
+  # =============================================================================
+  # IDEATION & CREATIVITY
+  # =============================================================================
+
+  ideator:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Creative exploration and innovation"
+
+  ideator-catalyst:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Creative solutions within North Star boundaries"
+
+  idea-clarifier:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Concept refinement and problem essence"
+
+  synthesizer:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Breakthrough synthesis from tensions"
+
+  edge-optimizer:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Hidden brilliance discovery at solution edges"
+
+  complexity-guard:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    notes: "Completion Through Subtraction - prevents over-engineering"
+
+  # =============================================================================
+  # OCTAVE & DOCUMENTATION
+  # =============================================================================
+
+  octave-specialist:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "OCTAVE syntax and semantic compression"
+
+  octave-validator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "OCTAVE v3.0 syntax compliance"
+
+  semantic-optimizer:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "OCTAVE pattern optimization"
+
+  documentation-compressor:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Technical documentation to OCTAVE compression"
+
+  compression-fidelity-validator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Validates OCTAVE compressions maintain fidelity"
+
+  hestai-doc-steward:
+    claude: opus
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "HestAI document governance with anti-bloat enforcement"
+
+  # =============================================================================
+  # TASK MANAGEMENT
+  # =============================================================================
+
+  task-decomposer:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Blueprint to atomic tasks decomposition"
+
+  task-decomposer-validator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Build plan validation and gap analysis"
+
+  # =============================================================================
+  # DOMAIN SPECIALISTS
+  # =============================================================================
+
+  smartsuite-expert:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "SmartSuite API operations and field format mastery"
+
+  supabase-expert:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Supabase operations, RLS, migrations"
+
+  skills-expert:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Claude Code skills creation and validation"
+
+  subagent-creator:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "OCTAVE-optimized agent creation"
+
+  # =============================================================================
+  # STEWARDS & SUPPORT
+  # =============================================================================
+
+  system-steward:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: null           # Avoid Gemini sandbox for file operations
+    primary: claude
+    notes: "Git stewardship and documentation - avoids Gemini sandbox"
+
+  solution-steward:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "Delivery handoff and knowledge synthesis"
+
+  vibe-coder:
+    claude: sonnet
+    codex: gpt-5.1-codex
+    gemini: gemini-3-pro-preview
+    primary: claude
+    notes: "User-feedback-driven iterative development"
+
+  # =============================================================================
+  # GENERIC ROLES
+  # =============================================================================
+
+  default:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    prompt_override:
+      claude: default.txt
+      codex: default.txt
+      gemini: default.txt
+    notes: "Default conversational role"
+
+  planner:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    prompt_override:
+      claude: default_planner.txt
+      codex: default_planner.txt
+      gemini: default_planner.txt
+    notes: "Planning assistance"
+
+  codereviewer:
+    claude: haiku
+    codex: gpt-5.1-codex-mini
+    gemini: gemini-3-pro-preview
+    primary: gemini
+    prompt_override:
+      claude: default_codereviewer.txt
+      codex: codex_codereviewer.txt
+      gemini: default_codereviewer.txt
+    notes: "Basic code review (use code-review-specialist for thorough review)"

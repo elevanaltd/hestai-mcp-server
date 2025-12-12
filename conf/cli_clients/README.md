@@ -5,14 +5,16 @@ This directory contains configuration files for the HestAI MCP Server's CLI inte
 ## Architecture Overview
 
 ```
-conf/cli_clients/
-├── claude.json              # Claude CLI configuration (48 roles)
-├── codex.json               # Codex CLI configuration (34 roles)
-├── gemini.json              # Gemini CLI configuration (36 roles)
-├── metadata/
-│   ├── agent-model-tiers.json   # Source of truth for tier mappings
-│   └── fallback_hints.json      # Generated: primary/fallback CLI hints
-└── README.md                    # This file
+conf/
+├── agent-routing.yaml           # Source of truth for per-agent routing
+└── cli_clients/
+    ├── claude.json              # Claude CLI configuration (generated)
+    ├── codex.json               # Codex CLI configuration (generated)
+    ├── gemini.json              # Gemini CLI configuration (generated)
+    ├── metadata/
+    │   ├── agent-model-tiers.json   # Legacy tier mappings (deprecated)
+    │   └── fallback_hints.json      # Legacy fallback hints (deprecated)
+    └── README.md                    # This file
 ```
 
 ## File Purposes
@@ -26,40 +28,58 @@ Each client file defines:
 - **`env`**: Environment variable overrides
 - **`roles`**: Agent-to-prompt mappings with per-role arguments
 
-### Metadata Files
+### Source of Truth: `conf/agent-routing.yaml`
 
-**`agent-model-tiers.json`** (Source of Truth)
-- Defines three tiers: HIGH, MEDIUM, LOW
-- Maps agents to appropriate models per CLI
-- Contains exceptions for special cases
-- Includes fallback hints and reasoning effort mappings
+The **agent-routing.yaml** file (in the parent `conf/` directory) is the single source of truth for agent routing configuration. Each agent is configured individually with:
 
-**`fallback_hints.json`** (Generated)
-- Extracted from `agent-model-tiers.json` by the generator script
-- Provides primary/fallback CLI routing for specific agents
-- **Do not edit directly** - modify `agent-model-tiers.json` instead
+- **CLI-specific models**: `claude`, `codex`, `gemini` - which model to use on each CLI
+- **Primary CLI**: `primary` - preferred CLI for this agent
+- **Reasoning effort**: `reasoning_effort` - Codex-specific (high/medium/low)
+- **Prompt overrides**: `prompt_override` - CLI-specific prompt file mapping
+- **Notes**: `notes` - Documentation about agent capabilities
 
-## Tier System
+Example agent configuration:
+```yaml
+critical-engineer:
+  claude: opus
+  codex: gpt-5.1-codex      # Now available on Codex!
+  gemini: gemini-3-pro-preview
+  primary: claude
+  reasoning_effort: high
+  notes: "GO/NO-GO authority - prefers Claude Opus, but works on all CLIs"
+```
 
-| Tier | Claude Model | Gemini Model | Codex Model | Purpose |
-|------|-------------|--------------|-------------|---------|
-| HIGH | opus | null | null | Constitutional authority, GO/NO-GO decisions |
-| MEDIUM | sonnet | gemini-3-pro-preview | gpt-5.1-codex | Implementation, domain specialists |
-| LOW | haiku | gemini-3-pro-preview | gpt-5.1-codex-mini | Exploration, research, advisory |
+### Metadata Files (Legacy - Deprecated)
 
-**Note**: HIGH-tier agents (holistic-orchestrator, critical-engineer, etc.) are Claude-only by design. Their `gemini: null` and `codex: null` values indicate intentional exclusion, not missing configuration.
+**`metadata/agent-model-tiers.json`** - Legacy tier-based mapping (kept for reference)
+**`metadata/fallback_hints.json`** - Legacy fallback hints (kept for reference)
+
+These files are deprecated. Use `conf/agent-routing.yaml` instead.
+
+## Per-Agent Configuration
+
+Every agent can now be configured individually. Use `null` to exclude an agent from a specific CLI:
+
+```yaml
+holistic-orchestrator:
+  claude: opus
+  codex: null     # Excluded from Codex
+  gemini: null    # Excluded from Gemini
+  primary: claude
+  notes: "Constitutional authority - Claude only"
+```
 
 ## Update Workflow
 
-1. **Edit the source of truth**: Modify `metadata/agent-model-tiers.json`
+1. **Edit the source of truth**: Modify `conf/agent-routing.yaml`
 2. **Run the generator**: `python scripts/generate_client_configs.py`
 3. **Verify changes**: `python scripts/generate_client_configs.py --check`
-4. **Commit all changes**: Both metadata and generated configs
+4. **Commit all changes**: Both YAML and generated JSON configs
 
 ### Generator Commands
 
 ```bash
-# Generate/update all configs from tier mapping
+# Generate/update all configs from agent-routing.yaml
 python scripts/generate_client_configs.py
 
 # Dry-run (preview changes without writing)
@@ -72,57 +92,54 @@ python scripts/generate_client_configs.py --check
 python scripts/generate_client_configs.py --cli claude codex
 ```
 
-## Role Coverage by CLI
+## Agent Availability
 
-- **Claude**: Most complete coverage (48 roles) - supports all tiers
-- **Codex**: Medium coverage (34 roles) - MEDIUM and LOW tiers only
-- **Gemini**: Medium coverage (36 roles) - MEDIUM and LOW tiers only
+With the new per-agent routing system, most agents are available on all CLIs:
 
-This asymmetry is intentional: HIGH-tier agents require Claude's constitutional reasoning capabilities.
+- **Claude**: Full coverage with per-agent model selection (opus/sonnet/haiku)
+- **Codex**: Full coverage including previously excluded agents (with reasoning_effort)
+- **Gemini**: Full coverage for all non-excluded agents
+
+Only agents with explicit `null` values (like `holistic-orchestrator`) are excluded from specific CLIs.
 
 ## Adding a New Agent
 
-1. Add agent to appropriate tier in `metadata/agent-model-tiers.json`:
-   ```json
-   "tiers": {
-     "MEDIUM": {
-       "agents": [..., "new-agent-name"]
-     }
-   }
+1. Add agent configuration to `conf/agent-routing.yaml`:
+   ```yaml
+   new-agent-name:
+     claude: sonnet
+     codex: gpt-5.1-codex
+     gemini: gemini-3-pro-preview
+     primary: claude
+     notes: "Description of agent purpose"
    ```
 
 2. Create system prompt: `systemprompts/clink/new-agent-name.txt`
 
 3. Run generator: `python scripts/generate_client_configs.py`
 
-4. If agent needs special handling, add to `exceptions` section
-
-## Exception Handling
-
-Some agents require special CLI routing. Define exceptions in `agent-model-tiers.json`:
-
-```json
-"exceptions": {
-  "system-steward": {
-    "claude": "haiku",
-    "gemini": null,      // Excluded: sandbox limitations
-    "codex": "gpt-5.1-codex-mini",
-    "reason": "Requires file system access - avoids Gemini sandbox"
-  }
-}
-```
+4. If agent needs CLI-specific prompts, add `prompt_override`:
+   ```yaml
+   new-agent-name:
+     ...
+     prompt_override:
+       codex: custom_codex_prompt.txt
+   ```
 
 ## Reasoning Effort (Codex-specific)
 
-Codex supports `model_reasoning_effort` levels (high/medium/low). Configure in:
+Codex supports `model_reasoning_effort` levels (high/medium/low). Configure per-agent in `agent-routing.yaml`:
 
-```json
-"reasoning_effort_mappings": {
-  "high": ["code-review-specialist", "critical-engineer"],
-  "medium": ["holistic-orchestrator", "technical-architect"],
-  "low": []
-}
+```yaml
+code-review-specialist:
+  claude: sonnet
+  codex: gpt-5.1-codex
+  gemini: gemini-3-pro-preview
+  primary: codex
+  reasoning_effort: high  # Codex will use high reasoning effort
 ```
+
+Available levels: `high`, `medium`, `low`
 
 ## Troubleshooting
 

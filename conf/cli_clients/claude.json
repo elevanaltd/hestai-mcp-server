@@ -7,204 +7,8 @@
   ],
   "env": {},
   "roles": {
-    "default": {
-      "prompt_path": "systemprompts/clink/default.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "planner": {
-      "prompt_path": "systemprompts/clink/default_planner.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "codereviewer": {
-      "prompt_path": "systemprompts/clink/default_codereviewer.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "holistic-orchestrator": {
-      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "north-star-architect": {
-      "prompt_path": "systemprompts/clink/north-star-architect.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "ideator": {
-      "prompt_path": "systemprompts/clink/ideator.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "validator": {
-      "prompt_path": "systemprompts/clink/validator.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "synthesizer": {
-      "prompt_path": "systemprompts/clink/synthesizer.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "edge-optimizer": {
-      "prompt_path": "systemprompts/clink/edge-optimizer.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "design-architect": {
-      "prompt_path": "systemprompts/clink/design-architect.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "visual-architect": {
-      "prompt_path": "systemprompts/clink/visual-architect.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "technical-architect": {
-      "prompt_path": "systemprompts/clink/technical-architect.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "critical-design-validator": {
-      "prompt_path": "systemprompts/clink/critical-design-validator.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "requirements-steward": {
-      "prompt_path": "systemprompts/clink/requirements-steward.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "critical-engineer": {
-      "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "test-methodology-guardian": {
-      "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "universal-test-engineer": {
-      "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
-      "role_args": [
-        "--model",
-        "opus"
-      ]
-    },
-    "implementation-lead": {
-      "prompt_path": "systemprompts/clink/implementation-lead.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "principal-engineer": {
-      "prompt_path": "systemprompts/clink/principal-engineer.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "system-steward": {
-      "prompt_path": "systemprompts/clink/system-steward.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "surveyor": {
-      "prompt_path": "systemprompts/clink/surveyor.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "quality-observer": {
-      "prompt_path": "systemprompts/clink/quality-observer.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "ho-liaison": {
-      "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": [
-        "--model",
-        "haiku"
-      ]
-    },
-    "task-decomposer": {
-      "prompt_path": "systemprompts/clink/task-decomposer.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "task-decomposer-validator": {
-      "prompt_path": "systemprompts/clink/task-decomposer-validator.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
     "blind-assessor": {
       "prompt_path": "systemprompts/clink/blind-assessor.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "code-review-specialist": {
-      "prompt_path": "systemprompts/clink/code-review-specialist.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "test-infrastructure-steward": {
-      "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
-      "role_args": [
-        "--model",
-        "sonnet"
-      ]
-    },
-    "octave-specialist": {
-      "prompt_path": "systemprompts/clink/octave-specialist.txt",
       "role_args": [
         "--model",
         "sonnet"
@@ -215,6 +19,20 @@
       "role_args": [
         "--model",
         "opus"
+      ]
+    },
+    "code-review-specialist": {
+      "prompt_path": "systemprompts/clink/code-review-specialist.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "codereviewer": {
+      "prompt_path": "systemprompts/clink/default_codereviewer.txt",
+      "role_args": [
+        "--model",
+        "haiku"
       ]
     },
     "coherence-oracle": {
@@ -245,11 +63,39 @@
         "sonnet"
       ]
     },
+    "critical-design-validator": {
+      "prompt_path": "systemprompts/clink/critical-design-validator.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
+    "critical-engineer": {
+      "prompt_path": "systemprompts/clink/critical-engineer.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
     "critical-implementation-validator": {
       "prompt_path": "systemprompts/clink/critical-implementation-validator.txt",
       "role_args": [
         "--model",
         "opus"
+      ]
+    },
+    "default": {
+      "prompt_path": "systemprompts/clink/default.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "design-architect": {
+      "prompt_path": "systemprompts/clink/design-architect.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
       ]
     },
     "directory-curator": {
@@ -264,6 +110,13 @@
       "role_args": [
         "--model",
         "sonnet"
+      ]
+    },
+    "edge-optimizer": {
+      "prompt_path": "systemprompts/clink/edge-optimizer.txt",
+      "role_args": [
+        "--model",
+        "opus"
       ]
     },
     "error-architect": {
@@ -287,8 +140,29 @@
         "opus"
       ]
     },
+    "ho-liaison": {
+      "prompt_path": "systemprompts/clink/ho-liaison.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "holistic-orchestrator": {
+      "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
     "idea-clarifier": {
       "prompt_path": "systemprompts/clink/idea-clarifier.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "ideator": {
+      "prompt_path": "systemprompts/clink/ideator.txt",
       "role_args": [
         "--model",
         "haiku"
@@ -301,11 +175,60 @@
         "haiku"
       ]
     },
+    "implementation-lead": {
+      "prompt_path": "systemprompts/clink/implementation-lead.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "north-star-architect": {
+      "prompt_path": "systemprompts/clink/north-star-architect.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
+    "octave-specialist": {
+      "prompt_path": "systemprompts/clink/octave-specialist.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
     "octave-validator": {
       "prompt_path": "systemprompts/clink/octave-validator.txt",
       "role_args": [
         "--model",
         "sonnet"
+      ]
+    },
+    "planner": {
+      "prompt_path": "systemprompts/clink/default_planner.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "principal-engineer": {
+      "prompt_path": "systemprompts/clink/principal-engineer.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "quality-observer": {
+      "prompt_path": "systemprompts/clink/quality-observer.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "requirements-steward": {
+      "prompt_path": "systemprompts/clink/requirements-steward.txt",
+      "role_args": [
+        "--model",
+        "opus"
       ]
     },
     "research-analyst": {
@@ -371,8 +294,85 @@
         "sonnet"
       ]
     },
+    "surveyor": {
+      "prompt_path": "systemprompts/clink/surveyor.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "synthesizer": {
+      "prompt_path": "systemprompts/clink/synthesizer.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
+    "system-steward": {
+      "prompt_path": "systemprompts/clink/system-steward.txt",
+      "role_args": [
+        "--model",
+        "haiku"
+      ]
+    },
+    "task-decomposer": {
+      "prompt_path": "systemprompts/clink/task-decomposer.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "task-decomposer-validator": {
+      "prompt_path": "systemprompts/clink/task-decomposer-validator.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "technical-architect": {
+      "prompt_path": "systemprompts/clink/technical-architect.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "test-infrastructure-steward": {
+      "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "test-methodology-guardian": {
+      "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
+    "universal-test-engineer": {
+      "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
+      "role_args": [
+        "--model",
+        "opus"
+      ]
+    },
+    "validator": {
+      "prompt_path": "systemprompts/clink/validator.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
     "vibe-coder": {
       "prompt_path": "systemprompts/clink/vibe-coder.txt",
+      "role_args": [
+        "--model",
+        "sonnet"
+      ]
+    },
+    "visual-architect": {
+      "prompt_path": "systemprompts/clink/visual-architect.txt",
       "role_args": [
         "--model",
         "sonnet"
@@ -387,5 +387,6 @@
     }
   },
   "_generated_by": "scripts/generate_client_configs.py",
-  "_tier_mapping_version": "1.0.0"
+  "_tier_mapping_version": "1.0.0",
+  "_routing_version": "2.0.0"
 }
