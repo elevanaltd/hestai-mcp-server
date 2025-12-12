@@ -4,23 +4,7 @@
   "additional_args": [
     "--model",
     "gemini-3-pro-preview",
-    "--yolo",
-    "--include-directories",
-    "/Users/shaunbuswell/.claude/agents",
-    "--include-directories",
-    "/Volumes/HestAI-old/hestai-tests",
-    "--include-directories",
-    "/Volumes/HestAI-Projects/eav-cep-assist",
-    "--include-directories",
-    "/Volumes/HestAI-Projects/eav-monorepo",
-    "--include-directories",
-    "/Volumes/HestAI-Projects/ingest-assistant",
-    "--include-directories",
-    "/Volumes/HestAI",
-    "--include-directories",
-    "/Users/shaunbuswell/",
-    "--include-directories",
-    "/Users/shaunbuswell/Development/elevana-projects/archive/elevana-input-hub/input-hub-current"
+    "--yolo"
   ],
   "env": {},
   "roles": {
