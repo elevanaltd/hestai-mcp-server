@@ -17,9 +17,9 @@ This is error-prone and requires understanding the JSON structure.
 ## Solution
 
 Three slash commands + one Node.js utility script:
-- `/mcp list` - Shows all servers and their enabled/disabled status
-- `/mcp disable {name}` - Disables a server for current path
-- `/mcp enable {name}` - Re-enables a server for current path
+- `/mcp-servers list` - Shows all servers and their enabled/disabled status
+- `/mcp-servers disable {name}` - Disables a server for current path
+- `/mcp-servers enable {name}` - Re-enables a server for current path
 
 ## Technical Architecture
 
@@ -194,9 +194,9 @@ switch (command) {
 }
 ```
 
-### Slash Command: `mcp.md`
+### Slash Command: `mcp-servers.md`
 
-Location: `~/.claude/commands/mcp.md`
+Location: `~/.claude/commands/mcp-servers.md`
 
 ```markdown
 # MCP Server Management
@@ -206,7 +206,7 @@ Manage MCP servers for the current project/worktree.
 ## Usage
 
 ```
-/mcp [list|disable|enable] [server-name]
+/mcp-servers [list|disable|enable] [server-name]
 ```
 
 **Commands:**
@@ -235,7 +235,7 @@ node "$SCRIPT" "$ACTION" "$SERVER"
 ### Post-Execution
 If disable or enable was executed:
 1. Inform user: "Restart Claude session for changes to take effect"
-2. Optionally run `/mcp list` to show new state
+2. Optionally run `/mcp-servers list` to show new state
 
 ---
 
@@ -243,14 +243,14 @@ If disable or enable was executed:
 
 ```bash
 # List all servers
-/mcp
-/mcp list
+/mcp-servers
+/mcp-servers list
 
 # Disable supabase for current project
-/mcp disable supabase
+/mcp-servers disable supabase
 
 # Re-enable supabase
-/mcp enable supabase
+/mcp-servers enable supabase
 ```
 
 ---
@@ -276,10 +276,10 @@ This allows project-specific MCP configuration without manual intervention.
 - [ ] Create `~/.claude/bin/` directory if not exists
 - [ ] Write `mcp-server-manager.mjs` script
 - [ ] Make script executable (`chmod +x`)
-- [ ] Write `~/.claude/commands/mcp.md` slash command
-- [ ] Test: `/mcp list`
-- [ ] Test: `/mcp disable supabase`
-- [ ] Test: `/mcp enable supabase`
+- [ ] Write `~/.claude/commands/mcp-servers.md` slash command
+- [ ] Test: `/mcp-servers list`
+- [ ] Test: `/mcp-servers disable supabase`
+- [ ] Test: `/mcp-servers enable supabase`
 - [ ] Verify JSON integrity after modifications
 - [ ] Document in CLAUDE.md if needed
 
@@ -292,7 +292,7 @@ This allows project-specific MCP configuration without manual intervention.
 
 ## Future Enhancements
 
-1. **Bulk operations**: `/mcp disable-all`, `/mcp enable-all`
-2. **Presets**: `/mcp preset minimal` (only hestai)
+1. **Bulk operations**: `/mcp-servers disable-all`, `/mcp-servers enable-all`
+2. **Presets**: `/mcp-servers preset minimal` (only hestai)
 3. **Context Steward integration**: Auto-configure on `/load`
 4. **MCP tool**: Add as MCP tool for programmatic access
