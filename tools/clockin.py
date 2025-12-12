@@ -411,7 +411,7 @@ class ClockInTool(BaseTool):
 
         now = datetime.now()
         archive_retention_days = 30
-        stale_session_hours = 24
+        stale_session_hours = 72  # 3 days - sessions can span multiple days
 
         # Cleanup old archives
         if archive_dir.exists():

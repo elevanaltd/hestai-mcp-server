@@ -499,7 +499,7 @@ class TestClockInTool:
 
         os.utime(old_archive, (old_time, old_time))
 
-        # Create stale active session (> 24h)
+        # Create stale active session (> 72h)
         active_dir = temp_hestai_dir / "sessions" / "active"
         stale_session_dir = active_dir / "stale-session"
         stale_session_dir.mkdir(parents=True, exist_ok=True)
@@ -508,7 +508,7 @@ class TestClockInTool:
             "session_id": "stale-session",
             "role": "test-role",
             "focus": "test",
-            "started_at": (datetime.now() - timedelta(hours=30)).isoformat(),
+            "started_at": (datetime.now() - timedelta(hours=80)).isoformat(),  # 80h > 72h threshold
         }
         stale_session_file.write_text(json.dumps(stale_data))
 
