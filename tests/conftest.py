@@ -241,3 +241,29 @@ def mock_provider_availability(request, monkeypatch):
         }
 
     monkeypatch.setattr(ModelProviderRegistry, "get_available_models", mock_get_available_models)
+
+
+@pytest.fixture(autouse=True)
+def mock_context_steward_ai(monkeypatch):
+    """
+    Auto-mock ContextStewardAI to disable AI compression in tests.
+
+    This prevents tests from hanging on real AI calls during clockout operations.
+    Individual tests can override this by explicitly patching ContextStewardAI.
+    """
+
+    class MockContextStewardAI:
+        def is_task_enabled(self, task_name):
+            """Disable compression tasks by default in tests"""
+            return False
+
+        async def run_task(self, task_name, **kwargs):
+            """Fallback for tests that enable tasks but don't mock run_task"""
+            return {"status": "disabled", "artifacts": []}
+
+    # Only patch if ContextStewardAI is importable
+    try:
+        monkeypatch.setattr("tools.context_steward.ai.ContextStewardAI", MockContextStewardAI)
+    except (ImportError, AttributeError):
+        # Module not available, skip patching
+        pass

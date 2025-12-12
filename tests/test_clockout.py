@@ -835,13 +835,15 @@ class TestOctaveContentValidation:
 
         # Content is JSON-encoded
         content = json.loads(output["content"])
-        archive_path = Path(content["archive_path"])
 
-        # Verify .txt archive was created
-        assert archive_path.exists()
+        # Verify raw_jsonl_path was created (TXT generation removed)
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        assert raw_jsonl_path.exists()
+        assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file was NOT created (short content rejected)
-        octave_path = archive_path.with_suffix(".oct.md")
+        octave_path = raw_jsonl_path.with_suffix(".oct.md")
         assert not octave_path.exists(), "OCTAVE file should not be created for short content"
 
     @pytest.mark.asyncio
@@ -861,7 +863,7 @@ class TestOctaveContentValidation:
         # Create archive file mentioned in OCTAVE
         archive_dir = working_dir / ".hestai" / "sessions" / "archive"
         archive_dir.mkdir(parents=True, exist_ok=True)
-        (archive_dir / "2025-12-09-b2-implementation-abc123.txt").write_text("session")
+        (archive_dir / "2025-12-09-b2-implementation-abc123.jsonl").write_text("session")
         (archive_dir / "2025-12-09-b2-implementation-abc123.oct.md").write_text("octave")
 
         # Create long OCTAVE content (> MIN_OCTAVE_LENGTH)
@@ -882,7 +884,7 @@ TECHNICAL_CONTEXT::[
 ]
 
 ARTIFACTS_GENERATED::[
-  ARCHIVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.txt,
+  RAW_JSONL::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.jsonl,
   OCTAVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.oct.md
 ]
 """
@@ -914,13 +916,15 @@ ARTIFACTS_GENERATED::[
 
         # Content is JSON-encoded
         content = json.loads(output["content"])
-        archive_path = Path(content["archive_path"])
 
-        # Verify .txt archive was created
-        assert archive_path.exists()
+        # Verify raw_jsonl_path was created (TXT generation removed)
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        assert raw_jsonl_path.exists()
+        assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file WAS created (substantial content accepted)
-        octave_path = archive_path.with_suffix(".oct.md")
+        octave_path = raw_jsonl_path.with_suffix(".oct.md")
         assert octave_path.exists(), "OCTAVE file should be created for substantial content"
 
         # Verify content matches what we provided
@@ -1107,14 +1111,14 @@ class TestClockoutVerificationGate:
         octave_content = """
 SESSION_SUMMARY::[
   FILES_MODIFIED::[tools/clockout.py,tests/test_clockout.py],
-  ARTIFACTS::[.hestai/sessions/archive/session.txt]
+  ARTIFACTS::[.hestai/sessions/archive/session.jsonl]
 ]
 """
 
         # Create archive directory and file
         archive_dir = working_dir / ".hestai" / "sessions" / "archive"
         archive_dir.mkdir(parents=True)
-        (archive_dir / "session.txt").write_text("session content")
+        (archive_dir / "session.jsonl").write_text("session content")
 
         # Verify should pass - all mentioned files exist
         result = clockout_tool._verify_context_claims(octave_content, working_dir)
@@ -1131,7 +1135,7 @@ SESSION_SUMMARY::[
         octave_content = """
 SESSION_SUMMARY::[
   FILES_MODIFIED::[tools/clockout.py,tests/test_missing.py],
-  ARTIFACTS::[.hestai/sessions/archive/missing.txt]
+  ARTIFACTS::[.hestai/sessions/archive/missing.jsonl]
 ]
 """
 
@@ -1141,7 +1145,7 @@ SESSION_SUMMARY::[
         assert result["passed"] is False
         assert len(result["issues"]) > 0
         assert any(
-            "clockout.py" in issue or "test_missing.py" in issue or "missing.txt" in issue for issue in result["issues"]
+            "clockout.py" in issue or "test_missing.py" in issue or "missing.jsonl" in issue for issue in result["issues"]
         )
 
     def test_verify_context_claims_reference_integrity_pass(self, clockout_tool, tmp_path):
@@ -1287,7 +1291,7 @@ SESSION_SUMMARY::[
   ROLE::implementation-lead,
   FOCUS::verification-testing,
   FILES_MODIFIED::[nonexistent/file1.py,nonexistent/file2.py,nonexistent/file3.py],
-  ARTIFACTS::[missing/artifact1.txt,missing/artifact2.txt]
+  ARTIFACTS::[missing/artifact1.jsonl,missing/artifact2.jsonl]
 ]
 
 TECHNICAL_CONTEXT::[
@@ -1464,7 +1468,7 @@ async def test_focus_sanitization_path_separators(temp_hestai_dir):
 
         # Verify archive file was created with sanitized filename
         archive_dir = hestai_dir / "sessions" / "archive"
-        archive_files = list(archive_dir.glob("*.txt"))
+        archive_files = list(archive_dir.glob("*.jsonl"))
         assert len(archive_files) == 1
 
         # Archive filename should NOT contain path separators
@@ -1530,7 +1534,7 @@ async def test_focus_sanitization_newlines(temp_hestai_dir):
 
         # Verify archive file was created with sanitized filename
         archive_dir = hestai_dir / "sessions" / "archive"
-        archive_files = list(archive_dir.glob("*.txt"))
+        archive_files = list(archive_dir.glob("*.jsonl"))
         assert len(archive_files) == 1
 
         # Archive filename should NOT contain newlines
