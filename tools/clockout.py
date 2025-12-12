@@ -168,10 +168,20 @@ class ClockOutTool(BaseTool):
             # Find Claude session JSONL using dual-path resolution
             jsonl_path = self._resolve_transcript_path(session_data, project_root)
 
+            # Generate timestamp and sanitize focus BEFORE creating any archive files
+            # Issue #120: Consistent naming requires same base for raw JSONL and OCTAVE
+            timestamp = datetime.now().strftime("%Y-%m-%d")
+            focus = session_data.get("focus", "general")
+            safe_focus = focus.replace("/", "-").replace("\\", "-").replace("\n", "-").strip("-")
+
+            # Create archive directory
+            archive_dir.mkdir(parents=True, exist_ok=True)
+
             # Preserve raw JSONL before parsing (Issue #120)
             # This maintains complete session history for potential future analysis
-            archive_dir.mkdir(parents=True, exist_ok=True)
-            raw_jsonl_path = archive_dir / f"{request.session_id}-raw.jsonl"
+            # Consistent naming: {timestamp}-{focus}-{session_id}-raw.jsonl
+            raw_jsonl_filename = f"{timestamp}-{safe_focus}-{request.session_id}-raw.jsonl"
+            raw_jsonl_path = archive_dir / raw_jsonl_filename
             try:
                 import shutil
 
@@ -190,24 +200,17 @@ class ClockOutTool(BaseTool):
             # Generate summary
             summary = self._generate_summary(messages, session_data, request.description)
 
-            # Create archive
-            archive_dir.mkdir(parents=True, exist_ok=True)
-            timestamp = datetime.now().strftime("%Y-%m-%d")
-            focus = session_data.get("focus", "general")
-            # Sanitize focus to remove filesystem-unsafe characters
-            safe_focus = focus.replace("/", "-").replace("\\", "-").replace("\n", "-").strip("-")
-            archive_filename = f"{timestamp}-{safe_focus}-{request.session_id}.txt"
-            archive_path = archive_dir / archive_filename
+            # Issue #120 Phase 2: TXT generation removed - raw JSONL + OCTAVE provide complete coverage
+            # - Raw JSONL preserves 100% of session content (no 98.6% loss)
+            # - OCTAVE compression provides human-readable summary
+            # - TXT format was redundant and source of content loss
+            # archive_path will point to OCTAVE file when compression succeeds, raw JSONL otherwise
 
-            # Format and write archive
-            formatted_transcript = self._format_transcript(messages, session_data, request.description)
-            archive_path.write_text(formatted_transcript)
-
-            logger.info(f"Archived session {request.session_id} to {archive_path}")
+            logger.info(f"Session {request.session_id} transcript preserved in raw JSONL")
 
             # AI compression (optional - graceful degradation)
             # Controlled by conf/context_steward.json enabled flag
-            # Track octave_path to include in response when compression succeeds
+            # Track octave_path to use as primary archive_path when compression succeeds
             octave_path_created = None
             from tools.context_steward.ai import ContextStewardAI
 
@@ -223,11 +226,13 @@ class ClockOutTool(BaseTool):
                         duration=session_data.get("duration", "unknown"),
                         branch=session_data.get("branch", "main"),
                         working_dir=str(project_root),  # For signal gathering
-                        transcript_path=str(archive_path),
+                        transcript_path=str(raw_jsonl_path),  # Use raw JSONL as source
                     )
                     if result.get("status") == "success":
-                        # Save octave summary
-                        octave_path = archive_path.with_suffix(".oct.md")
+                        # Save octave summary - use consistent naming with raw JSONL
+                        # Issue #120: Same base name as raw JSONL, different suffix
+                        octave_filename = f"{timestamp}-{safe_focus}-{request.session_id}.oct.md"
+                        octave_path = archive_dir / octave_filename
                         artifacts = result.get("artifacts", [])
                         if artifacts:
                             octave_content = artifacts[0].get("content", "")
@@ -251,8 +256,11 @@ class ClockOutTool(BaseTool):
                                 # Verify claims before context_update
                                 verification = self._verify_context_claims(octave_content, project_root)
 
-                                # Save verification result
-                                verification_path = archive_dir / f"{request.session_id}.verification.json"
+                                # Save verification result - Issue #120: Use consistent naming base
+                                verification_filename = (
+                                    f"{timestamp}-{safe_focus}-{request.session_id}.verification.json"
+                                )
+                                verification_path = archive_dir / verification_filename
                                 verification_path.write_text(json.dumps(verification, indent=2))
 
                                 # FIX: Make verification gate actually block (not just log)
@@ -275,7 +283,8 @@ class ClockOutTool(BaseTool):
                                         metadata={
                                             "tool_name": self.name,
                                             "session_id": request.session_id,
-                                            "archive_path": str(archive_path),
+                                            "raw_jsonl_path": str(raw_jsonl_path),
+                                            "octave_path": str(octave_path),
                                             "verification": verification,
                                         },
                                     )
@@ -309,9 +318,14 @@ class ClockOutTool(BaseTool):
                 logger.warning(f"Failed to remove session from global registry: {e}")
 
             # Create response content
+            # Issue #120 Phase 2: archive_path now points to OCTAVE when available, raw JSONL otherwise
+            # This provides the most useful human-readable output while preserving full data in JSONL
+            primary_archive = str(octave_path_created) if octave_path_created else str(raw_jsonl_path)
+
             content = {
                 "summary": summary,
-                "archive_path": str(archive_path),
+                "archive_path": primary_archive,
+                "raw_jsonl_path": str(raw_jsonl_path),  # Always include raw JSONL for completeness
                 "message_count": len(messages),
                 "session_id": request.session_id,
             }

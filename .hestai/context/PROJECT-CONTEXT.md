@@ -26,95 +26,83 @@ RUNTIME_DEPENDENCIES::[
 ]
 
 ## CURRENT_STATE
-DATE::2025-12-11[21:36]
-BRANCH::fix/issue-120-clockout-pipeline[71cf145]
-ACTIVE_FOCUS::\"Context Steward v2 - Clockout Pipeline Completion + /load Command Ecosystem Integration\"
+DATE::2025-12-11
+BRANCH::fix-issue-120[868ad56]
+ACTIVE_FOCUS::\"Issue #120 Unified .hestai Architecture - Foundation for Context Steward v2\"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
-SESSION_VERIFIED::true[system-steward context validation 21:36 UTC]
+ISSUE_120_STATUS::OPEN[REOPENED - architectural scope exceeds initial PRs]
 
 RECENT_ACHIEVEMENTS::[
-  \"Session c63e80ae: /load command 7-tier redesign with 5/5 specialist consensus (HO-Liaison+Edge-Optimizer+Critical-Engineer+Principal-Engineer+HO)\",
-  \"Cross-session learnings index: governance cascades architecture, failure mode design, ecosystem context awareness\",
-  \"#121 Web Agent Protocol MERGED to main (feature/issue-120-web-agent-protocol)\",
-  \"#120 Clockout pipeline COMPLETE: tool_use + tool_result capture + verification gate working\",
-  \"Issue #120: Raw JSONL preservation + sensitive params redaction + output summarization\",
-  \"Verification gate implementation: Path traversal protection + artifact reality checks\",
-  \"Context sync integration: OCTAVE compression → PROJECT-CONTEXT auto-merge (holistic path)\"
+  \"PR #124 Worktree branch operations MERGED\",
+  \"PR #123 Clockout pipeline fix MERGED (tool_use + tool_result capture)\",
+  \"PR #122 Tool operations preservation MERGED\",
+  \"PR #121 Web Agent Protocol MERGED\",
+  \"/load command 7-tier redesign validated (5/5 specialist consensus)\"
+]
+
+## ISSUE_120_ARCHITECTURE_OVERHAUL
+STATUS::IN_PROGRESS[keystone_issue]
+PROBLEM_STATEMENT::[
+  \"Sessions siloed per worktree - agents cannot see cross-worktree work\",
+  \"Clockout pipeline loses 98.6% of content (tool ops filtered out)\",
+  \"No separate git tracking - artifacts pollute project or lost on clone\",
+  \"Duplicated PROJECT-CONTEXT.md with divergence risk\"
+]
+
+PROPOSED_SOLUTION::\"Centralize via ~/.hestai/ as separate git repo with symlinks; preserve JSONL (gitignored, 30-day); track OCTAVE permanently\"
+
+PHASE_PROGRESS::[
+  \"Phase 1 Infrastructure: TODO (create ~/.hestai/, init git, symlinking script)\",
+  \"Phase 2 Clockout Fix: PARTIAL (PR #123 merged, but TXT still generated, no JSONL copy to archive)\",
+  \"Phase 3 Clockin Updates: TODO (symlink detection, cleanup trigger)\",
+  \"Phase 4 Migration: TODO (existing directory migration, PROJECT-CONTEXT merge)\",
+  \"Phase 5 Documentation: TODO (spec updates, setup guide, retention policy)\"
+]
+
+ACCEPTANCE_CRITERIA::[
+  \"All 10 Phase 1 requirements implemented\",
+  \"Existing projects migrate without data loss\",
+  \"CI/CD pipelines work without modification\",
+  \"Multi-worktree visibility achieved\",
+  \"Clockout atomicity verified (no partial writes)\",
+  \"Git Notes linkage traversable\"
+]
+
+BLOCKING_ISSUES::[
+  \"#119 CSI-HYBRID Session Lifecycle (depends on #120)\",
+  \"#104 Verification Gate (depends on #120)\",
+  \"#93 Validation Gate Phase 4 (depends on #104)\"
 ]
 
 NEXT_PRIORITY::[
-  \"Ecosystem-integrated load.md distribution via /config-sync push_all to all projects\",
-  \"Lazy GC implementation: zombie session cleanup on clock_in (principal-engineer identified 100% abandonment)\",
-  \"Test new /load command: verify 7-tier flow + fail-hard clockin + dashboard display\",
-  \"Branch-binding for sessions (#110) + partial symlink pattern for worktree context sharing\"
+  \"Phase 1: Create ~/.hestai/ directory structure + git init\",
+  \"Phase 1: Symlinking setup script\",
+  \"Phase 2: Remove TXT generation, add JSONL copy to archive\",
+  \"Quick win: #116 Add octave_path to response (independent, 30 min)\"
 ]
 
-## CLOCKOUT_FLOW_STATUS
-INTENDED_FLOW::[
-  \"1. Session transcript created → COMPLETE\",
-  \"2. Raw JSONL preservation → COMPLETE (#120: _preserve_raw_JSONL_before_parsing)\",
-  \"3. Tool_use/tool_result extraction → COMPLETE (#120: expanded _parse_session_transcript)\",
-  \"4. OCTAVE compression by AI → COMPLETE (archive/{session_id}-octave.oct.md)\",
-  \"5. Verification gate (path traversal + artifact reality checks) → COMPLETE\",
-  \"6. Context sync to PROJECT-CONTEXT → COMPLETE (auto-merge via context_update tool)\"
-]
+## CONTEXT_STEWARD_PHASE_STATUS
+PHASE_1_FOUNDATION::COMPLETE[7/7 items]
+PHASE_2_AI_INTELLIGENCE::COMPLETE[3/3 items]
+PHASE_3_DEPRECATION::TODO[#92 deprecate request_doc]
+PHASE_4_VALIDATION::BLOCKED[#93 depends on #104 depends on #120]
+PHASE_5_GOVERNANCE::FUTURE[#66,#67,#68]
 
-ISSUE_120_COMPLETION::[
-  \"Previously: Lost 98.6% of session content (only user/assistant messages captured)\",
-  \"Now: tool_use → name+id+redacted_params; tool_result → output+summary; raw JSONL preserved\",
-  \"Verification gate: Blocks malicious OCTAVE content before context sync\",
-  \"Security hardening: Path traversal validation + sensitive param redaction + output summarization\",
-  \"Holistic path: JSONL → transcript → OCTAVE compression → verification → PROJECT-CONTEXT sync\"
-]
-
-LOAD_COMMAND_REDESIGN::[
-  ARCHITECTURE::[\"7-tier ecosystem-integrated design validated by 5/5 specialist consensus\"],
-  TIER_1::\"Constitutional RAPH (micro-RAPH identity binding)\",
-  TIER_2::\"Session lifecycle (clock_in fail-hard + context state vector)\",
-  TIER_3::\"Context negatives filtering (excluded items + enforcement state)\",
-  TIER_4::\"Anchor submit soft-fail (enforcement rules without blocking capability)\",
-  TIER_5::\"Codebase lazy loading (conditional repomix on architectural questions only)\",
-  TIER_6::\"RAPH context-aware (role-specific prompt loading)\",
-  TIER_7::\"Dashboard display (enforcement rules + behind/ahead counts + state summary)\",
-  DECISION_RATIONALE::[
-    \"Fail-hard on clockin: session_id required for clockout compression+context_sync (audit_gap without it)\",
-    \"Soft-fail on anchor_submit: enforcement_rules_missing_gracefully_degrades_guards_not_capability\",
-    \"Lazy repomix: conditional_pack avoids 40KB×10_loads=400K_tokens_wasted (principal-engineer validation)\",
-    \"Partial symlink: .hestai/context_shared across worktrees, sessions/local per-branch (race_condition_prevention)\"
-  ],
-  IMPLEMENTATION_STATUS::\"Ready for ecosystem distribution via /config-sync push_all\"
-]
-
-NEXT_PHASE::[
-  \"PR #120 submission and merge (code ready on fix/issue-120-clockout-pipeline)\",
-  \"Distribute ecosystem-integrated /load to hestai,eav,eav-monorepo,ingest,cep projects\",
-  \"Branch-awareness (#110) → add git branch field to session.json\",
-  \"Lazy GC on clock_in → zombie session recovery (holistic-orchestrator finding)\"
-]
-
-PHASE_STATUS::[
-  \"Phase 1 Foundation: COMPLETE\",
-  \"Phase 2 AI Intelligence: COMPLETE\",
-  \"Phase 3 Deprecation: #92 TODO\",
-  \"Phase 4 Validation: #93 UNBLOCKED (pending PR #111 merge)\"
-]
+## LOAD_COMMAND_REDESIGN
+STATUS::VALIDATED[5/5 specialist consensus]
+ARCHITECTURE::\"7-tier ecosystem-integrated design\"
+IMPLEMENTATION_STATUS::\"Ready for ecosystem distribution via /config-sync push_all\"
 
 ## AUTHORITY
 CURRENT_OWNER::implementation-lead[b2-implementation]
-PHASE::B2[Build Phase - Issue #120 clockout pipeline completion + ecosystem /load integration]
-PREVIOUS_VALIDATION::holistic-orchestrator[163bc14b: systemic gap analysis complete; c63e80ae: ecosystem-first /load redesign validated]
-CURRENT_VALIDATION::system-steward[2025-12-11T21:36Z: timestamp+branch+commit verified; lint/typecheck/test gates pending]
+PHASE::B2[Build Phase - Issue #120 Unified .hestai Architecture]
+PREVIOUS_VALIDATION::holistic-orchestrator[session 7f1e751e: PROJECT-CONTEXT correction + 803-REPORT creation]
 ACCOUNTABLE_TO::critical-engineer[via holistic-orchestrator]
 
-QUALITY_GATES::[
-  lint::\"pending\",
-  typecheck::\"pending\",
-  test::\"pending\"
-]
+QUALITY_GATES::[lint::\"passing\", typecheck::\"passing\", test::\"passing\"]
 
-BRANCH_TRACKING::fix/issue-120-clockout-pipeline[71cf145: docs(session) compress session 3674be37 model-tracking-test to OCTAVE; ready for PR submission]
-MAIN_BRANCH_STATUS::6bf3dc3[Merge_PR_#121_Web_Agent_Protocol]
-IMPLEMENTATION_STATUS::Code complete; clockout + /load ecosystem integration working; quality gates pending; atomic commit ready
+BRANCH_TRACKING::fix-issue-120[868ad56: synced with main after PR #123, #124 merges]
+MAIN_BRANCH_STATUS::868ad56[PR #124 worktree-branch-operations merged]
 
 ## DEVELOPMENT_GUIDELINES
 STYLE::\"Follow existing project conventions (formatting, naming).\"
@@ -129,8 +117,9 @@ SPEC::\".hestai/workflow/CONTEXT-STEWARD-V2-SPEC.oct.md\"
 CRITICAL_ASSESSMENT::\".hestai/reports/800-REPORT-CRITICAL-ENGINEER-CONTEXT-STEWARD-ASSESSMENT.md\"
 LOAD_ARCHITECTURE::\".hestai/commands/load.md\"[7-tier ecosystem-integrated design]
 
-### Audit & Operations (New - 2025-12-10)
+### Audit & Operations
 MCP_AUDIT_REPORT::\".hestai/reports/801-REPORT-MCP-AUDIT-SESSION-F29CB14C.md\"[comprehensive system health validation]
+ISSUE_120_ASSESSMENT::\".hestai/reports/803-REPORT-ISSUE-120-ORCHESTRATION-ASSESSMENT.md\"[keystone issue priority plan]
 TOOL_DEPENDENCY_MATRIX::\".hestai/workflow/MCP-TOOL-DEPENDENCY-MATRIX.md\"[change control checklist]
 PARALLEL_VALIDATION_PATTERN::\".hestai/patterns/PARALLEL-AGENT-VALIDATION.oct.md\"[orchestration pattern]
 PROCESS_CLEANUP_PROTOCOL::\".hestai/operations/PROCESS-CLEANUP-PROTOCOL.md\"[operational runbook]
@@ -151,25 +140,17 @@ ACTIVE::[clockin, clockout, anchorsubmit, chat, clink, consensus, document_submi
 DEPRECATED::[thinkdeep, debug, requestdoc]
 
 ## CURRENT_CI_STATUS
+BRANCH::\"fix-issue-120\"
+COMMITS_AHEAD::0
+COMMITS_BEHIND::0
+QUALITY_GATES::[lint::\"passing\", typecheck::\"passing\", test::\"passing\"]
+LAST_MERGE::\"PR #124 worktree-branch-operations merged\"
 
-BRANCH::\"fix/issue-120-clockout-pipeline\"
-COMMITS_AHEAD::1
-QUALITY_GATES::[lint::\"pending\", typecheck::\"pending\", test::\"pending\"]
-LAST_MERGE::\"PR #121 merged (Web Agent Protocol)\",PENDING::\"clockout enhancements + /load ecosystem redesign for #120\"
-
-## SYSTEMIC_INSIGHTS[from_holistic-orchestrator]
-
-KEY_FINDINGS::[
-  \"Clockout design assumes user performs explicit action; actual data shows 100% abandonment rate (12 zombie sessions)\",
-  \"PROJECT_CONTEXT mixes strategic[identity+architecture] with tactical[current_PRs]→recommend split into STATUS file\",
-  \"Sessions lack git branch awareness→loses context when switching branches\",
-  \"Governance architecture must be visible to specialists during review, not discovered mid-consensus (c63e80ae learning)\",
-  \"Specialists optimize locally; orchestrators validate globally→bidirectional consultation needed\"
-]
-
-REMEDIATION_ROADMAP::[
-  \"Tier_0: Ecosystem-integrated /load distribution + branch binding (#110) + lazy GC on clock_in (zombie recovery)\",
-  \"Tier_1: Split PROJECT_CONTEXT into strategic+PROJECT_STATUS tactical\",
-  \"Tier_2: Cross-session discovery + anchor.json as source of truth (requires specialist consultation on race_conditions)\",
-  \"Tier_3: Consolidate workflow documentation (deferred)\"
-]
+## DEPENDENCY_GRAPH[from_803-REPORT]
+KEYSTONE::#120[Unified .hestai Architecture]
+TIER_1_QUICK_WINS::[#116 octave_path (30 min, independent)]
+TIER_2_FOUNDATION::[#120 Architecture → #119 CSI-HYBRID]
+TIER_3_BUG_TRIAGE::[#103 working_dir (may be solved by #120)]
+TIER_4_PHASE_PROGRESSION::[#92 deprecation → #104 verification → #93 validation]
+TIER_5_PARALLEL::[#97 configurable_paths, #98 rollback, #99 conflict_detection]
+TIER_6_GOVERNANCE::[#66 blockage, #67 analyzer, #68 hybrid_enforcement]

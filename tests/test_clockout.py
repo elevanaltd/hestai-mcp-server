@@ -264,14 +264,19 @@ class TestClockOutTool:
         assert len(content["summary"]) > 0
 
     @pytest.mark.asyncio
-    async def test_clockout_excludes_thinking_by_default(self, clockout_tool, temp_hestai_dir, temp_claude_session):
-        """Test clock_out excludes thinking messages by default"""
+    async def test_clockout_preserves_thinking_in_raw_jsonl(self, clockout_tool, temp_hestai_dir, temp_claude_session):
+        """
+        Test that raw JSONL preserves thinking messages (Issue #120 ruling).
+
+        Critical-engineer ruling: Raw JSONL must preserve ALL content including thinking
+        to prevent 98.6% content loss. This is the whole point of the raw JSONL fix.
+        """
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
 
         arguments = {
             "session_id": session_id,
-            "description": "Test thinking exclusion",
+            "description": "Test thinking preservation",
             "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
@@ -286,13 +291,13 @@ class TestClockOutTool:
         # Content is JSON-encoded
         content = json.loads(output["content"])
 
-        # Read the archived file
-        archive_path = Path(content["archive_path"])
-        archived_content = archive_path.read_text()
+        # Read the raw JSONL file
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        raw_jsonl_content = raw_jsonl_path.read_text()
 
-        # Thinking messages should not appear
-        assert "[thinking]" not in archived_content
-        assert "Let me think about" not in archived_content
+        # Raw JSONL MUST preserve thinking messages (98.6% loss prevention)
+        assert "thinking" in raw_jsonl_content.lower(), "Raw JSONL must preserve thinking messages"
+        assert "Let me think about" in raw_jsonl_content, "Raw JSONL must contain actual thinking content"
 
     def test_clockout_rejects_path_traversal_session_id(self):
         """Test session_id with ../ is rejected to prevent path traversal"""
@@ -835,13 +840,16 @@ class TestOctaveContentValidation:
 
         # Content is JSON-encoded
         content = json.loads(output["content"])
-        archive_path = Path(content["archive_path"])
 
-        # Verify .txt archive was created
-        assert archive_path.exists()
+        # Verify raw_jsonl_path was created (TXT generation removed)
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        assert raw_jsonl_path.exists()
+        assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file was NOT created (short content rejected)
-        octave_path = archive_path.with_suffix(".oct.md")
+        # Issue #120: With consistent naming, derive OCTAVE path by replacing -raw.jsonl with .oct.md
+        octave_path = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".oct.md"))
         assert not octave_path.exists(), "OCTAVE file should not be created for short content"
 
     @pytest.mark.asyncio
@@ -861,7 +869,7 @@ class TestOctaveContentValidation:
         # Create archive file mentioned in OCTAVE
         archive_dir = working_dir / ".hestai" / "sessions" / "archive"
         archive_dir.mkdir(parents=True, exist_ok=True)
-        (archive_dir / "2025-12-09-b2-implementation-abc123.txt").write_text("session")
+        (archive_dir / "2025-12-09-b2-implementation-abc123.jsonl").write_text("session")
         (archive_dir / "2025-12-09-b2-implementation-abc123.oct.md").write_text("octave")
 
         # Create long OCTAVE content (> MIN_OCTAVE_LENGTH)
@@ -882,7 +890,7 @@ TECHNICAL_CONTEXT::[
 ]
 
 ARTIFACTS_GENERATED::[
-  ARCHIVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.txt,
+  RAW_JSONL::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.jsonl,
   OCTAVE::.hestai/sessions/archive/2025-12-09-b2-implementation-abc123.oct.md
 ]
 """
@@ -914,13 +922,16 @@ ARTIFACTS_GENERATED::[
 
         # Content is JSON-encoded
         content = json.loads(output["content"])
-        archive_path = Path(content["archive_path"])
 
-        # Verify .txt archive was created
-        assert archive_path.exists()
+        # Verify raw_jsonl_path was created (TXT generation removed)
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        assert raw_jsonl_path.exists()
+        assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file WAS created (substantial content accepted)
-        octave_path = archive_path.with_suffix(".oct.md")
+        # Issue #120: With consistent naming, derive OCTAVE path by replacing -raw.jsonl with .oct.md
+        octave_path = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".oct.md"))
         assert octave_path.exists(), "OCTAVE file should be created for substantial content"
 
         # Verify content matches what we provided
@@ -1107,14 +1118,14 @@ class TestClockoutVerificationGate:
         octave_content = """
 SESSION_SUMMARY::[
   FILES_MODIFIED::[tools/clockout.py,tests/test_clockout.py],
-  ARTIFACTS::[.hestai/sessions/archive/session.txt]
+  ARTIFACTS::[.hestai/sessions/archive/session.jsonl]
 ]
 """
 
         # Create archive directory and file
         archive_dir = working_dir / ".hestai" / "sessions" / "archive"
         archive_dir.mkdir(parents=True)
-        (archive_dir / "session.txt").write_text("session content")
+        (archive_dir / "session.jsonl").write_text("session content")
 
         # Verify should pass - all mentioned files exist
         result = clockout_tool._verify_context_claims(octave_content, working_dir)
@@ -1131,7 +1142,7 @@ SESSION_SUMMARY::[
         octave_content = """
 SESSION_SUMMARY::[
   FILES_MODIFIED::[tools/clockout.py,tests/test_missing.py],
-  ARTIFACTS::[.hestai/sessions/archive/missing.txt]
+  ARTIFACTS::[.hestai/sessions/archive/missing.jsonl]
 ]
 """
 
@@ -1141,7 +1152,8 @@ SESSION_SUMMARY::[
         assert result["passed"] is False
         assert len(result["issues"]) > 0
         assert any(
-            "clockout.py" in issue or "test_missing.py" in issue or "missing.txt" in issue for issue in result["issues"]
+            "clockout.py" in issue or "test_missing.py" in issue or "missing.jsonl" in issue
+            for issue in result["issues"]
         )
 
     def test_verify_context_claims_reference_integrity_pass(self, clockout_tool, tmp_path):
@@ -1250,8 +1262,13 @@ ARTIFACTS_GENERATED::[
         assert output["status"] == "success"
 
         # Verify .verification.json was created
-        archive_dir = hestai_dir / "sessions" / "archive"
-        verification_file = archive_dir / f"{session_id}.verification.json"
+        # Issue #120: Derive verification path from raw_jsonl_path (consistent naming)
+        content = json.loads(output["content"])
+        assert "raw_jsonl_path" in content
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+
+        # Derive verification path by replacing -raw.jsonl with .verification.json
+        verification_file = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".verification.json"))
 
         assert verification_file.exists(), "Verification result should be persisted"
 
@@ -1287,7 +1304,7 @@ SESSION_SUMMARY::[
   ROLE::implementation-lead,
   FOCUS::verification-testing,
   FILES_MODIFIED::[nonexistent/file1.py,nonexistent/file2.py,nonexistent/file3.py],
-  ARTIFACTS::[missing/artifact1.txt,missing/artifact2.txt]
+  ARTIFACTS::[missing/artifact1.jsonl,missing/artifact2.jsonl]
 ]
 
 TECHNICAL_CONTEXT::[
@@ -1464,7 +1481,7 @@ async def test_focus_sanitization_path_separators(temp_hestai_dir):
 
         # Verify archive file was created with sanitized filename
         archive_dir = hestai_dir / "sessions" / "archive"
-        archive_files = list(archive_dir.glob("*.txt"))
+        archive_files = list(archive_dir.glob("*.jsonl"))
         assert len(archive_files) == 1
 
         # Archive filename should NOT contain path separators
@@ -1530,7 +1547,7 @@ async def test_focus_sanitization_newlines(temp_hestai_dir):
 
         # Verify archive file was created with sanitized filename
         archive_dir = hestai_dir / "sessions" / "archive"
-        archive_files = list(archive_dir.glob("*.txt"))
+        archive_files = list(archive_dir.glob("*.jsonl"))
         assert len(archive_files) == 1
 
         # Archive filename should NOT contain newlines
