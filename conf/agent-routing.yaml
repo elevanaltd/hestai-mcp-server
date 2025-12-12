@@ -19,22 +19,21 @@ schema_version: "2.0.0"
 # Available models per CLI (for validation)
 available_models:
   claude: [opus, sonnet, haiku]
-  codex: [gpt-5.1-codex, gpt-5.1-codex-mini, o3-mini]
-  gemini: [gemini-3-pro-preview, gemini-2.5-flash]
+  codex: [gpt-5.1-codex, gpt-5.1-codex-mini, gpt-5.1-codex-max, gpt-5.1]
+  gemini: [gemini-3-pro-preview, gemini-2.5-flash, gemini-2.5-pro]
 
 # Defaults for agents not explicitly listed
 defaults:
   claude: sonnet
   codex: gpt-5.1-codex
-  gemini: gemini-3-pro-preview
+  gemini: gemini-2.5-pro-preview
   primary: claude
 
 # Per-agent routing configuration
 agents:
   # =============================================================================
   # CONSTITUTIONAL / BLOCKING AUTHORITY AGENTS
-  # These agents have GO/NO-GO authority. Most work best on Claude Opus but
-  # can be used on other CLIs for analysis (without blocking authority).
+  # These agents have GO/NO-GO authority.
   # =============================================================================
 
   holistic-orchestrator:
@@ -46,9 +45,9 @@ agents:
 
   critical-engineer:
     claude: opus
-    codex: gpt-5.1-codex  # Available for analysis, blocking decisions on Claude
+    codex: gpt-5.1-codex-max
     gemini: gemini-3-pro-preview
-    primary: claude
+    primary: gemini
     reasoning_effort: high
     notes: "GO/NO-GO authority - prefers Claude Opus, but analysis works on all CLIs"
 
