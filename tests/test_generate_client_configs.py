@@ -1,253 +1,308 @@
-"""Tests for generate_client_configs.py script."""
+"""
+Test suite for scripts/generate_client_configs.py
+
+Tests YAML-based agent routing configuration generation.
+RED phase - these tests will fail until implementation exists.
+"""
 
 import json
-import sys
 from pathlib import Path
-from unittest.mock import patch
 
-# Add scripts directory to path before importing
-scripts_dir = Path(__file__).parent.parent / "scripts"
-sys.path.insert(0, str(scripts_dir))
-
-import pytest  # noqa: E402
-from generate_client_configs import ConfigGenerator  # noqa: E402
+import pytest
 
 
-@pytest.fixture
-def mock_tier_mapping():
-    """Mock tier mapping data."""
-    return {
-        "_schema_version": "1.0.0",
-        "tiers": {
-            "HIGH": {
-                "claude": "opus",
-                "gemini": None,
-                "codex": None,
-                "agents": ["holistic-orchestrator", "critical-engineer"],
+class TestYAMLLoading:
+    """Test YAML configuration loading."""
+
+    def test_load_valid_yaml(self):
+        """Should load valid agent-routing.yaml file."""
+        from scripts.generate_client_configs import load_yaml
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        assert "schema_version" in config
+        assert "agents" in config
+        assert "defaults" in config
+
+    def test_load_missing_file_raises_error(self):
+        """Should raise FileNotFoundError for missing file."""
+        from scripts.generate_client_configs import load_yaml
+
+        with pytest.raises(FileNotFoundError):
+            load_yaml("/nonexistent/file.yaml")
+
+
+class TestClaudeGeneration:
+    """Test Claude config generation from YAML."""
+
+    @pytest.fixture
+    def yaml_config(self):
+        """Minimal YAML config for testing."""
+        return {
+            "schema_version": "2.0.0",
+            "defaults": {"claude": "sonnet"},
+            "agents": {
+                "test-opus": {"claude": "opus", "primary": "claude"},
+                "test-sonnet": {"claude": "sonnet", "primary": "claude"},
+                "test-haiku": {"claude": "haiku", "primary": "claude"},
+                "test-excluded": {"claude": None, "primary": "codex"},
+                "test-override": {
+                    "claude": "haiku",
+                    "primary": "claude",
+                    "prompt_override": {"claude": "custom.txt"},
+                },
             },
-            "MEDIUM": {
-                "claude": "sonnet",
-                "gemini": "gemini-3-pro-preview",
-                "codex": "gpt-5.1-codex",
-                "agents": ["implementation-lead"],
-            },
-            "LOW": {
-                "claude": "haiku",
-                "gemini": "gemini-3-pro-preview",
-                "codex": "gpt-5.1-codex-mini",
-                "agents": ["surveyor"],
-            },
-        },
-        "exceptions": {
-            "system-steward": {
-                "claude": "haiku",
-                "gemini": None,
-                "codex": "gpt-5.1-codex-mini",
-            }
-        },
-        "primary_fallback_hints": {
-            "system-steward": {
-                "primary_cli": "claude",
-                "primary_model": "haiku",
-                "fallback_cli": "codex",
-                "fallback_model": "gpt-5.1-codex-mini",
-                "reason": "Requires file system access",
-            }
-        },
-        "model_mappings": {
-            "claude": {"opus": "opus", "sonnet": "sonnet", "haiku": "haiku"},
-            "gemini": {"gemini-3-pro-preview": "gemini-3-pro-preview"},
-            "codex": {
-                "gpt-5.1-codex": "gpt-5.1-codex",
-                "gpt-5.1-codex-mini": "gpt-5.1-codex-mini",
-            },
-        },
-        "reasoning_effort_mappings": {
-            "high": ["critical-engineer"],
-            "medium": ["holistic-orchestrator"],
-            "low": [],
-        },
-    }
-
-
-@pytest.fixture
-def mock_claude_config():
-    """Mock Claude client config."""
-    return {
-        "name": "claude",
-        "command": "claude",
-        "additional_args": [],
-        "env": {},
-        "roles": {
-            "holistic-orchestrator": {
-                "prompt_path": "systemprompts/clink/holistic-orchestrator.txt",
-                "role_args": [],
-            },
-            "critical-engineer": {
-                "prompt_path": "systemprompts/clink/critical-engineer.txt",
-                "role_args": [],
-            },
-            "implementation-lead": {
-                "prompt_path": "systemprompts/clink/implementation-lead.txt",
-                "role_args": [],
-            },
-            "surveyor": {
-                "prompt_path": "systemprompts/clink/surveyor.txt",
-                "role_args": [],
-            },
-            "system-steward": {
-                "prompt_path": "systemprompts/clink/system-steward.txt",
-                "role_args": [],
-            },
-        },
-    }
-
-
-@pytest.fixture
-def generator(tmp_path, mock_tier_mapping, mock_claude_config):
-    """Create ConfigGenerator with mocked data."""
-    # Create directory structure
-    cli_clients_dir = tmp_path / "conf" / "cli_clients"
-    metadata_dir = cli_clients_dir / "metadata"
-    metadata_dir.mkdir(parents=True)
-
-    # Write mock tier mapping
-    tier_mapping_path = metadata_dir / "agent-model-tiers.json"
-    with open(tier_mapping_path, "w") as f:
-        json.dump(mock_tier_mapping, f)
-
-    # Write mock claude config
-    claude_config_path = cli_clients_dir / "claude.json"
-    with open(claude_config_path, "w") as f:
-        json.dump(mock_claude_config, f)
-
-    gen = ConfigGenerator(base_dir=tmp_path)
-    gen.load_tier_mapping()
-    gen.load_client_configs(["claude"])
-
-    return gen
-
-
-class TestConfigGenerator:
-    """Tests for ConfigGenerator class."""
-
-    def test_find_agent_tier(self, generator):
-        """Test finding agent tier."""
-        assert generator.find_agent_tier("holistic-orchestrator") == "HIGH"
-        assert generator.find_agent_tier("implementation-lead") == "MEDIUM"
-        assert generator.find_agent_tier("surveyor") == "LOW"
-        assert generator.find_agent_tier("unknown-agent") is None
-
-    def test_get_model_for_agent_from_tier(self, generator):
-        """Test getting model from tier mapping."""
-        # HIGH tier agent
-        assert generator.get_model_for_agent("holistic-orchestrator", "claude") == "opus"
-        assert generator.get_model_for_agent("holistic-orchestrator", "gemini") is None
-
-        # MEDIUM tier agent
-        assert generator.get_model_for_agent("implementation-lead", "claude") == "sonnet"
-        assert generator.get_model_for_agent("implementation-lead", "gemini") == "gemini-3-pro-preview"
-
-        # LOW tier agent
-        assert generator.get_model_for_agent("surveyor", "claude") == "haiku"
-
-    def test_get_model_for_agent_exception_override(self, generator):
-        """Test exception overrides tier mapping."""
-        # system-steward has exception override
-        assert generator.get_model_for_agent("system-steward", "claude") == "haiku"
-        assert generator.get_model_for_agent("system-steward", "gemini") is None  # Explicit exclusion
-        assert generator.get_model_for_agent("system-steward", "codex") == "gpt-5.1-codex-mini"
-
-    def test_get_reasoning_effort(self, generator):
-        """Test getting reasoning effort level."""
-        assert generator.get_reasoning_effort("critical-engineer") == "high"
-        assert generator.get_reasoning_effort("holistic-orchestrator") == "medium"
-        assert generator.get_reasoning_effort("surveyor") is None
-
-    def test_update_client_config_claude(self, generator):
-        """Test updating Claude client config."""
-        result = generator.update_client_config("claude", dry_run=False)
-
-        config = result["config"]
-        roles = config["roles"]
-
-        # HIGH tier → opus
-        assert roles["holistic-orchestrator"]["role_args"] == ["--model", "opus"]
-        assert roles["critical-engineer"]["role_args"] == ["--model", "opus"]
-
-        # MEDIUM tier → sonnet
-        assert roles["implementation-lead"]["role_args"] == ["--model", "sonnet"]
-
-        # LOW tier → haiku
-        assert roles["surveyor"]["role_args"] == ["--model", "haiku"]
-
-        # Exception override → haiku
-        assert roles["system-steward"]["role_args"] == ["--model", "haiku"]
-
-        # Metadata added
-        assert config["_generated_by"] == "scripts/generate_client_configs.py"
-
-    def test_update_client_config_dry_run(self, generator):
-        """Test dry-run mode doesn't modify config."""
-        original_config = generator.client_configs["claude"].copy()
-
-        result = generator.update_client_config("claude", dry_run=True)
-
-        # Original config should be unchanged
-        assert generator.client_configs["claude"] == original_config
-
-        # Result should show changes
-        assert len(result["changes"]) > 0
-
-    def test_validate_model_ids_valid(self, generator):
-        """Test validation passes for valid model IDs."""
-        errors = generator.validate_model_ids()
-        assert errors == []
-
-    def test_validate_model_ids_invalid(self, generator):
-        """Test validation catches invalid model IDs."""
-        # Add invalid model to tier
-        generator.tier_mapping["tiers"]["HIGH"]["claude"] = "invalid-model"
-
-        errors = generator.validate_model_ids()
-        assert len(errors) > 0
-        assert "invalid-model" in errors[0]
-
-    def test_generate_fallback_hints(self, generator):
-        """Test generating fallback hints."""
-        hints = generator.generate_fallback_hints()
-
-        assert "system-steward" in hints
-        assert hints["system-steward"]["primary_cli"] == "claude"
-        assert hints["system-steward"]["primary_model"] == "haiku"
-        assert hints["system-steward"]["fallback_cli"] == "codex"
-
-
-class TestValidation:
-    """Tests for validation functions."""
-
-    def test_validate_tier_degradation_warning(self, generator):
-        """Test tier degradation detection."""
-        # Add a HIGH→LOW degradation
-        generator.tier_mapping["primary_fallback_hints"]["critical-engineer"] = {
-            "primary_cli": "claude",
-            "primary_model": "opus",
-            "fallback_cli": "codex",
-            "fallback_model": "gpt-5.1-codex-mini",  # LOW tier model
         }
 
-        warnings = generator.validate_tier_degradation()
-        # Current implementation may not catch this - test structure
-        # This is a placeholder for future enhancement
-        assert isinstance(warnings, list)
+    def test_generate_claude_structure(self, yaml_config):
+        """Should generate Claude config with required structure."""
+        from scripts.generate_client_configs import generate_claude
+
+        config = generate_claude(yaml_config)
+
+        assert config["name"] == "claude"
+        assert config["command"] == "claude"
+        assert "roles" in config
+        assert isinstance(config["roles"], dict)
+
+    def test_claude_opus_role(self, yaml_config):
+        """Should generate role with --model opus."""
+        from scripts.generate_client_configs import generate_claude
+
+        config = generate_claude(yaml_config)
+
+        assert "test-opus" in config["roles"]
+        role = config["roles"]["test-opus"]
+        assert role["prompt_path"] == "systemprompts/clink/test-opus.txt"
+        assert role["role_args"] == ["--model", "opus"]
+
+    def test_claude_excludes_null(self, yaml_config):
+        """Should exclude agents where claude: null."""
+        from scripts.generate_client_configs import generate_claude
+
+        config = generate_claude(yaml_config)
+
+        assert "test-excluded" not in config["roles"]
+
+    def test_claude_prompt_override(self, yaml_config):
+        """Should use prompt_override when specified."""
+        from scripts.generate_client_configs import generate_claude
+
+        config = generate_claude(yaml_config)
+
+        role = config["roles"]["test-override"]
+        assert role["prompt_path"] == "systemprompts/clink/custom.txt"
 
 
-def test_main_function_help(capsys):
-    """Test main function help output."""
-    with patch("sys.argv", ["generate_client_configs.py", "--help"]):
-        with pytest.raises(SystemExit) as exc_info:
-            from generate_client_configs import main
+class TestCodexGeneration:
+    """Test Codex config generation from YAML."""
 
-            main()
+    @pytest.fixture
+    def yaml_config(self):
+        """Minimal YAML config for testing."""
+        return {
+            "schema_version": "2.0.0",
+            "defaults": {"codex": "gpt-5.1-codex"},
+            "agents": {
+                "test-basic": {"codex": "gpt-5.1-codex", "primary": "codex"},
+                "test-reasoning-high": {
+                    "codex": "gpt-5.1-codex",
+                    "reasoning_effort": "high",
+                    "primary": "codex",
+                },
+                "test-reasoning-medium": {
+                    "codex": "gpt-5.1-codex",
+                    "reasoning_effort": "medium",
+                    "primary": "codex",
+                },
+                "test-excluded": {"codex": None, "primary": "claude"},
+            },
+        }
 
-        assert exc_info.value.code == 0
+    def test_generate_codex_structure(self, yaml_config):
+        """Should generate Codex config with required structure."""
+        from scripts.generate_client_configs import generate_codex
+
+        config = generate_codex(yaml_config)
+
+        assert config["name"] == "codex"
+        assert config["command"] == "codex"
+        assert "roles" in config
+
+    def test_codex_reasoning_high(self, yaml_config):
+        """Should add -c model_reasoning_effort=high."""
+        from scripts.generate_client_configs import generate_codex
+
+        config = generate_codex(yaml_config)
+
+        role = config["roles"]["test-reasoning-high"]
+        assert role["role_args"] == ["-c", "model_reasoning_effort=high"]
+
+    def test_codex_reasoning_medium(self, yaml_config):
+        """Should add -c model_reasoning_effort=medium."""
+        from scripts.generate_client_configs import generate_codex
+
+        config = generate_codex(yaml_config)
+
+        role = config["roles"]["test-reasoning-medium"]
+        assert role["role_args"] == ["-c", "model_reasoning_effort=medium"]
+
+    def test_codex_no_reasoning(self, yaml_config):
+        """Should have empty role_args when no reasoning_effort."""
+        from scripts.generate_client_configs import generate_codex
+
+        config = generate_codex(yaml_config)
+
+        role = config["roles"]["test-basic"]
+        assert role["role_args"] == []
+
+    def test_codex_excludes_null(self, yaml_config):
+        """Should exclude agents where codex: null."""
+        from scripts.generate_client_configs import generate_codex
+
+        config = generate_codex(yaml_config)
+
+        assert "test-excluded" not in config["roles"]
+
+
+class TestGeminiGeneration:
+    """Test Gemini config generation from YAML."""
+
+    @pytest.fixture
+    def yaml_config(self):
+        """Minimal YAML config for testing."""
+        return {
+            "schema_version": "2.0.0",
+            "defaults": {"gemini": "gemini-3-pro-preview"},
+            "agents": {
+                "test-pro": {"gemini": "gemini-3-pro-preview", "primary": "gemini"},
+                "test-flash": {"gemini": "gemini-2.5-flash", "primary": "gemini"},
+                "test-excluded": {"gemini": None, "primary": "claude"},
+            },
+        }
+
+    def test_generate_gemini_structure(self, yaml_config):
+        """Should generate Gemini config with required structure."""
+        from scripts.generate_client_configs import generate_gemini
+
+        config = generate_gemini(yaml_config)
+
+        assert config["name"] == "gemini"
+        assert config["command"] == "gemini"
+        assert "roles" in config
+
+    def test_gemini_model_args(self, yaml_config):
+        """Should add --model <model> to role_args."""
+        from scripts.generate_client_configs import generate_gemini
+
+        config = generate_gemini(yaml_config)
+
+        pro_role = config["roles"]["test-pro"]
+        assert pro_role["role_args"] == ["--model", "gemini-3-pro-preview"]
+
+        flash_role = config["roles"]["test-flash"]
+        assert flash_role["role_args"] == ["--model", "gemini-2.5-flash"]
+
+    def test_gemini_excludes_null(self, yaml_config):
+        """Should exclude agents where gemini: null."""
+        from scripts.generate_client_configs import generate_gemini
+
+        config = generate_gemini(yaml_config)
+
+        assert "test-excluded" not in config["roles"]
+
+
+class TestIntegration:
+    """Integration tests with actual agent-routing.yaml."""
+
+    def test_loads_actual_yaml(self):
+        """Should successfully load conf/agent-routing.yaml."""
+        from scripts.generate_client_configs import load_yaml
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        assert config["schema_version"] == "2.0.0"
+        assert "holistic-orchestrator" in config["agents"]
+
+    def test_critical_engineer_all_clis(self):
+        """Should generate critical-engineer for all CLIs."""
+        from scripts.generate_client_configs import (
+            generate_claude,
+            generate_codex,
+            generate_gemini,
+            load_yaml,
+        )
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        claude = generate_claude(config)
+        codex = generate_codex(config)
+        gemini = generate_gemini(config)
+
+        assert "critical-engineer" in claude["roles"]
+        assert "critical-engineer" in codex["roles"]
+        assert "critical-engineer" in gemini["roles"]
+
+        # Verify model assignments
+        assert "opus" in claude["roles"]["critical-engineer"]["role_args"]
+        assert "-c" in codex["roles"]["critical-engineer"]["role_args"]
+
+    def test_system_steward_gemini_exclusion(self):
+        """Should exclude system-steward from Gemini (null in YAML)."""
+        from scripts.generate_client_configs import generate_gemini, load_yaml
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        gemini = generate_gemini(config)
+
+        assert "system-steward" not in gemini["roles"]
+
+    def test_holistic_orchestrator_claude_only(self):
+        """Should only generate holistic-orchestrator for Claude."""
+        from scripts.generate_client_configs import (
+            generate_claude,
+            generate_codex,
+            generate_gemini,
+            load_yaml,
+        )
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        claude = generate_claude(config)
+        codex = generate_codex(config)
+        gemini = generate_gemini(config)
+
+        assert "holistic-orchestrator" in claude["roles"]
+        assert "holistic-orchestrator" not in codex["roles"]
+        assert "holistic-orchestrator" not in gemini["roles"]
+
+    def test_generated_configs_valid_json(self):
+        """Should generate valid JSON for all CLIs."""
+        from scripts.generate_client_configs import (
+            generate_claude,
+            generate_codex,
+            generate_gemini,
+            load_yaml,
+        )
+
+        yaml_path = Path(__file__).parent.parent / "conf" / "agent-routing.yaml"
+        config = load_yaml(str(yaml_path))
+
+        claude = generate_claude(config)
+        codex = generate_codex(config)
+        gemini = generate_gemini(config)
+
+        # Should serialize to JSON without error
+        json.dumps(claude)
+        json.dumps(codex)
+        json.dumps(gemini)
+
+        # Should have roles
+        assert len(claude["roles"]) > 0
+        assert len(codex["roles"]) > 0
+        assert len(gemini["roles"]) > 0
