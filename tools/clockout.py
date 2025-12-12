@@ -168,10 +168,20 @@ class ClockOutTool(BaseTool):
             # Find Claude session JSONL using dual-path resolution
             jsonl_path = self._resolve_transcript_path(session_data, project_root)
 
+            # Generate timestamp and sanitize focus BEFORE creating any archive files
+            # Issue #120: Consistent naming requires same base for raw JSONL and OCTAVE
+            timestamp = datetime.now().strftime("%Y-%m-%d")
+            focus = session_data.get("focus", "general")
+            safe_focus = focus.replace("/", "-").replace("\\", "-").replace("\n", "-").strip("-")
+
+            # Create archive directory
+            archive_dir.mkdir(parents=True, exist_ok=True)
+
             # Preserve raw JSONL before parsing (Issue #120)
             # This maintains complete session history for potential future analysis
-            archive_dir.mkdir(parents=True, exist_ok=True)
-            raw_jsonl_path = archive_dir / f"{request.session_id}-raw.jsonl"
+            # Consistent naming: {timestamp}-{focus}-{session_id}-raw.jsonl
+            raw_jsonl_filename = f"{timestamp}-{safe_focus}-{request.session_id}-raw.jsonl"
+            raw_jsonl_path = archive_dir / raw_jsonl_filename
             try:
                 import shutil
 
@@ -189,9 +199,6 @@ class ClockOutTool(BaseTool):
 
             # Generate summary
             summary = self._generate_summary(messages, session_data, request.description)
-
-            # Create archive directory
-            archive_dir.mkdir(parents=True, exist_ok=True)
 
             # Issue #120 Phase 2: TXT generation removed - raw JSONL + OCTAVE provide complete coverage
             # - Raw JSONL preserves 100% of session content (no 98.6% loss)
@@ -222,10 +229,8 @@ class ClockOutTool(BaseTool):
                         transcript_path=str(raw_jsonl_path),  # Use raw JSONL as source
                     )
                     if result.get("status") == "success":
-                        # Save octave summary - derive path from raw JSONL
-                        timestamp = datetime.now().strftime("%Y-%m-%d")
-                        focus = session_data.get("focus", "general")
-                        safe_focus = focus.replace("/", "-").replace("\\", "-").replace("\n", "-").strip("-")
+                        # Save octave summary - use consistent naming with raw JSONL
+                        # Issue #120: Same base name as raw JSONL, different suffix
                         octave_filename = f"{timestamp}-{safe_focus}-{request.session_id}.oct.md"
                         octave_path = archive_dir / octave_filename
                         artifacts = result.get("artifacts", [])

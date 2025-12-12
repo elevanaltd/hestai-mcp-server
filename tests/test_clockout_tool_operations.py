@@ -378,10 +378,15 @@ class TestRawJSONLPreservation:
 
         assert output["status"] == "success"
 
-        # RED: Raw JSONL should be preserved in archive
-        archive_dir = hestai_dir / "sessions" / "archive"
-        raw_jsonl_path = archive_dir / f"{session_id}-raw.jsonl"
+        # Issue #120: Raw JSONL should be preserved in archive with consistent naming
+        # New naming: {timestamp}-{focus}-{session_id}-raw.jsonl
+        content = json.loads(output["content"])
+        assert "raw_jsonl_path" in content, "Response should include raw_jsonl_path"
+
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
         assert raw_jsonl_path.exists(), "Raw JSONL should be preserved in archive"
+        assert raw_jsonl_path.name.endswith("-raw.jsonl"), "Raw JSONL should have -raw.jsonl suffix"
+        assert session_id in raw_jsonl_path.name, "Raw JSONL should include session_id in filename"
 
         # Verify it's a complete copy
         raw_content = raw_jsonl_path.read_text()

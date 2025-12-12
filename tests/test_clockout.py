@@ -264,14 +264,19 @@ class TestClockOutTool:
         assert len(content["summary"]) > 0
 
     @pytest.mark.asyncio
-    async def test_clockout_excludes_thinking_by_default(self, clockout_tool, temp_hestai_dir, temp_claude_session):
-        """Test clock_out excludes thinking messages by default"""
+    async def test_clockout_preserves_thinking_in_raw_jsonl(self, clockout_tool, temp_hestai_dir, temp_claude_session):
+        """
+        Test that raw JSONL preserves thinking messages (Issue #120 ruling).
+
+        Critical-engineer ruling: Raw JSONL must preserve ALL content including thinking
+        to prevent 98.6% content loss. This is the whole point of the raw JSONL fix.
+        """
         hestai_dir, session_id = temp_hestai_dir
         working_dir = hestai_dir.parent
 
         arguments = {
             "session_id": session_id,
-            "description": "Test thinking exclusion",
+            "description": "Test thinking preservation",
             "_session_context": type("obj", (object,), {"project_root": working_dir})(),
         }
 
@@ -286,13 +291,13 @@ class TestClockOutTool:
         # Content is JSON-encoded
         content = json.loads(output["content"])
 
-        # Read the archived file
-        archive_path = Path(content["archive_path"])
-        archived_content = archive_path.read_text()
+        # Read the raw JSONL file
+        raw_jsonl_path = Path(content["raw_jsonl_path"])
+        raw_jsonl_content = raw_jsonl_path.read_text()
 
-        # Thinking messages should not appear
-        assert "[thinking]" not in archived_content
-        assert "Let me think about" not in archived_content
+        # Raw JSONL MUST preserve thinking messages (98.6% loss prevention)
+        assert "thinking" in raw_jsonl_content.lower(), "Raw JSONL must preserve thinking messages"
+        assert "Let me think about" in raw_jsonl_content, "Raw JSONL must contain actual thinking content"
 
     def test_clockout_rejects_path_traversal_session_id(self):
         """Test session_id with ../ is rejected to prevent path traversal"""
@@ -843,7 +848,8 @@ class TestOctaveContentValidation:
         assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file was NOT created (short content rejected)
-        octave_path = raw_jsonl_path.with_suffix(".oct.md")
+        # Issue #120: With consistent naming, derive OCTAVE path by replacing -raw.jsonl with .oct.md
+        octave_path = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".oct.md"))
         assert not octave_path.exists(), "OCTAVE file should not be created for short content"
 
     @pytest.mark.asyncio
@@ -924,7 +930,8 @@ ARTIFACTS_GENERATED::[
         assert raw_jsonl_path.suffix == ".jsonl"
 
         # Verify .oct.md file WAS created (substantial content accepted)
-        octave_path = raw_jsonl_path.with_suffix(".oct.md")
+        # Issue #120: With consistent naming, derive OCTAVE path by replacing -raw.jsonl with .oct.md
+        octave_path = Path(str(raw_jsonl_path).replace("-raw.jsonl", ".oct.md"))
         assert octave_path.exists(), "OCTAVE file should be created for substantial content"
 
         # Verify content matches what we provided
@@ -1145,7 +1152,8 @@ SESSION_SUMMARY::[
         assert result["passed"] is False
         assert len(result["issues"]) > 0
         assert any(
-            "clockout.py" in issue or "test_missing.py" in issue or "missing.jsonl" in issue for issue in result["issues"]
+            "clockout.py" in issue or "test_missing.py" in issue or "missing.jsonl" in issue
+            for issue in result["issues"]
         )
 
     def test_verify_context_claims_reference_integrity_pass(self, clockout_tool, tmp_path):
