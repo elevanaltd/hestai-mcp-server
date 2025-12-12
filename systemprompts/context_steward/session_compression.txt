@@ -18,7 +18,8 @@ SESSION_CONTEXT::[
   ROLE::{{role}},
   DURATION::{{duration}},
   BRANCH::{{branch}},
-  PHASE::{{phase}}
+  PHASE::{{phase}},
+  CLOCKOUT_SUMMARY::{{clockout_summary}}
 ]
 
 SIGNAL_CONTEXT::[
@@ -39,6 +40,12 @@ GOAL::[
   OUTPUT::[COMPLETE_compressed_content[40-120_lines_typical]],
   FIDELITY::[100%_decision_logic+96%+_overall],
   COMPRESSION_RATIO::target[60-80%_reduction]
+]
+
+PRIORITY_SIGNAL::[
+  IF[clockout_summary_not_empty]→WEIGHT_AS_PRIMARY[user_explicitly_curated_this_insight],
+  EXTRACTION_ORDER::[1::validate_clockout_summary_against_transcript, 2::extract_supporting_evidence, 3::then_other_findings],
+  LATE_PIVOT_DETECTION::IF[clockout_summary_contradicts_early_consensus]→CLOCKOUT_SUMMARY_WINS[human_override_recency]
 ]
 
 NEVER::[
@@ -283,17 +290,30 @@ QUALITY_GATE_VALIDATION::[
       IF[ratio>0.80]→compress[merge_similar_decisions, combine_related_blockers, tighten_abstractions]
     ]
   ]
+
+  GATE_8_CLOCKOUT_FIDELITY::[
+    MANDATE::"Clockout summary insights MUST appear in compression"
+    CHECK::[
+      □ clockout_summary_parsed_for_key_phrases["Key finding", "Root cause", "Critical", "Important"],
+      □ EACH_key_phrase_appears_in_output[DECISIONS|BLOCKERS|LEARNINGS],
+      □ IF[clockout_contradicts_body]→CONTRADICTION_explicitly_noted
+    ]
+    FAIL_CONDITION::[any_clockout_insight_missing_from_output]
+    MEASUREMENT::"Clockout_fidelity_score[clockout_insights_captured ÷ total_clockout_insights]"
+    REMEDIATION::IF[gate_fails]→re-read_clockout_summary→add_missing_insights→recalculate
+  ]
 ]
 
 VALIDATION_CHECKLIST::before_output[
-  □ all_7_gates_report_PASS_or_REMEDIATED,
+  □ all_8_gates_report_PASS_or_REMEDIATED,
   □ fidelity_score≥96%,
   □ scenario_density_score≥0.8,
   □ metric_context_score≥95%,
   □ operator_density_score≥70%,
   □ wisdom_transfer_score≥90%,
   □ completeness_score=100%,
-  □ compression_ratio_in_range[60-80%]
+  □ compression_ratio_in_range[60-80%],
+  □ clockout_fidelity_score=100%
 ]
 
 REMEDIATION_STRATEGY::[

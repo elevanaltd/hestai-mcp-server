@@ -220,6 +220,7 @@ class ClockOutTool(BaseTool):
                     result = await ai.run_task(
                         "session_compression",
                         session_id=request.session_id,
+                        clockout_summary=request.description,  # User's priority signal
                         model=session_data.get("model", "unknown"),
                         model_history=session_data.get("model_history", []),
                         role=session_data.get("role", "unknown"),
