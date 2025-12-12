@@ -1106,6 +1106,28 @@ validate_api_keys() {
 }
 
 # ----------------------------------------------------------------------------
+# Worktree Detection Functions
+# ----------------------------------------------------------------------------
+
+# Check if we're running from a git worktree
+is_git_worktree() {
+    # Method 1: Check if .git is a file (worktrees use .git files, not directories)
+    if [[ -f ".git" ]]; then
+        return 0
+    fi
+
+    # Method 2: Check git rev-parse for worktree indicator
+    if command -v git &> /dev/null; then
+        local git_dir=$(git rev-parse --git-dir 2>/dev/null)
+        if [[ "$git_dir" == *"/worktrees/"* ]]; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# ----------------------------------------------------------------------------
 # Claude Integration Functions
 # ----------------------------------------------------------------------------
 
@@ -1113,6 +1135,14 @@ validate_api_keys() {
 check_claude_cli_integration() {
     local python_cmd="$1"
     local server_path="$2"
+
+    # Skip MCP registration updates when running from a worktree
+    # This prevents worktree-specific paths from overwriting the main repo config
+    if is_git_worktree; then
+        print_warning "Running from git worktree - skipping MCP registration update"
+        print_info "MCP registration should point to main repo, not worktrees"
+        return 0
+    fi
 
     if ! command -v claude &> /dev/null; then
         echo ""
@@ -1201,6 +1231,12 @@ check_claude_cli_integration() {
 check_claude_desktop_integration() {
     local python_cmd="$1"
     local server_path="$2"
+
+    # Skip MCP registration updates when running from a worktree
+    if is_git_worktree; then
+        # Already warned in CLI integration check, no need to repeat
+        return 0
+    fi
 
     # Skip if already configured (check flag)
     if [[ -f "$DESKTOP_CONFIG_FLAG" ]]; then
@@ -1326,6 +1362,12 @@ EOF
 check_gemini_cli_integration() {
     local script_dir="$1"
     local hestai_wrapper="$script_dir/hestai-mcp-server"
+
+    # Skip MCP registration updates when running from a worktree
+    if is_git_worktree; then
+        # Already warned in CLI integration check, no need to repeat
+        return 0
+    fi
 
     # Check if Gemini settings file exists
     local gemini_config="$HOME/.gemini/settings.json"
