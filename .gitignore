@@ -203,3 +203,6 @@ logs/
 /.hestai/context/RESEARCH-*.md
 
 repomix-output.xml
+
+.gemini/
+gha-creds-*.json

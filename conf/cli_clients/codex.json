@@ -4,7 +4,7 @@
   "timeout_seconds": 900,
   "additional_args": [
     "--model",
-    "gpt-5.1-codex",
+    "gpt-5.2",
     "--json",
     "--dangerously-bypass-approvals-and-sandbox",
     "--skip-git-repo-check"
