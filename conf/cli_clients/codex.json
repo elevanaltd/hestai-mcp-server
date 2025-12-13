@@ -13,24 +13,15 @@
   "roles": {
     "critical-engineer": {
       "prompt_path": "systemprompts/clink/critical-engineer.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=high"
-      ]
+      "role_args": []
     },
     "critical-design-validator": {
       "prompt_path": "systemprompts/clink/critical-design-validator.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=high"
-      ]
+      "role_args": []
     },
     "critical-implementation-validator": {
       "prompt_path": "systemprompts/clink/critical-implementation-validator.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=high"
-      ]
+      "role_args": []
     },
     "requirements-steward": {
       "prompt_path": "systemprompts/clink/requirements-steward.txt",
@@ -38,38 +29,23 @@
     },
     "security-specialist": {
       "prompt_path": "systemprompts/clink/security-specialist.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=high"
-      ]
+      "role_args": []
     },
     "coherence-oracle": {
       "prompt_path": "systemprompts/clink/coherence-oracle.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "test-methodology-guardian": {
       "prompt_path": "systemprompts/clink/test-methodology-guardian.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "universal-test-engineer": {
       "prompt_path": "systemprompts/clink/universal-test-engineer.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "test-infrastructure-steward": {
       "prompt_path": "systemprompts/clink/test-infrastructure-steward.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "build-plan-checker": {
       "prompt_path": "systemprompts/clink/build-plan-checker.txt",
@@ -77,10 +53,7 @@
     },
     "code-review-specialist": {
       "prompt_path": "systemprompts/clink/code-review-specialist.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=high"
-      ]
+      "role_args": []
     },
     "quality-observer": {
       "prompt_path": "systemprompts/clink/quality-observer.txt",
@@ -100,10 +73,7 @@
     },
     "technical-architect": {
       "prompt_path": "systemprompts/clink/technical-architect.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "design-architect": {
       "prompt_path": "systemprompts/clink/design-architect.txt",
@@ -155,10 +125,7 @@
     },
     "ho-liaison": {
       "prompt_path": "systemprompts/clink/ho-liaison.txt",
-      "role_args": [
-        "-c",
-        "model_reasoning_effort=medium"
-      ]
+      "role_args": []
     },
     "ideator": {
       "prompt_path": "systemprompts/clink/ideator.txt",

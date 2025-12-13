@@ -18,9 +18,12 @@ def find_context_file(project_root: Path, filename: str) -> Path | None:
     Find context file in priority order across multiple locations.
 
     Searches for the file in:
-    1. .hestai/context/
-    2. .coord/
-    3. project root
+    1. .hestai/snapshots/ (anchor architecture - READ-ONLY synthesized by Steward)
+    2. .hestai/context/ (legacy architecture - direct writes)
+    3. .coord/ (legacy coordination directory)
+    4. project root
+
+    Anchor architecture takes precedence when both exist (migration in progress).
 
     Args:
         project_root: Project root directory
@@ -31,12 +34,14 @@ def find_context_file(project_root: Path, filename: str) -> Path | None:
 
     Example:
         >>> find_context_file(Path("/project"), "PROJECT-CONTEXT.md")
-        Path("/project/.hestai/context/PROJECT-CONTEXT.md")
+        Path("/project/.hestai/snapshots/PROJECT-CONTEXT.md")  # Anchor mode
+        Path("/project/.hestai/context/PROJECT-CONTEXT.md")     # Legacy mode
     """
     search_paths = [
-        project_root / ".hestai" / "context" / filename,
-        project_root / ".coord" / filename,
-        project_root / filename,
+        project_root / ".hestai" / "snapshots" / filename,  # Anchor architecture (prioritized)
+        project_root / ".hestai" / "context" / filename,  # Legacy architecture
+        project_root / ".coord" / filename,  # Legacy coordination
+        project_root / filename,  # Project root fallback
     ]
 
     for path in search_paths:

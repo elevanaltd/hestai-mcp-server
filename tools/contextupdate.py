@@ -3,11 +3,17 @@ Context Update Tool - AI-driven merge into context files.
 Part of Context Steward v2 Phase 2.
 
 Flow: ACCEPT → ARCHIVE → CROSS_REFERENCE → DETECT_CONFLICTS → MERGE → COMPRESS → WRITE → LOG → RETURN
+
+Anchor Architecture Support:
+- Detects .hestai/snapshots/ (READ-ONLY)
+- Emits events to .hestai/events/ instead of direct writes
+- Backward compatible with legacy .hestai/context/ (direct writes)
 """
 
 import json
 import logging
 import re
+import uuid as uuid_module
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -269,7 +275,101 @@ class ContextUpdateTool(BaseTool):
     2. Uses AI to intelligently merge new content
     3. Detects conflicts with recent changes
     4. Maintains LOC limits via compaction
+
+    Anchor Architecture:
+    - Detects .hestai/snapshots/ (event-sourced READ-ONLY)
+    - Emits events to .hestai/events/ instead of direct writes
+    - Legacy mode: direct writes to .hestai/context/
     """
+
+    def _is_anchor_mode(self, hestai_dir: Path) -> bool:
+        """
+        Check if running in anchor mode (snapshots/ exists).
+
+        Anchor mode means:
+        - .hestai/snapshots/ exists (READ-ONLY synthesized by Steward)
+        - Must emit events to .hestai/events/ instead of direct writes
+
+        Args:
+            hestai_dir: Path to .hestai directory
+
+        Returns:
+            True if anchor architecture detected
+        """
+        snapshots_dir = hestai_dir / "snapshots"
+        is_anchor = snapshots_dir.exists()
+
+        if is_anchor:
+            logger.info("Anchor mode detected - will emit event instead of direct write")
+        else:
+            logger.info("Legacy mode detected - will write directly to context/")
+
+        return is_anchor
+
+    async def _emit_context_event(
+        self, request: ContextUpdateRequest, hestai_dir: Path, inbox_uuid: str, session_context: dict = None
+    ) -> dict:
+        """
+        Emit context update event for Steward to synthesize.
+
+        In anchor architecture, context files in snapshots/ are READ-ONLY.
+        Agents emit events to events/, Steward synthesizes snapshots/.
+
+        Args:
+            request: Context update request
+            hestai_dir: Path to .hestai directory
+            inbox_uuid: UUID from inbox submission for audit trail
+            session_context: Session context containing session_id and role
+
+        Returns:
+            Event emission result dict
+        """
+        # Create events directory structure (YYYY-MM-DD daily partitioning)
+        today = datetime.now().strftime("%Y-%m-%d")
+        events_dir = hestai_dir / "events" / today
+        events_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate event
+        event_id = str(uuid_module.uuid4())
+        timestamp = datetime.now().isoformat()
+
+        # Extract session_id and role from session context
+        session_id = session_context.get("session_id", "direct") if session_context else "direct"
+        role = session_context.get("role", "unknown") if session_context else "unknown"
+
+        # Build event per spec/CONTEXT-ANCHOR-STRUCTURE.md
+        event = {
+            "id": event_id,
+            "timestamp": timestamp,
+            "session_id": session_id,
+            "role": role,
+            "type": "context_update",
+            "payload": {
+                "target_file": f"{request.target}.md",  # e.g., "PROJECT-CONTEXT.md"
+                "section": None,  # Optional - could be extracted from intent
+                "operation": "append",  # Default operation
+                "content": request.content if request.content else f"file_ref:{request.file_ref}",
+            },
+        }
+
+        # Write event file: {ISO8601}-{session_id}-{type}.json
+        event_filename = f"{timestamp}-{session_id}-context_update.json"
+        event_file = events_dir / event_filename
+        event_file.write_text(json.dumps(event, indent=2))
+
+        logger.info(f"Emitted context_update event: {event_file}")
+
+        return {
+            "status": "success",
+            "mode": "event_emitted",
+            "event_id": event_id,
+            "event_file": str(event_file.relative_to(hestai_dir.parent)),
+            "target": request.target,
+            "session_id": session_id,
+            "role": role,
+            "inbox_uuid": inbox_uuid,
+            "message": "Event emitted to events/ - Steward will synthesize to snapshots/",
+        }
 
     def get_name(self) -> str:
         return "contextupdate"
@@ -350,9 +450,23 @@ class ContextUpdateTool(BaseTool):
             request = ContextUpdateRequest(**arguments)
             project_root = Path(request.working_dir)
 
+            # FIRST: Detect anchor mode BEFORE any file operations
+            hestai_dir = project_root / ".hestai"
+            if hestai_dir.is_symlink():
+                hestai_dir = hestai_dir.resolve()
+                logger.info(f"Resolved .hestai symlink to: {hestai_dir}")
+
+            # Check if running in anchor mode (READ-ONLY snapshots/)
+            is_anchor = self._is_anchor_mode(hestai_dir)
+
             # 1. ACCEPT - Validate and determine content source
             if request.file_ref:
-                file_path = project_root / request.file_ref
+                file_path = (project_root / request.file_ref).resolve()
+
+                # Security: validate path containment to prevent path traversal
+                if not file_path.is_relative_to(project_root.resolve()):
+                    raise ValueError(f"Path traversal rejected: {request.file_ref}")
+
                 if not file_path.exists():
                     raise FileNotFoundError(f"Referenced file not found: {request.file_ref}")
                 new_content = file_path.read_text()
@@ -368,12 +482,16 @@ class ContextUpdateTool(BaseTool):
             target_path = find_context_file(project_root, target_filename)
 
             if target_path is None:
-                # Create new file in .hestai/context/
-                context_dir = project_root / ".hestai" / "context"
-                context_dir.mkdir(parents=True, exist_ok=True)
-                target_path = context_dir / target_filename
-                target_path.write_text(f"# {request.target}\n\n")
-                logger.info(f"Created new context file: {target_path}")
+                # Create new file in .hestai/context/ (only in legacy mode)
+                if not is_anchor:
+                    context_dir = project_root / ".hestai" / "context"
+                    context_dir.mkdir(parents=True, exist_ok=True)
+                    target_path = context_dir / target_filename
+                    target_path.write_text(f"# {request.target}\n\n")
+                    logger.info(f"Created new context file: {target_path}")
+                else:
+                    # In anchor mode, target_path will be None - that's OK, we'll emit event
+                    logger.info(f"Anchor mode: will emit event for new target {request.target}")
 
             # 2. ARCHIVE - Submit to inbox for audit trail
             uuid = submit_to_inbox(
@@ -383,6 +501,26 @@ class ContextUpdateTool(BaseTool):
                 session_id=request.continuation_id or "direct",
             )
 
+            # ANCHOR MODE: Emit event and return (no direct write to snapshots/)
+            if is_anchor:
+                # Get session context from arguments if available
+                session_context = arguments.get("_session_context")
+                result = await self._emit_context_event(request, hestai_dir, uuid, session_context)
+                process_inbox_item(project_root, uuid)
+
+                return [
+                    TextContent(
+                        type="text",
+                        text=ToolOutput(
+                            status="success",
+                            content=json.dumps(result, indent=2),
+                            content_type="json",
+                            metadata={"tool_name": self.name, "target": request.target},
+                        ).model_dump_json(),
+                    )
+                ]
+
+            # LEGACY MODE: Continue with direct write to context/
             # 3. CROSS_REFERENCE - Read current content and changelog
             existing_content = target_path.read_text()
             changelog_path = project_root / ".hestai" / "context" / "PROJECT-CHANGELOG.md"

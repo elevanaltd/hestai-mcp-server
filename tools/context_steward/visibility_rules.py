@@ -28,9 +28,21 @@ class DocumentTypeConfig(TypedDict, total=False):
 
 # Visibility rules from ADR-003
 # Used by requestdoc tool for legacy compatibility
+#
+# NOTE: context_update path is dual-mode:
+# - Anchor architecture:
+#   - READ from .hestai/snapshots/ (READ-ONLY, synthesized by Steward)
+#   - WRITE to .hestai/events/ (agent event emission)
+# - Legacy architecture: .hestai/context/ (direct reads and writes)
+# File lookup prioritizes snapshots/ when both exist
 VISIBILITY_RULES: dict[str, VisibilityRule] = {
     "adr": {"path": "docs/adr/", "format": "ADR_template"},
-    "context_update": {"path": ".hestai/context/", "format": "OCTAVE"},
+    "context_update": {
+        "read_path": ".hestai/snapshots/",  # For READING in anchor mode
+        "write_path": ".hestai/events/",  # For WRITING in anchor mode (events)
+        "legacy_path": ".hestai/context/",  # For legacy mode (read and write)
+        "format": "OCTAVE",
+    },
     "session_note": {"path": ".hestai/sessions/", "format": "OCTAVE"},
     "workflow_update": {"path": ".hestai/workflow/", "format": "OCTAVE"},
 }

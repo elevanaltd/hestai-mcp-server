@@ -175,10 +175,32 @@ class RequestDocTool(BaseTool):
             else:
                 project_root = Path(request.working_dir)
 
+            # Detect anchor mode for context_update type
+            is_anchor = False
+            if request.type == "context_update":
+                hestai_dir = project_root / ".hestai"
+                if hestai_dir.is_symlink():
+                    hestai_dir = hestai_dir.resolve()
+                snapshots_dir = hestai_dir / "snapshots"
+                is_anchor = snapshots_dir.exists()
+                logger.info(f"Anchor mode: {is_anchor} for context_update")
+
             # Get visibility rules for this doc type
             rules = VISIBILITY_RULES[request.type]
-            base_path = rules["path"]
             doc_format = rules["format"]
+
+            # Determine path based on mode
+            if request.type == "context_update" and is_anchor:
+                # Anchor mode: emit to events/ or inbox/, NOT snapshots/
+                base_path = rules.get("write_path", ".hestai/events/")
+                logger.info(f"Using anchor write path: {base_path}")
+            elif request.type == "context_update":
+                # Legacy mode: use legacy_path
+                base_path = rules.get("legacy_path", ".hestai/context/")
+                logger.info(f"Using legacy path: {base_path}")
+            else:
+                # Other types: use standard path
+                base_path = rules.get("path", rules.get("legacy_path", ""))
 
             # Construct full path
             doc_dir = project_root / base_path
