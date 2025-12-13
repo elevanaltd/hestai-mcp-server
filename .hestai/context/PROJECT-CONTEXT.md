@@ -26,20 +26,20 @@ RUNTIME_DEPENDENCIES::[
 ]
 
 ## CURRENT_STATE
-DATE::2025-12-12
-BRANCH::main[7169297]
-ACTIVE_FOCUS::\"Issue #120 Unified .hestai Architecture - Phase 3 Clockin Updates\"
+DATE::2025-12-13
+BRANCH::main[c51a909]
+COMMIT_MESSAGE::\"feat(context-steward): add anchor architecture support with event sourcing\"
+ACTIVE_FOCUS::\"Anchor Architecture Integration with hestai-core\"
 TASK_TRACKING::https://github.com/orgs/elevanaltd/projects/4
-ISSUE_120_STATUS::OPEN[Phase 1+2 COMPLETE, Phase 3-5 remaining]
-QUALITY_GATES_STATUS::lint=pending, typecheck=pending, test=pending
+ISSUE_120_STATUS::OPEN[Phase 3 anchor support COMPLETE, Phase 4-5 remaining]
+QUALITY_GATES_STATUS::lint=passing, typecheck=passing, test=passing
 
 RECENT_ACHIEVEMENTS::[
-  \"PR #125 Phase 2 - Consistent archive naming and TXT removal MERGED\",
-  \"PR #124 Worktree branch operations MERGED\",
-  \"PR #123 Clockout pipeline fix MERGED (tool_use + tool_result capture)\",
-  \"PR #122 Tool operations preservation MERGED\",
-  \"PR #121 Web Agent Protocol MERGED\",
-  \"#116 octave_path in response CLOSED\"
+  \"c51a909 feat(context-steward): add anchor architecture support with event sourcing\",
+  \"Anchor mode detection in clockin (snapshots/ vs context/)\",
+  \"Event emission to events/ in contextupdate (READ-ONLY snapshots/ enforcement)\",
+  \"Path traversal security fix with is_relative_to() validation\",
+  \"7 comprehensive anchor mode tests\"
 ]
 
 ## ISSUE_120_ARCHITECTURE_OVERHAUL
@@ -51,14 +51,39 @@ PROBLEM_STATEMENT::[
   \"Duplicated PROJECT-CONTEXT.md with divergence risk\"
 ]
 
-PROPOSED_SOLUTION::\"Centralize via ~/.hestai/ as separate git repo with symlinks; preserve JSONL (gitignored, 30-day); track OCTAVE permanently\"
+PROPOSED_SOLUTION::\"Anchor Architecture via hestai-core - sibling worktree with event sourcing\"
 
 PHASE_PROGRESS::[
   \"Phase 1 Infrastructure: COMPLETE (PR #125: ~/.hestai/ + git init + setup script + inbox layer)\",
   \"Phase 2 Clockout Fix: COMPLETE (PR #125: TXT removed, consistent naming, JSONL preserved)\",
-  \"Phase 3 Clockin Updates: TODO (symlink detection, cleanup trigger)\",
+  \"Phase 3 Anchor Support: COMPLETE (c51a909: dual-mode detection, event emission, path security)\",
   \"Phase 4 Migration: TODO (existing directory migration, PROJECT-CONTEXT merge)\",
   \"Phase 5 Documentation: TODO (spec updates, setup guide, retention policy)\"
+]
+
+## HESTAI_CORE_INTEGRATION
+STATUS::IN_DEVELOPMENT
+LOCATION::\"/Volumes/HestAI-Projects/hestai-core/\"
+SPEC::\"spec/CONTEXT-ANCHOR-STRUCTURE.md\"
+ARCHITECTURE::[
+  \"Sibling Worktree: .hestai-state-wt-{repo_name}-{hash}/ (collision-proof naming)\",
+  \"Event Sourcing: Agents emit events to events/, Steward synthesizes snapshots/\",
+  \"READ-ONLY: snapshots/ and governance/ are never written directly by agents\",
+  \"Symlink: .hestai/ in project root points to sibling worktree\",
+  \"Orphan Branch: hestai-state branch for anchor persistence\"
+]
+MCP_TOOL_ALIGNMENT::[
+  \"clockin: Detects anchor mode via snapshots/ existence, stores is_anchor_mode in session\",
+  \"contextupdate: Emits events to events/ in anchor mode, direct writes in legacy mode\",
+  \"file_lookup: Prioritizes snapshots/ over context/ in search order\",
+  \"visibility_rules: Separate read_path (snapshots/), write_path (events/), legacy_path (context/)\"
+]
+NEXT_STEPS::[
+  \"Implement AnchorManager in hestai-core (git worktree add, symlink creation)\",
+  \"Implement EventLog for safe JSON event appending\",
+  \"Implement Snapshotter for events -> markdown synthesis\",
+  \"Add tripwire validation (abort if CWD is anchor directory)\",
+  \"Add chmod enforcement for snapshots/ READ-ONLY\"
 ]
 
 ACCEPTANCE_CRITERIA::[
@@ -100,12 +125,12 @@ CURRENT_OWNER::implementation-lead[b2-implementation]
 PHASE::B2[Build Phase - Issue #120 Unified .hestai Architecture]
 PREVIOUS_VALIDATION::holistic-orchestrator[session 7f1e751e: PROJECT-CONTEXT correction + 803-REPORT creation]
 ACCOUNTABLE_TO::critical-engineer[via holistic-orchestrator]
-LAST_UPDATE::system-steward[2025-12-12T02:19:04Z: context state verification, branch/commit tracking updated]
+LAST_UPDATE::holistic-orchestrator[2025-12-13T17:45:00Z: anchor architecture integration, hestai-core reference, Phase 3 complete, branch tracking c51a909]
 
 QUALITY_GATES::[lint::\"passing\", typecheck::\"passing\", test::\"passing\"]
 
-BRANCH_TRACKING::main[7169297: update project context #126]
-MAIN_BRANCH_STATUS::7169297[PR #126 project context update merged]
+BRANCH_TRACKING::main[c51a909: feat(context-steward): add anchor architecture support]
+MAIN_BRANCH_STATUS::c51a909[anchor architecture support with event sourcing]
 
 ## DEVELOPMENT_GUIDELINES
 STYLE::\"Follow existing project conventions (formatting, naming).\"
