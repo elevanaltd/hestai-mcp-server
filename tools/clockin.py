@@ -136,7 +136,9 @@ class ClockInTool(BaseTool):
 
             sessions_dir = hestai_dir / "sessions"
             active_dir = sessions_dir / "active"
-            context_dir = hestai_dir / "context"
+
+            # Detect anchor vs legacy structure
+            context_dir, context_subdir, is_anchor_mode = self._detect_context_structure(hestai_dir)
 
             active_dir.mkdir(parents=True, exist_ok=True)
             context_dir.mkdir(parents=True, exist_ok=True)
@@ -167,6 +169,8 @@ class ClockInTool(BaseTool):
                 "model": request.model,
                 # Store transcript_path if available from context (for clockout JSONL extraction)
                 "transcript_path": getattr(session_context, "transcript_path", None) if session_context else None,
+                # Store anchor mode flag for downstream tools
+                "is_anchor_mode": is_anchor_mode,
             }
 
             session_file = session_dir / "session.json"
@@ -189,9 +193,10 @@ class ClockInTool(BaseTool):
             logger.info(f"Created session {session_id} for {request.role} (focus: {request.focus})")
 
             # Build context paths (relative to project root)
+            # Use detected structure (snapshots/ for anchor, context/ for legacy)
             context_paths = {
-                "project_context": ".hestai/context/PROJECT-CONTEXT.md",
-                "checklist": ".hestai/context/PROJECT-CHECKLIST.md",
+                "project_context": f".hestai/{context_subdir}/PROJECT-CONTEXT.md",
+                "checklist": f".hestai/{context_subdir}/PROJECT-CHECKLIST.md",
             }
 
             # Load and validate state vector if exists
@@ -231,6 +236,36 @@ class ClockInTool(BaseTool):
                 status="error", content=f"Error registering session: {str(e)}", content_type="text"
             )
             return [TextContent(type="text", text=error_output.model_dump_json())]
+
+    def _detect_context_structure(self, hestai_dir: Path) -> tuple[Path, str, bool]:
+        """
+        Detect anchor vs legacy structure.
+
+        Anchor architecture (hestai-core migration):
+        - .hestai/snapshots/ exists (READ-ONLY synthesized by Steward)
+        - .hestai/events/ for event sourcing
+
+        Legacy architecture:
+        - .hestai/context/ for direct file writes
+
+        Args:
+            hestai_dir: Path to .hestai directory
+
+        Returns:
+            Tuple of (context_dir, subdir_name, is_anchor_mode)
+            - context_dir: Path to context/snapshots directory
+            - subdir_name: "snapshots" or "context"
+            - is_anchor_mode: True if anchor architecture detected
+        """
+        snapshots_dir = hestai_dir / "snapshots"
+        context_dir = hestai_dir / "context"
+
+        if snapshots_dir.exists():
+            logger.info("Detected anchor architecture (.hestai/snapshots/ exists)")
+            return snapshots_dir, "snapshots", True
+        else:
+            logger.info("Detected legacy architecture (.hestai/context/)")
+            return context_dir, "context", False
 
     def _check_focus_conflict(self, active_dir: Path, focus: str, current_session_id: str) -> Optional[dict]:
         """

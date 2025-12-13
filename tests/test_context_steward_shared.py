@@ -22,9 +22,19 @@ class TestVisibilityRules:
         assert "workflow_update" in VISIBILITY_RULES
 
     def test_visibility_rules_format(self):
-        """Test each rule has required fields."""
+        """Test each rule has required fields.
+
+        Note: context_update uses read_path/write_path/legacy_path for anchor architecture,
+        while other rules use the standard 'path' field.
+        """
         for doc_type, rule in VISIBILITY_RULES.items():
-            assert "path" in rule, f"{doc_type} missing 'path'"
+            if doc_type == "context_update":
+                # Anchor architecture: separate read/write/legacy paths
+                assert "read_path" in rule, f"{doc_type} missing 'read_path'"
+                assert "write_path" in rule, f"{doc_type} missing 'write_path'"
+                assert "legacy_path" in rule, f"{doc_type} missing 'legacy_path'"
+            else:
+                assert "path" in rule, f"{doc_type} missing 'path'"
             assert "format" in rule, f"{doc_type} missing 'format'"
 
     def test_document_types_structure(self):
