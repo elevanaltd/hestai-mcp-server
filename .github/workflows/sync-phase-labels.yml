@@ -36,6 +36,8 @@ jobs:
 
       - name: Sync Phase field to labels (with manual override detection)
         id: sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           #!/bin/bash
           set -euo pipefail
@@ -188,9 +190,6 @@ Please update the Phase field directly in the GitHub Project instead of changing
           echo "overrides=$overrides" >> $GITHUB_OUTPUT
 
           [ $errors -eq 0 ] || exit 1
-
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update last sync timestamp
         if: success()

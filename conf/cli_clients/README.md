@@ -44,8 +44,8 @@ Each client file defines:
 | Tier | Claude Model | Gemini Model | Codex Model | Purpose |
 |------|-------------|--------------|-------------|---------|
 | HIGH | opus | null | null | Constitutional authority, GO/NO-GO decisions |
-| MEDIUM | sonnet | gemini-3-pro-preview | gpt-5.1-codex | Implementation, domain specialists |
-| LOW | haiku | gemini-3-pro-preview | gpt-5.1-codex-mini | Exploration, research, advisory |
+| MEDIUM | sonnet | gemini-3-pro-preview | gpt-5.2 | Implementation, domain specialists |
+| LOW | haiku | gemini-3-pro-preview | gpt-5.2 | Exploration, research, advisory |
 
 **Note**: HIGH-tier agents (holistic-orchestrator, critical-engineer, etc.) are Claude-only by design. Their `gemini: null` and `codex: null` values indicate intentional exclusion, not missing configuration.
 
@@ -106,7 +106,7 @@ Some agents require special CLI routing. Define exceptions in `agent-model-tiers
   "system-steward": {
     "claude": "haiku",
     "gemini": null,      // Excluded: sandbox limitations
-    "codex": "gpt-5.1-codex-mini",
+    "codex": "gpt-5.2",
     "reason": "Requires file system access - avoids Gemini sandbox"
   }
 }
@@ -114,7 +114,7 @@ Some agents require special CLI routing. Define exceptions in `agent-model-tiers
 
 ## Reasoning Effort (Codex-specific)
 
-Codex supports `model_reasoning_effort` levels (high/medium/low). Configure in:
+Codex supports `model_reasoning_effort` levels (low/medium/high/extra-high). Configure in:
 
 ```json
 "reasoning_effort_mappings": {
